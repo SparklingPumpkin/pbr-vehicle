@@ -1,0 +1,9 @@
+{
+  "direct_proxy": {
+    "white_level": 0.82,
+    "roughness": 0.32,
+    "metallic": 0.02,
+    "thin_ratio": 0.02,
+    "minimum_thickness": 0.00001
+  }
+}

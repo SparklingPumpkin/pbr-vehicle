@@ -1,0 +1,319 @@
+{
+  "schema_version": 10,
+  "asset_contract": "pbr-vehicle-single-ply-v1",
+  "asset_id": "10010",
+  "files": {
+    "pbr": "pbr_10010.ply",
+    "config": "configs/config_10010.json"
+  },
+  "material": {
+    "roughness": 0.32,
+    "reflectance": 0.04,
+    "metallic": 0.02,
+    "clearcoat": 0.35,
+    "exposure": 1.0,
+    "relight_strength": 1.0,
+    "albedo_rgb": [
+      0.82,
+      0.82,
+      0.82
+    ]
+  },
+  "light": {
+    "sun_enabled": true,
+    "sun_azimuth_degrees": 90.0,
+    "sun_elevation_degrees": 45.0,
+    "intensity": 2.0,
+    "color_rgb": [
+      0.9742142016085995,
+      1.0021554170482136,
+      1.0236303813431868
+    ],
+    "environment_color_rgb": [
+      0.5697627233683317,
+      0.5697627233683317,
+      0.5697627233683317
+    ]
+  },
+  "projection": {
+    "enabled": true,
+    "dynamic": true,
+    "runtime": "receiver_space_mask_v1",
+    "shape_model": "procedural-mask-contact-silhouette-v4",
+    "composition": "receiver_alpha_blend_to_grayscale_v1",
+    "contact": {
+      "shape": "rounded_rectangle",
+      "alignment": "vehicle_local_xy",
+      "length_scale": 0.92,
+      "width_scale": 0.88,
+      "offset_xy_m": [
+        0.0,
+        0.0
+      ],
+      "corner_radius_m": 0.22,
+      "edge_softness_m": 0.08,
+      "opacity": 0.11,
+      "brightness": 0.18
+    },
+    "extension": {
+      "shape": "dynamic_vehicle_outline",
+      "source": "parallel_light_projected_pbr_gaussian_outline",
+      "opacity": 0.28,
+      "opacity_distance_decay": 0.55,
+      "opacity_distance_exponent": 1.25,
+      "brightness": 0.32,
+      "brightness_distance_to_white": 0.65,
+      "brightness_distance_exponent": 1.35,
+      "edge_softness_m": 0.1,
+      "edge_softness_distance_growth_m": 0.24,
+      "edge_softness_distance_exponent": 1.15,
+      "distance_scale_m": 1.25
+    },
+    "anchor": {
+      "mode": "gaussian_bottom_surface",
+      "bottom_surface_percentile": 1.0,
+      "surface_sigma": 1.0,
+      "z_offset_m": 0.0
+    }
+  },
+  "projection_runtime": {
+    "dynamic": true,
+    "runtime": "receiver_space_mask_v1",
+    "recompute_on": [
+      "sun_azimuth_degrees",
+      "sun_elevation_degrees",
+      "vehicle pose",
+      "projection parameters"
+    ],
+    "algorithm": "render an analytic vehicle-local rounded-rectangle contact mask and a filled, smoothed parallel-light vehicle-outline mask from the current PBR Gaussian and configuration"
+  },
+  "projection_stats": {
+    "model": "procedural-mask-contact-silhouette-v4",
+    "runtime": "receiver_space_mask_v1",
+    "geometry": "analytic-rounded-rectangle-plus-parallel-light-projected-pbr-gaussian-outline",
+    "ground_z": -0.67148756980896,
+    "vehicle_z_anchor": {
+      "mode": "gaussian_bottom_surface",
+      "bottom_surface_percentile": 1.0,
+      "surface_sigma": 1.0,
+      "z_offset_m": 0.0,
+      "bottom_surface_z": -0.67148756980896,
+      "geometry_source": "pbr_gaussian_original_covariance"
+    }
+  },
+  "sha256": {
+    "pbr": "eeb202b51cdbe44a43c38cf8c83036e33dd4bf81a7ced3058fa9166c3056cc4b"
+  },
+  "auto_fit": {
+    "schema_version": 2,
+    "status": "candidate_only",
+    "method": "rear_view_conditioned_dc_bake_opacity_weighted_rgb_cdf_l1",
+    "contract": {
+      "scene_kind": "ordinary_gaussian_sh",
+      "scene_sh_used": "dc_only",
+      "vehicle_kind": "pbr_asset",
+      "sun_direction_source": "manual_fixed_input",
+      "excluded_inputs": [
+        "2d_rgb",
+        "scene_screenshots",
+        "native_vehicles",
+        "masks",
+        "camera_observations",
+        "r3gw_env_sh",
+        "scene_pbr_fields",
+        "ground_projection"
+      ]
+    },
+    "inputs": {
+      "scene_ply": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/auto-light-material/low-order-sh-vehicle-pbr-fit/ALM-v3-d/run-20260831T035629Z-argoverse004-10010-rear-dc-fit/scene_background_argoverse004.ply",
+      "scene_sha256": "72c65f25fc5374ae5f834f71313d71be0087d9289f8fd3c6456ae4fb51e0d211",
+      "scene_vertices": 3920199,
+      "original_ply": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/original_10010.ply",
+      "original_sha256": "c2b048acbd62cbe75dc709f7005b717d448ead43607d34b61b9c2c49fcaeae0b",
+      "original_vertices": 191427,
+      "proxy_ply": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/proxy_10010.ply",
+      "proxy_sha256": "a5ea9fb6c83100d7bf016094347ada24e969283ed4ea7fae92f04e13b5b0b80f",
+      "mapping": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/map_10010.npz",
+      "mapping_sha256": "4300d385361b3a978083accac4d2376d199d9ad35510aebd146c6eda7a85af6e",
+      "base_config": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/configs/config_10010.json",
+      "base_config_sha256": "332d282d7ed0a5556b4f356496f7e0febdb6a0c0083ca5200d243aa80646c61a"
+    },
+    "rear_view": {
+      "position": [
+        -6.24679931640625,
+        0.15442587435245514,
+        1.6293575763702393
+      ],
+      "target": [
+        0.0026772564742714167,
+        0.15442587435245514,
+        1.1293575763702393
+      ],
+      "rear_x_quantile_0p005": -2.24679931640625,
+      "vertical_fov_degrees": 30.0
+    },
+    "metric": {
+      "name": "bilateral_opacity_weighted_rgb_cdf_l1_512",
+      "definition": "Decode DC to RGB, weight both vehicle and scene Gaussians by sigmoid(opacity), and average absolute per-channel CDF differences over 512 RGB grid points.",
+      "raw": {
+        "per_channel": [
+          0.06380420272227214,
+          0.05009143703932447,
+          0.05325622004608124
+        ],
+        "rgb_mean": 0.055717286602559285
+      },
+      "baked": {
+        "per_channel": [
+          0.0550729776027893,
+          0.04903260588674167,
+          0.05621002091099128
+        ],
+        "rgb_mean": 0.05343853480017408
+      },
+      "improvement_percent": 4.089847049875059,
+      "scene_statistics": {
+        "weight_sum": 1208517.3517108837,
+        "sample_count": 3920199,
+        "mean": [
+          0.37087597375621273,
+          0.3815129830165872,
+          0.38968833940240794
+        ],
+        "std": [
+          0.2170596935691273,
+          0.2113340991138423,
+          0.21206209854581426
+        ],
+        "quantiles": {
+          "ch0": [
+            0.003913894324853229,
+            0.34442270058708413,
+            0.9921722113502935
+          ],
+          "ch1": [
+            0.005870841487279843,
+            0.36007827788649704,
+            0.923679060665362
+          ],
+          "ch2": [
+            0.005870841487279843,
+            0.37181996086105673,
+            0.9432485322896281
+          ]
+        }
+      },
+      "raw_vehicle_statistics": {
+        "weight_sum": 78763.17825004332,
+        "sample_count": 191427,
+        "mean": [
+          0.30698036595954575,
+          0.3395301810020375,
+          0.3605017562054669
+        ],
+        "std": [
+          0.23098072177053355,
+          0.24690188982578481,
+          0.2591169814471748
+        ],
+        "quantiles": {
+          "ch0": [
+            0.0,
+            0.2759295499021526,
+            1.0
+          ],
+          "ch1": [
+            0.0,
+            0.30332681017612523,
+            1.0
+          ],
+          "ch2": [
+            0.0,
+            0.32289628180039137,
+            1.0
+          ]
+        }
+      }
+    },
+    "bake": {
+      "output_ply": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/auto-light-material/low-order-sh-vehicle-pbr-fit/ALM-v3-d/run-20260831T035629Z-argoverse004-10010-rear-dc-fit/10010_argoverse004_rear_view_pbr_dc_baked.ply",
+      "output_sha256": "2027100c9779ae99defc1e29b66f9cc76d3293baf2c25d85449b8167a6a78641",
+      "view_dependent": true,
+      "source_vertex_count": 191427,
+      "output_vertex_count": 191427,
+      "higher_order_sh": "zeroed",
+      "max_abs_decode_error": 5.6471884890552104e-08
+    },
+    "search": {
+      "light_candidates_planned": 25,
+      "material_candidates_planned": 405,
+      "candidates_evaluated": 430,
+      "best_candidate": {
+        "stage": "light",
+        "index": 24,
+        "material": {
+          "roughness": 0.32,
+          "reflectance": 0.04,
+          "metallic": 0.02,
+          "clearcoat": 0.35,
+          "exposure": 1.0,
+          "relight_strength": 1.0,
+          "ambient_fill": 0.4,
+          "specular_gain": 1.0,
+          "environment_reflection": 0.8,
+          "clearcoat_roughness": 0.12,
+          "shader_model": "Car paint GGX"
+        },
+        "light": {
+          "sun_azimuth_degrees": 90.0,
+          "sun_elevation_degrees": 45.0,
+          "intensity": 2.0,
+          "color_rgb": [
+            0.9742142016085995,
+            1.0021554170482136,
+            1.0236303813431868
+          ],
+          "environment_color_rgb": [
+            0.5697627233683317,
+            0.5697627233683317,
+            0.5697627233683317
+          ]
+        },
+        "distance": {
+          "per_channel": [
+            0.055040185410686546,
+            0.049049948779251396,
+            0.056233444203547533
+          ],
+          "rgb_mean": 0.053441192797828496
+        }
+      },
+      "time_cap_seconds": 480.0,
+      "phase_times": {
+        "load_and_baseline_seconds": 0.7436168810236268,
+        "light_search_seconds": 11.425964218040463,
+        "material_search_seconds": 181.6643748920178,
+        "total_fit_seconds": 203.82863716600696
+      }
+    },
+    "claim_boundary": "This is only a rear-view-conditioned, opacity-weighted DC distribution adaptation proxy. It does not establish physical illumination, recovered material truth, spatial correspondence, or general multi-view realism."
+  },
+  "surface": {
+    "geometry": "visible_original_gaussians",
+    "normal_fields": [
+      "normal_0",
+      "normal_1",
+      "normal_2"
+    ],
+    "normal_source": "minimum_covariance_axis",
+    "normal_orientation": "center_outward",
+    "normal_version": 1
+  },
+  "relighting": {
+    "control_layer": "logical",
+    "geometry_source": "pbr_gaussian",
+    "material_source": "config.material",
+    "transfer": "same_point_multiplicative_ratio",
+    "mapping_required": false
+  }
+}

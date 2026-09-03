@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pbr-vehicle-auto"
+version = "1.2.0"
+description = "Constrained ordinary-Gaussian scene to PBR vehicle DC adaptation."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.24,<3", "plyfile>=1.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=7.4"]
+
+[project.scripts]
+pbr-vehicle-auto-fit = "pbr_vehicle_auto.fitter:main"
+pbr-vehicle-auto-default = "pbr_vehicle_auto.defaults:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pbr_vehicle_auto = ["defaults/*.json", "templates/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

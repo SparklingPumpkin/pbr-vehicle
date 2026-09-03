@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pbr-vehicle-sdk"
+version = "1.5.0"
+description = "Convert, relight, render, and bake Gaussian vehicle assets."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "numpy>=1.24",
+  "pillow>=9.0",
+  "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+render = ["torch>=2.1", "gsplat>=1.4"]
+test = ["pytest>=7.4"]
+
+[project.scripts]
+pbr-vehicle = "pbr_vehicle_sdk.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

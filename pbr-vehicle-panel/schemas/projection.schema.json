@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projection.schema.json",
+  "type": "object",
+  "required": ["runtime", "shape_model", "composition", "contact", "extension", "anchor"],
+  "properties": {
+    "runtime": {"const": "receiver_space_mask_v1"},
+    "shape_model": {"const": "procedural-mask-contact-silhouette-v4"},
+    "composition": {"const": "receiver_alpha_blend_to_grayscale_v1"},
+    "contact": {"type": "object", "required": ["length_scale", "width_scale", "opacity", "brightness"]},
+    "extension": {"type": "object", "required": ["opacity", "opacity_distance_decay", "edge_softness_m", "distance_scale_m"]},
+    "anchor": {"type": "object", "required": ["bottom_surface_percentile", "surface_sigma", "z_offset_m"]}
+  }
+}

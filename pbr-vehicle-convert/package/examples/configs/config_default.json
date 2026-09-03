@@ -1,0 +1,61 @@
+{
+  "material": {
+    "albedo_rgb": [0.82, 0.82, 0.82],
+    "roughness": 0.32,
+    "metallic": 0.02,
+    "reflectance": 0.04,
+    "clearcoat": 0.35,
+    "clearcoat_roughness": 0.12,
+    "ambient_fill": 0.35,
+    "specular_gain": 1.0,
+    "environment_reflection": 0.8,
+    "exposure": 1.0,
+    "relight_strength": 1.0
+  },
+  "light": {
+    "sun_enabled": true,
+    "sun_azimuth_degrees": 126.0,
+    "sun_elevation_degrees": 45.0,
+    "intensity": 1.0,
+    "color_rgb": [1.0, 0.98, 0.92],
+    "environment_color_rgb": [0.55, 0.62, 0.72]
+  },
+  "projection": {
+    "enabled": true,
+    "dynamic": true,
+    "runtime": "receiver_space_mask_v1",
+    "shape_model": "procedural-mask-contact-silhouette-v4",
+    "composition": "receiver_alpha_blend_to_grayscale_v1",
+    "contact": {
+      "shape": "rounded_rectangle",
+      "alignment": "vehicle_local_xy",
+      "length_scale": 0.92,
+      "width_scale": 0.88,
+      "offset_xy_m": [0.0, 0.0],
+      "corner_radius_m": 0.22,
+      "edge_softness_m": 0.08,
+      "opacity": 0.11,
+      "brightness": 0.18
+    },
+    "extension": {
+      "shape": "dynamic_vehicle_outline",
+      "source": "parallel_light_projected_pbr_gaussian_outline",
+      "opacity": 0.28,
+      "opacity_distance_decay": 0.55,
+      "opacity_distance_exponent": 1.25,
+      "brightness": 0.32,
+      "brightness_distance_to_white": 0.65,
+      "brightness_distance_exponent": 1.35,
+      "edge_softness_m": 0.10,
+      "edge_softness_distance_growth_m": 0.24,
+      "edge_softness_distance_exponent": 1.15,
+      "distance_scale_m": 1.25
+    },
+    "anchor": {
+      "mode": "gaussian_bottom_surface",
+      "bottom_surface_percentile": 1.0,
+      "surface_sigma": 1.0,
+      "z_offset_m": 0.0
+    }
+  }
+}

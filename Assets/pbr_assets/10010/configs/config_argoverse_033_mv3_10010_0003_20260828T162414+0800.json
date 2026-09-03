@@ -1,0 +1,245 @@
+{
+  "schema_version": 6,
+  "saved_at": "2026-08-28T16:24:14.878512+08:00",
+  "sequence": 3,
+  "scene": {
+    "name": "argoverse_033_mv3",
+    "kind": "checkpoint",
+    "path": "/mnt/data/dataset/output/argoverse/argoverse_033_mv3/checkpoint_final.pth"
+  },
+  "pbr_asset": {
+    "schema_version": 10,
+    "asset_contract": "pbr-vehicle-single-ply-v1",
+    "asset_id": "10010",
+    "files": {
+      "pbr": "pbr_10010.ply",
+      "config": "configs/config_10010.json"
+    },
+    "material": {
+      "roughness": 0.32,
+      "metallic": 0.02,
+      "reflectance": 0.04,
+      "clearcoat": 0.35,
+      "exposure": 1.0,
+      "relight_strength": 1.0,
+      "albedo_rgb": [
+        0.82,
+        0.82,
+        0.82
+      ]
+    },
+    "light": {
+      "sun_enabled": true,
+      "sun_azimuth_degrees": 126.0,
+      "sun_elevation_degrees": 45.0,
+      "intensity": 1.0,
+      "color_rgb": [
+        1.0,
+        0.98,
+        0.92
+      ],
+      "environment_color_rgb": [
+        0.55,
+        0.62,
+        0.72
+      ]
+    },
+    "projection": {
+      "enabled": true,
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "shape_model": "procedural-mask-contact-silhouette-v4",
+      "composition": "receiver_alpha_blend_to_grayscale_v1",
+      "contact": {
+        "shape": "rounded_rectangle",
+        "alignment": "vehicle_local_xy",
+        "length_scale": 0.92,
+        "width_scale": 0.88,
+        "offset_xy_m": [
+          0.0,
+          0.0
+        ],
+        "corner_radius_m": 0.22,
+        "edge_softness_m": 0.08,
+        "opacity": 0.11,
+        "brightness": 0.18
+      },
+      "extension": {
+        "shape": "dynamic_vehicle_outline",
+        "source": "parallel_light_projected_pbr_gaussian_outline",
+        "opacity": 0.28,
+        "opacity_distance_decay": 0.55,
+        "opacity_distance_exponent": 1.25,
+        "brightness": 0.32,
+        "brightness_distance_to_white": 0.65,
+        "brightness_distance_exponent": 1.35,
+        "edge_softness_m": 0.1,
+        "edge_softness_distance_growth_m": 0.24,
+        "edge_softness_distance_exponent": 1.15,
+        "distance_scale_m": 1.25
+      },
+      "anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": 0.0
+      }
+    },
+    "projection_runtime": {
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "recompute_on": [
+        "sun_azimuth_degrees",
+        "sun_elevation_degrees",
+        "vehicle pose",
+        "projection parameters"
+      ],
+      "algorithm": "render an analytic vehicle-local rounded-rectangle contact mask and a filled, smoothed parallel-light vehicle-outline mask from the current PBR Gaussian and configuration"
+    },
+    "projection_stats": {
+      "model": "procedural-mask-contact-silhouette-v4",
+      "runtime": "receiver_space_mask_v1",
+      "geometry": "analytic-rounded-rectangle-plus-parallel-light-projected-pbr-gaussian-outline",
+      "ground_z": -0.67148756980896,
+      "vehicle_z_anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": 0.0,
+        "bottom_surface_z": -0.67148756980896,
+        "geometry_source": "pbr_gaussian_original_covariance"
+      }
+    },
+    "sha256": {
+      "pbr": "eeb202b51cdbe44a43c38cf8c83036e33dd4bf81a7ced3058fa9166c3056cc4b"
+    },
+    "asset_config_path": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/configs/config_10010.json",
+    "surface": {
+      "geometry": "visible_original_gaussians",
+      "normal_fields": [
+        "normal_0",
+        "normal_1",
+        "normal_2"
+      ],
+      "normal_source": "minimum_covariance_axis",
+      "normal_orientation": "center_outward",
+      "normal_version": 1
+    },
+    "relighting": {
+      "control_layer": "logical",
+      "geometry_source": "pbr_gaussian",
+      "material_source": "config.material",
+      "transfer": "same_point_multiplicative_ratio",
+      "mapping_required": false
+    }
+  },
+  "vehicle": {
+    "id": "vehicle_001",
+    "asset_folder": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010",
+    "vehicle_name": "10010",
+    "path": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/pbr_10010.ply",
+    "label": "Self-contained PBR Gaussian",
+    "asset_mode": "single_pbr_gaussian",
+    "projection_path": null,
+    "pbr_config_path": "/mnt/data/fjn/projects/51w/PBR-Inserts/data/simulation2/pbr_assets/10010/configs/config_10010.json",
+    "max_splats": 0,
+    "seed": 20260709,
+    "opacity_scale": 1.0,
+    "axis_convention": "canonical_xyz",
+    "frozen": true,
+    "visible": true,
+    "mode": "Relight PBR Gaussian",
+    "position": [
+      13.0,
+      -0.001690415432676673,
+      0.0
+    ],
+    "rotation_deg": {
+      "roll": 0.0,
+      "pitch": 0.0,
+      "yaw": 0.035604527281879995
+    },
+    "scale": 1.0,
+    "use_ply_material": false,
+    "roughness": 0.4,
+    "reflectance": 0.09,
+    "metallic": 0.1,
+    "exposure": 1.0,
+    "ambient_fill": 0.4,
+    "relight_strength": 1.0,
+    "projection_visible": true,
+    "projection_opacity": 1.0,
+    "projection": {
+      "enabled": true,
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "shape_model": "procedural-mask-contact-silhouette-v4",
+      "composition": "receiver_alpha_blend_to_grayscale_v1",
+      "contact": {
+        "shape": "rounded_rectangle",
+        "alignment": "vehicle_local_xy",
+        "length_scale": 0.92,
+        "width_scale": 0.88,
+        "offset_xy_m": [
+          0.0,
+          0.0
+        ],
+        "corner_radius_m": 0.22,
+        "edge_softness_m": 0.08,
+        "opacity": 1.0,
+        "brightness": 0.0
+      },
+      "extension": {
+        "shape": "dynamic_vehicle_outline",
+        "source": "parallel_light_projected_pbr_gaussian_outline",
+        "opacity": 1.0,
+        "opacity_distance_decay": 0.55,
+        "opacity_distance_exponent": 1.25,
+        "brightness": 0.0,
+        "brightness_distance_to_white": 0.0,
+        "brightness_distance_exponent": 1.35,
+        "edge_softness_m": 0.1,
+        "edge_softness_distance_growth_m": 0.24,
+        "edge_softness_distance_exponent": 1.15,
+        "distance_scale_m": 1.25
+      },
+      "anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": -0.135
+      }
+    },
+    "vehicle_lighting": {
+      "use_scene_lighting": false,
+      "intensity": 1.0,
+      "red": 1.0,
+      "green": 1.0,
+      "blue": 1.0,
+      "sun_enabled": true,
+      "sun_intensity": 1.0,
+      "sun_azimuth": -64.0,
+      "sun_elevation": 35.0,
+      "visibility": 1.0
+    },
+    "config_path": "data/simulation2/pbr_assets/10010/configs/config_10010.json",
+    "pbr_asset_config_path": "data/simulation2/pbr_assets/10010/configs/config_10010.json",
+    "pbr_asset_schema_version": 10,
+    "asset_contract": "pbr-vehicle-single-ply-v1"
+  },
+  "scene_lighting": {
+    "use_r3gw": false,
+    "render_branch": "Auto RGB",
+    "frame": 0,
+    "image_idx": 0,
+    "intensity": 1.0,
+    "red": 1.0,
+    "green": 1.1,
+    "blue": 1.1,
+    "sun_enabled": true,
+    "sun_intensity": 1.0,
+    "sun_azimuth": 45.0,
+    "sun_elevation": 35.0,
+    "visibility": 1.0
+  }
+}

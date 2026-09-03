@@ -1,0 +1,17 @@
+# Python and test artefacts
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/*.egg-info/
+
+# Locally generated previews, caches, and package artefacts
+**/.cache/
+**/build/
+**/dist/
+pbr-vehicle-auto/validation/
+runs/
+
+# Local editor and operating-system files
+.DS_Store
+.idea/
+.vscode/

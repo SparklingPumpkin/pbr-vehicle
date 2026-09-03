@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewer-config.schema.json",
+  "title": "Standalone PBR vehicle viewer config",
+  "type": "object",
+  "required": ["schema_version", "scene", "scene_lighting", "vehicle"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "config_kind": {"const": "pbr-vehicle-standalone-viewer"},
+    "saved_at": {"type": "string"},
+    "scene": {
+      "type": "object",
+      "required": ["name", "path"],
+      "properties": {
+        "name": {"type": "string"},
+        "path": {"type": "string"}
+      }
+    },
+    "scene_lighting": {"$ref": "#/$defs/lighting"},
+    "vehicle": {
+      "type": "object",
+      "required": ["vehicle_id", "asset_folder", "transform", "material", "lighting", "projection"],
+      "properties": {
+        "vehicle_id": {"type": "string"},
+        "asset_folder": {"type": "string"},
+        "visible": {"type": "boolean"},
+        "display_mode": {"type": "string"},
+        "use_scene_lighting": {"type": "boolean"},
+        "projection_visible": {"type": "boolean"},
+        "projection_opacity": {"type": "number", "minimum": 0},
+        "transform": {"type": "object"},
+        "material": {"type": "object"},
+        "lighting": {"$ref": "#/$defs/lighting"},
+        "projection": {"$ref": "projection.schema.json"}
+      }
+    }
+  },
+  "$defs": {
+    "lighting": {
+      "type": "object",
+      "required": ["environment_intensity", "environment_rgb", "environment_temperature_k", "sun_enabled", "sun_intensity", "sun_color_rgb", "sun_azimuth_deg", "sun_elevation_deg", "visibility"],
+      "properties": {
+        "environment_intensity": {"type": "number", "minimum": 0},
+        "environment_rgb": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 3, "maxItems": 3},
+        "environment_temperature_k": {"type": "number", "minimum": 2000, "maximum": 12000},
+        "sun_enabled": {"type": "boolean"},
+        "sun_intensity": {"type": "number", "minimum": 0},
+        "sun_color_rgb": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 3, "maxItems": 3},
+        "sun_azimuth_deg": {"type": "number"},
+        "sun_elevation_deg": {"type": "number"},
+        "visibility": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}

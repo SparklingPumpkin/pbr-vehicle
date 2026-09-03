@@ -1,0 +1,59 @@
+{
+  "conversion": {
+    "voxel_size": 0.04,
+    "normal_neighbors": 24,
+    "mapping_neighbors": 8,
+    "surfel_overlap": 1.2,
+    "roughness": 0.38,
+    "metallic": 0.02
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "background_rgb": [0.05, 0.05, 0.05],
+    "device": "cuda:0",
+    "exposure": 1.0,
+    "relight_strength": 1.0,
+    "integration": {
+      "lighting_color": true,
+      "pbr_properties": true,
+      "vehicle_shadow": true,
+      "vehicle_projection": true
+    },
+    "placement": {
+      "translation": [0.0, 0.0, 0.0],
+      "yaw_deg": 0.0,
+      "scale": 1.0
+    },
+    "shadow": {
+      "strength": 0.65,
+      "length_scale": 1.2,
+      "width_scale": 1.35,
+      "edge_softness": 0.12,
+      "ground_band": 0.18
+    },
+    "material": {
+      "roughness": 0.38,
+      "metallic": 0.02,
+      "reflectance": 0.04,
+      "clearcoat": 0.75,
+      "clearcoat_roughness": 0.16,
+      "specular_gain": 1.0
+    },
+    "light": {
+      "sun_enabled": true,
+      "sun_azimuth_deg": 135.0,
+      "sun_elevation_deg": 40.0,
+      "sun_intensity": 1.0,
+      "ambient_fill": 0.65,
+      "environment_reflection": 1.0,
+      "environment_color": [1.0, 1.0, 1.0]
+    },
+    "view": {
+      "camera_position": [6.0, -6.0, 3.0],
+      "target": [0.0, 0.0, 0.8],
+      "up": [0.0, 0.0, 1.0],
+      "vertical_fov_deg": 30.0
+    }
+  }
+}

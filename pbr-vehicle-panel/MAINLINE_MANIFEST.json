@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "package": "pbr-vehicle-panel",
+  "package_version": "1.3.0",
+  "scope_id": "viser-pbr-panel",
+  "mainline_version_id": "VSP-v2",
+  "promoted_from_candidate_id": "VSP-v1-a",
+  "change_type": "delivery_contract",
+  "version_snapshot": "docs/project-control/versions/VSP-v2.md",
+  "validation": "work/insert-rendering/viser-pbr-panel/VSP-v1-a/run-20260901T024035Z-panel-contract-e2e/validation.json",
+  "report": "work/insert-rendering/viser-pbr-panel/VSP-v1-a/run-20260901T024035Z-panel-contract-e2e/report.md",
+  "source_contract": {
+    "drivestudio": "upstream:51w-drivestudio/tools/insert_vehicle_r3gw_viewer.py",
+    "standalone": "src/pbr_vehicle_standalone/viewer.py"
+  },
+  "gaussian_limit": null
+}
