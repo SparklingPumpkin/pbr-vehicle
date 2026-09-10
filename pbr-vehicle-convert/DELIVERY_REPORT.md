@@ -7,6 +7,7 @@
 - `pbr_<asset-id>.ply` preserves the visible source 3DGS fields and adds only `normal_0..2`.
 - `configs/config_<asset-id>.json` stores global material, lighting, projection, and integrity metadata.
 - No proxy PLY, mapping NPZ, projection PLY, or `r3gw_*` compatibility fields are delivered.
+- The runtime projection descriptor defines cast extension as the swept convex hull from the vehicle footprint to the parallel-light endpoint footprint, so low-elevation shadows remain connected to the vehicle.
 
 The formal conversion command is `pbr-vehicle complete-asset`. Projection is runtime-only `receiver_space_mask_v1`: its contact and parallel-light PBR-Gaussian-outline masks share the Gaussian-bottom-surface anchor.
 

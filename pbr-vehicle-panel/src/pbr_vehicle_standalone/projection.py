@@ -119,7 +119,11 @@ def build_projection_masks(proxy: GaussianLayer, local_sun_direction: np.ndarray
 
     heights = np.maximum(points[:, 2] - ground_z, 0.0)
     cast = points - heights[:, None] * direction[None, :] / float(direction[2])
-    cast_outline = _outline(cast[:, :2])
+    # Projecting only the elevated Gaussian centers gives the far endpoint of
+    # the shadow, but leaves a gap between the vehicle and that endpoint at low
+    # sun elevations.  Include the vehicle footprint in the hull so the cast
+    # layer represents the swept volume of the parallel light rays.
+    cast_outline = _outline(np.concatenate([points[:, :2], cast[:, :2]], axis=0))
     padding = max(float(contact["edge_softness_m"]), float(extension["edge_softness_m"]) + float(extension["edge_softness_distance_growth_m"]), 0.05) * 4.0
     low2, high2, size2, ppm2, shape2 = _geometry(np.concatenate([contact_polygon, cast_outline]), padding)
     base = _polygon_mask(cast_outline, low2, ppm2, shape2, float(extension["edge_softness_m"]))
@@ -149,4 +153,3 @@ def build_projection_masks(proxy: GaussianLayer, local_sun_direction: np.ndarray
         "ground_z": ground_z,
         "cast_outline_xyz": np.column_stack([cast_outline, np.full(len(cast_outline), ground_z)]).astype(np.float32),
     }
-

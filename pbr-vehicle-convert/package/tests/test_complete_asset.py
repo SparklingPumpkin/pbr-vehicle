@@ -65,6 +65,13 @@ def test_config_folder_contract_and_runtime_mask_projection(tmp_path):
     assert descriptor["contact_footprint"]["size_xy_m"][0] < 3.6
     assert descriptor["contact_footprint"]["opacity"] == 0.11
     assert descriptor["contact_footprint"]["brightness"] == 0.18
+    assert descriptor["geometry"] == (
+        "analytic-rounded-rectangle-plus-parallel-light-swept-pbr-gaussian-outline"
+    )
+    from scipy.spatial import Delaunay
+    extension_hull = Delaunay(descriptor["cast_outline_xyz"][:, :2])
+    vehicle_xy = np.column_stack([loaded_pbr["x"], loaded_pbr["y"]])
+    assert np.all(extension_hull.find_simplex(vehicle_xy) >= 0)
 
     changed_light = dict(config["light"])
     changed_light["sun_azimuth_degrees"] = 260.0

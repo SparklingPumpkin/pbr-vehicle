@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "skill": "fjn-project-workflow",
+  "project": {
+    "project_id": "pbr-vehicle-delivery",
+    "name": "PBR Vehicle Delivery",
+    "root_hint": "pbr-vehicle",
+    "control_dir": "docs/project-control",
+    "created_at": "2026-09-09T03:40:40+00:00"
+  },
+  "config": {
+    "max_active_siblings": 6,
+    "max_managed_depth": 8,
+    "scope_prefix_required": true,
+    "legacy_ids_are_aliases_only": true,
+    "directory_policy": "hard_block_with_audited_override"
+  },
+  "scopes": {
+    "project": {
+      "scope_id": "project",
+      "kind": "project",
+      "prefix": "PVD",
+      "label": "项目主线",
+      "purpose": "维护车辆PBR转换、面板、自动外观适配与太阳识别的独立可安装交付包",
+      "parent_scope_id": null,
+      "current_version_id": "PVD-v2",
+      "next_version_number": 3,
+      "version_ids": [
+        "PVD-v1",
+        "PVD-v2"
+      ],
+      "candidate_ids": [
+        "PVD-v1-a"
+      ],
+      "created_at": "2026-09-09T03:40:40+00:00"
+    }
+  },
+  "versions": {
+    "PVD-v1": {
+      "version_id": "PVD-v1",
+      "scope_id": "project",
+      "number": 1,
+      "slug": "three-package-baseline",
+      "status": "superseded",
+      "parent_version_id": null,
+      "promoted_from_candidate_id": null,
+      "change_types": [],
+      "summary": "当前交付根包含Convert、Panel、Auto三个独立子包和车辆资产库，尚未包含太阳角识别子包。",
+      "evidence": [
+        {
+          "reference": "使用说明.md",
+          "claim": "记录现有三个可独立安装子包及其职责",
+          "recorded_at": "2026-09-09T03:40:40+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "b582c60b85b4756c626d404f8bcbb24a01f46add1200ea72ad3c9dbfd1f6f8b8",
+          "size_when_recorded": 8916,
+          "mtime_ns_when_recorded": 1788345203889695532
+        }
+      ],
+      "legacy_id": null,
+      "created_at": "2026-09-09T03:40:40+00:00",
+      "superseded_at": "2026-09-09T04:28:26+00:00"
+    },
+    "PVD-v2": {
+      "version_id": "PVD-v2",
+      "scope_id": "project",
+      "number": 2,
+      "slug": "four-package-sun-delivery",
+      "status": "current",
+      "parent_version_id": "PVD-v1",
+      "promoted_from_candidate_id": "PVD-v1-a",
+      "change_types": [
+        "delivery_contract"
+      ],
+      "summary": "交付根现包含Convert、Panel、Auto与Sun四个独立可安装子包；Sun 1.0.0冻结SSE-v6双几何分支、单/多帧路由、全场景Top-3车辆选择和边缘安全相机锥形轮廓拟合。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/verification_summary.json",
+          "claim": "证明测试、隔离安装、CLI、wheel路径审计和181度/15度严格复现全部通过",
+          "recorded_at": "2026-09-09T04:28:26+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "c280eeab54a60579ed212c161b6064d2d3169ed94874eec96218cb1f5e4bb366",
+          "size_when_recorded": 1323,
+          "mtime_ns_when_recorded": 1788928013760640335
+        },
+        {
+          "reference": "pbr-vehicle-sun/DELIVERY_REPORT.md",
+          "claim": "定义Sun交付范围并记录wheel与冻结样本核验结果",
+          "recorded_at": "2026-09-09T04:28:26+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "b676b3876938f55a699c53e878ce9ebd86637cbbf6521f19af05884bef12b080",
+          "size_when_recorded": 1177,
+          "mtime_ns_when_recorded": 1788928059628977629
+        }
+      ],
+      "legacy_id": null,
+      "created_at": "2026-09-09T04:28:26+00:00"
+    }
+  },
+  "candidates": {
+    "PVD-v1-a": {
+      "candidate_id": "PVD-v1-a",
+      "scope_id": "project",
+      "base_version_id": "PVD-v1",
+      "slug": "sse-v6-sun-delivery",
+      "status": "promoted",
+      "hypothesis": "将SSE-v6核心脚本封装进无PBR-Inserts运行时路径依赖的pbr-vehicle-sun wheel，并显式配置外部模型仓库/权重，可复现核心单帧拟合且完整场景编排能通过CLI和输入合同核验。",
+      "change_types": [
+        "delivery_contract"
+      ],
+      "directory_id": "dir-0004",
+      "run_ids": [
+        "run-20260909T034418Z-sun-wheel-e2e"
+      ],
+      "conclusion": "新增第四个独立太阳识别交付包，wheel无上游源码路径依赖，默认合同与SSE-v6一致并严格复现SSE-v5-f冻结样本。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/verification_summary.json",
+          "claim": "证明测试、隔离安装、CLI、wheel路径审计和181度/15度严格复现全部通过",
+          "recorded_at": "2026-09-09T04:28:26+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "c280eeab54a60579ed212c161b6064d2d3169ed94874eec96218cb1f5e4bb366",
+          "size_when_recorded": 1323,
+          "mtime_ns_when_recorded": 1788928013760640335
+        }
+      ],
+      "promoted_to_version_id": "PVD-v2",
+      "created_at": "2026-09-09T03:42:40+00:00",
+      "updated_at": "2026-09-09T04:28:26+00:00"
+    }
+  },
+  "runs": {
+    "run-20260909T034418Z-sun-wheel-e2e": {
+      "run_id": "run-20260909T034418Z-sun-wheel-e2e",
+      "candidate_id": "PVD-v1-a",
+      "variant": "sun-wheel-e2e",
+      "status": "completed",
+      "directory_id": "dir-0005",
+      "config_identity": "wheel 1.0.0; SSE-v6 defaults; isolated target install; cached Argoverse017/t025 core fit",
+      "code_identity": "pbr-vehicle-sun package source plus vendored SSE-v6 modules",
+      "data_identity": "PBR-Inserts SSE-v5-c cached vehicle/shadow geometry and postprocessed mask for validation",
+      "summary": "pbr-vehicle-sun 1.0.0已完成编译、测试、wheel构建、隔离安装、六CLI加载、路径审计及冻结SSE-v6单帧严格复现。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/report.md",
+          "claim": "记录完整交付核验、修复项和冻结输入复现结论",
+          "recorded_at": "2026-09-09T04:28:26+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "c76bf9292f97868b9b3e184e18f4cf8a31cda19ac0f09356d483d19e6e6f0878",
+          "size_when_recorded": 1581,
+          "mtime_ns_when_recorded": 1788928059628977629
+        }
+      ],
+      "created_at": "2026-09-09T03:44:44+00:00",
+      "updated_at": "2026-09-09T04:28:26+00:00"
+    }
+  },
+  "directories": {
+    "dir-0001": {
+      "directory_id": "dir-0001",
+      "path": ".",
+      "level": "project",
+      "parent_directory_id": null,
+      "scope_id": "project",
+      "purpose": "项目边界；其子目录必须按业务职责继续登记。",
+      "status": "active",
+      "status_reason": "project initialized",
+      "manage_children": false,
+      "decision_id": null,
+      "created_at": "2026-09-09T03:40:40+00:00",
+      "updated_at": "2026-09-09T03:40:40+00:00"
+    },
+    "dir-0002": {
+      "directory_id": "dir-0002",
+      "path": "pbr-vehicle-sun",
+      "level": "workstream",
+      "parent_directory_id": "dir-0001",
+      "scope_id": "project",
+      "purpose": "第四个独立可安装太阳角识别交付包，承载SSE-v6核心拟合、完整场景编排、文档与wheel",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": true,
+      "decision_id": "layout-0001",
+      "created_at": "2026-09-09T03:41:30+00:00",
+      "updated_at": "2026-09-09T03:41:30+00:00"
+    },
+    "dir-0003": {
+      "directory_id": "dir-0003",
+      "path": "pbr-vehicle-sun/delivery",
+      "level": "experiment_family",
+      "parent_directory_id": "dir-0002",
+      "scope_id": "project",
+      "purpose": "承载太阳识别交付包的候选构建与验证记录",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": true,
+      "decision_id": "layout-0002",
+      "created_at": "2026-09-09T03:42:16+00:00",
+      "updated_at": "2026-09-09T03:42:16+00:00"
+    },
+    "dir-0004": {
+      "directory_id": "dir-0004",
+      "path": "pbr-vehicle-sun/delivery/PVD-v1-a",
+      "level": "candidate",
+      "parent_directory_id": "dir-0003",
+      "scope_id": "project",
+      "purpose": "将PBR-Inserts SSE-v6双分支、单多帧、全场景Top3与证据可视化打包为独立wheel",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": true,
+      "decision_id": "layout-0003",
+      "created_at": "2026-09-09T03:42:40+00:00",
+      "updated_at": "2026-09-09T03:42:40+00:00"
+    },
+    "dir-0005": {
+      "directory_id": "dir-0005",
+      "path": "pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e",
+      "level": "run",
+      "parent_directory_id": "dir-0004",
+      "scope_id": "project",
+      "purpose": "构建wheel并在隔离安装目录验证CLI、核心太阳角单帧结果、场景编排dry-run和路径独立性",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": true,
+      "decision_id": "layout-0004",
+      "created_at": "2026-09-09T03:44:44+00:00",
+      "updated_at": "2026-09-09T03:44:44+00:00"
+    }
+  },
+  "layout_decisions": {
+    "layout-0001": {
+      "decision_id": "layout-0001",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_group",
+      "target_path": "pbr-vehicle-sun",
+      "target_level": "workstream",
+      "parent_directory_id": "dir-0001",
+      "purpose": "第四个独立可安装太阳角识别交付包，承载SSE-v6核心拟合、完整场景编排、文档与wheel",
+      "reason": "太阳识别与Convert、Panel、Auto职责和依赖独立，应作为平级子交付包而非混入现有包",
+      "alternatives_considered": [
+        "把脚本散落复制进pbr-vehicle-auto会混淆外观适配和太阳角识别边界"
+      ],
+      "active_sibling_count_at_decision": 0,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0002",
+      "created_at": "2026-09-09T03:41:30+00:00"
+    },
+    "layout-0002": {
+      "decision_id": "layout-0002",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_group",
+      "target_path": "pbr-vehicle-sun/delivery",
+      "target_level": "experiment_family",
+      "parent_directory_id": "dir-0002",
+      "purpose": "承载太阳识别交付包的候选构建与验证记录",
+      "reason": "项目工作流要求候选位于实验族下，交付源码仍位于pbr-vehicle-sun根目录",
+      "alternatives_considered": [
+        "跳过实验族直接登记候选不符合目录合同"
+      ],
+      "active_sibling_count_at_decision": 0,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0003",
+      "created_at": "2026-09-09T03:42:16+00:00"
+    },
+    "layout-0003": {
+      "decision_id": "layout-0003",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_child",
+      "target_path": "pbr-vehicle-sun/delivery/PVD-v1-a",
+      "target_level": "candidate",
+      "parent_directory_id": "dir-0003",
+      "purpose": "将PBR-Inserts SSE-v6双分支、单多帧、全场景Top3与证据可视化打包为独立wheel",
+      "reason": "这是从三包交付基线扩展为四包的可验证交付合同变化",
+      "alternatives_considered": [
+        "只复制说明文档而不提供可安装CLI无法构成交付包"
+      ],
+      "active_sibling_count_at_decision": 0,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0004",
+      "created_at": "2026-09-09T03:42:40+00:00"
+    },
+    "layout-0004": {
+      "decision_id": "layout-0004",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_child",
+      "target_path": "pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e",
+      "target_level": "run",
+      "parent_directory_id": "dir-0004",
+      "purpose": "构建wheel并在隔离安装目录验证CLI、核心太阳角单帧结果、场景编排dry-run和路径独立性",
+      "reason": "交付包必须证明安装后不依赖PBR-Inserts源码目录",
+      "alternatives_considered": [
+        "仅运行源目录pytest不能证明wheel交付完整"
+      ],
+      "active_sibling_count_at_decision": 0,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0005",
+      "created_at": "2026-09-09T03:44:44+00:00"
+    }
+  },
+  "updated_at": "2026-09-09T04:28:26+00:00",
+  "ledger": {
+    "event_count": 14,
+    "head_hash": "8981614b30c386c2f0868823f67310aeccb47aac834873570bd579828f1b8fbd"
+  }
+}

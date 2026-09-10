@@ -1,5 +1,6 @@
 import inspect
 
+import numpy as np
 import pytest
 
 from pbr_vehicle_standalone.viewer import VehicleController, _ui_to_value, _value_to_ui
@@ -44,17 +45,17 @@ def test_quick_and_category_controls_are_mirrored():
 
 
 @pytest.mark.parametrize(
-    ("kind", "low", "neutral", "high"),
+    ("kind", "ui_low", "ui_neutral", "ui_high", "value_low", "value_neutral", "value_high"),
     [
-        ("sun_intensity", 0.0, 1.0, 8.0),
-        ("brightness", 0.0, 0.35, 1.0),
-        ("temperature", 2000.0, 6500.0, 12000.0),
-        ("saturation", 0.0, 1.0, 2.0),
+        ("sun_intensity", -1.0, 0.0, 1.0, 0.0, 1.0, 8.0),
+        ("brightness", -1.0, 0.0, 1.0, 0.0, 0.35, 1.0),
+        ("temperature", -0.5, 0.0, 0.5, 2000.0, 6500.0, 12000.0),
+        ("saturation", 0.0, 1.0, 2.0, 0.0, 1.0, 2.0),
     ],
 )
-def test_normalized_exposed_control_mapping(kind, low, neutral, high):
-    assert _ui_to_value(-1.0, kind) == pytest.approx(low)
-    assert _ui_to_value(0.0, kind) == pytest.approx(neutral)
-    assert _ui_to_value(1.0, kind) == pytest.approx(high)
-    for value in (-1.0, -0.4, 0.0, 0.4, 1.0):
+def test_exposed_control_mapping(kind, ui_low, ui_neutral, ui_high, value_low, value_neutral, value_high):
+    assert _ui_to_value(ui_low, kind) == pytest.approx(value_low)
+    assert _ui_to_value(ui_neutral, kind) == pytest.approx(value_neutral)
+    assert _ui_to_value(ui_high, kind) == pytest.approx(value_high)
+    for value in np.linspace(ui_low, ui_high, 5):
         assert _value_to_ui(_ui_to_value(value, kind), kind) == pytest.approx(value)

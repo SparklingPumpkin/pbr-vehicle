@@ -144,12 +144,15 @@ def projection_mask_descriptor(
     full_size = np.maximum(high - low, 1e-4)
     center = (low + high) * 0.5 + np.asarray(contact["offset_xy_m"], dtype=np.float32)
     size = full_size * np.asarray([contact["length_scale"], contact["width_scale"]], dtype=np.float32)
-    outline_xy = _outline_vertices(cast[:, :2])
+    # The shadow is the parallel-ray sweep from the vehicle footprint to the
+    # projected endpoint footprint.  An endpoint-only hull detaches from the
+    # vehicle as the sun approaches the horizon.
+    outline_xy = _outline_vertices(np.concatenate([points[:, :2], cast[:, :2]], axis=0))
     outline_xyz = np.column_stack([outline_xy, np.full(len(outline_xy), ground_z, dtype=np.float32)]).astype(np.float32)
     return {
         "runtime": MASK_RUNTIME,
         "model": MASK_MODEL,
-        "geometry": "analytic-rounded-rectangle-plus-parallel-light-projected-pbr-gaussian-outline",
+        "geometry": "analytic-rounded-rectangle-plus-parallel-light-swept-pbr-gaussian-outline",
         "uses_gaussian_splats": False,
         "ground_z": ground_z,
         "vehicle_z_anchor": anchor,

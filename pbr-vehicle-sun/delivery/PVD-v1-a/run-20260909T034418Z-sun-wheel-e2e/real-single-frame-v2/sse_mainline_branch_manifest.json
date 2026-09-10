@@ -1,0 +1,63 @@
+{
+  "mainline": "SSE-v6",
+  "geometry_source": "feedforward_infinidepth",
+  "execution_mode": "single_frame",
+  "frame_count": 1,
+  "selected_fit_script": "fit_sun_camera_visible_arc.py",
+  "branch": {
+    "fit_script": "fit_sun_camera_visible_arc.py",
+    "objective": "source-edge-trimmed observed shadow and full candidate projection, each clipped to the complete near arc inside its own maximal same-frame camera cone",
+    "geometry_contract": "same-frame InfiniDepth feed-forward visible vehicle geometry; no scene-native Gaussian input required"
+  },
+  "inputs": {
+    "vehicle_geometry": [
+      "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    ],
+    "shadow_geometry": [
+      "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_geometry/infinidepth_shadow_geometry.npz"
+    ],
+    "postprocessed_shadow_masks": [
+      "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_postprocess/04_shadow_postprocessed.png"
+    ]
+  },
+  "command": [
+    "/root/miniconda3/bin/python3",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/isolated-site-v2/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+    "--vehicle-geometry",
+    "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+    "--shadow-geometry",
+    "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_geometry/infinidepth_shadow_geometry.npz",
+    "--shadow-mask",
+    "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_postprocess/04_shadow_postprocessed.png",
+    "--output-dir",
+    "real-single-frame-v2",
+    "--raster-size",
+    "900",
+    "--max-vehicle-points",
+    "100000",
+    "--coarse-az-step",
+    "5",
+    "--coarse-elev-min",
+    "20",
+    "--coarse-elev-max",
+    "70",
+    "--local-radius-deg",
+    "5",
+    "--local-basins",
+    "3",
+    "--visibility-mode",
+    "camera_cone_middle",
+    "--angular-bins",
+    "512",
+    "--exclude-image-edge-components",
+    "--no-predicted-floor-subtraction",
+    "--no-observed-floor-subtraction"
+  ],
+  "postprocess_contract": "caller-supplied masks must be the exact shadow AND NOT vehicle result after 8-connected cleanup, at most two retained components",
+  "top25_contract": "branch fitter writes Top-25 from the same objective used for best selection",
+  "feedforward_visibility_mode": "camera_cone_middle",
+  "feedforward_exclude_image_edge_shadow": true,
+  "feedforward_predicted_floor_subtraction": false,
+  "feedforward_observed_floor_subtraction": false,
+  "angular_bins": null
+}

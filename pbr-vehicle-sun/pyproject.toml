@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pbr-vehicle-sun"
+version = "1.0.0"
+description = "SSE-v6 camera-visible vehicle-shadow sun azimuth and elevation estimator."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24,<3",
+  "scipy>=1.10",
+  "opencv-python-headless>=4.8",
+  "plyfile>=1.0",
+  "Pillow>=9",
+]
+
+[project.optional-dependencies]
+scene = ["torch>=2.1", "ultralytics>=8.2"]
+test = ["pytest>=7.4", "build>=1.2"]
+
+[project.scripts]
+pbr-vehicle-sun-fit = "pbr_vehicle_sun.run_sse_mainline:main"
+pbr-vehicle-sun-scene = "pbr_vehicle_sun.run_sse_scene_global_top3:main"
+pbr-vehicle-sun-evidence = "pbr_vehicle_sun.make_sse_vehicle_evidence_bundles:main"
+pbr-vehicle-sun-shadow-postprocess = "pbr_vehicle_sun.postprocess_shadow_mask:main"
+pbr-vehicle-sun-shadow-lift = "pbr_vehicle_sun.lift_source_shadow_with_infinidepth:main"
+pbr-vehicle-sun-vehicle-geometry = "pbr_vehicle_sun.extract_infinidepth_vehicle_geometry:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

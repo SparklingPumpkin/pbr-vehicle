@@ -1,0 +1,302 @@
+{
+  "best": {
+    "azimuth_deg": 181.0,
+    "elevation_deg": 15.0,
+    "joint_score": -0.2457915581343519,
+    "frames": [
+      {
+        "score": -0.2457915581343519,
+        "pred_to_observed_p90_m": 0.29939518068169213,
+        "pred_to_observed_median_m": 0.04008641538411384,
+        "observed_to_predicted_p90_m": 0.4300355520146821,
+        "pred_boundary_support_0p35m": 0.9149700598802395,
+        "observed_boundary_points_used": 853,
+        "azimuth_deg": 181.0,
+        "elevation_deg": 15.0,
+        "arc_audit": {
+          "valid": true,
+          "operator": "maximal_camera_cone_middle_arc",
+          "input_components": 6,
+          "contract_components": 1,
+          "retained_components": 1,
+          "component_gate": {
+            "max_components": 2,
+            "min_relative_area": 0.5,
+            "components": [
+              {
+                "rank": 1,
+                "area_pixels": 119417.0,
+                "relative_to_largest": 1.0,
+                "contour_points": 2196,
+                "retained": true
+              },
+              {
+                "rank": 2,
+                "area_pixels": 104.0,
+                "relative_to_largest": 0.0008708977783732634,
+                "contour_points": 32,
+                "retained": false
+              },
+              {
+                "rank": 3,
+                "area_pixels": 44.0,
+                "relative_to_largest": 0.0003684567523886884,
+                "contour_points": 24,
+                "retained": false
+              },
+              {
+                "rank": 4,
+                "area_pixels": 44.0,
+                "relative_to_largest": 0.0003684567523886884,
+                "contour_points": 24,
+                "retained": false
+              },
+              {
+                "rank": 5,
+                "area_pixels": 24.0,
+                "relative_to_largest": 0.00020097641039383,
+                "contour_points": 16,
+                "retained": false
+              },
+              {
+                "rank": 6,
+                "area_pixels": 24.0,
+                "relative_to_largest": 0.00020097641039383,
+                "contour_points": 16,
+                "retained": false
+              }
+            ]
+          },
+          "selected_points": 835,
+          "components": [
+            {
+              "valid": true,
+              "operator": "maximal_camera_cone_middle_arc",
+              "input_points": 2196,
+              "selected_points": 835,
+              "left_angle_deg": 302.0107857207006,
+              "right_angle_deg": 333.79102515021293,
+              "maximal_cone_span_deg": 31.780239429512346,
+              "left_hit_count": 1,
+              "right_hit_count": 1,
+              "left_hits_xy": [
+                [
+                  28.87330362817114,
+                  -3.131306403998519
+                ]
+              ],
+              "right_hits_xy": [
+                [
+                  32.32063242418287,
+                  -2.802597797848787
+                ]
+              ],
+              "selected_left_hit_xy": [
+                28.87330362817114,
+                -3.131306403998519
+              ],
+              "selected_right_hit_xy": [
+                32.32063242418287,
+                -2.802597797848787
+              ],
+              "left_numeric_fallback": false,
+              "right_numeric_fallback": false,
+              "hit_contract_1_or_2_each": true,
+              "selected_median_camera_distance_m": 4.194601996890689,
+              "alternate_median_camera_distance_m": 5.1362429595501835,
+              "scored_arc_length_m": 4.628299246813093
+            }
+          ]
+        },
+        "iou_diagnostic": 0.07133218240895008
+      }
+    ]
+  },
+  "objective": "per-connected-component maximal camera cone boundary intersections and complete intervening near contour arcs, identically applied to observed shadow and candidate projection; mean bidirectional robust contour distance across frames; IoU diagnostic only",
+  "visibility_mode": "camera_cone_middle",
+  "angular_bins": null,
+  "observed_floor_subtraction": true,
+  "contact_exclusion_m": 0.0,
+  "predicted_floor_subtraction": false,
+  "exclude_image_edge_components": true,
+  "visualization": "gray=observed mask; green=scored observed camera-facing edge; blue=vehicle floor; pale-red=rejected full candidate contour; red=scored candidate camera-facing edge; purple=legacy side rays when ray_arc is selected",
+  "top25_same_objective": true,
+  "execution_mode": "single_frame",
+  "frame_count": 1,
+  "camera_contract": [
+    {
+      "camera_xy": [
+        27.044100645546727,
+        -0.20519556276920844
+      ],
+      "left_angle_deg": -76.09056518382333,
+      "right_angle_deg": -29.097170142507075,
+      "observed_arc": {
+        "valid": true,
+        "operator": "maximal_camera_cone_middle_arc",
+        "input_components": 7,
+        "contract_components": 2,
+        "retained_components": 2,
+        "component_gate": {
+          "max_components": 2,
+          "min_relative_area": 0.5,
+          "components": [
+            {
+              "rank": 1,
+              "area_pixels": 10416.5,
+              "relative_to_largest": 1.0,
+              "contour_points": 673,
+              "retained": true
+            },
+            {
+              "rank": 2,
+              "area_pixels": 8653.5,
+              "relative_to_largest": 0.8307492919886719,
+              "contour_points": 1059,
+              "retained": true
+            },
+            {
+              "rank": 3,
+              "area_pixels": 1289.5,
+              "relative_to_largest": 0.12379398070369126,
+              "contour_points": 169,
+              "retained": false
+            },
+            {
+              "rank": 4,
+              "area_pixels": 1.5,
+              "relative_to_largest": 0.0001440023040368646,
+              "contour_points": 13,
+              "retained": false
+            },
+            {
+              "rank": 5,
+              "area_pixels": 0.0,
+              "relative_to_largest": 0.0,
+              "contour_points": 1,
+              "retained": false
+            },
+            {
+              "rank": 6,
+              "area_pixels": 0.0,
+              "relative_to_largest": 0.0,
+              "contour_points": 2,
+              "retained": false
+            },
+            {
+              "rank": 7,
+              "area_pixels": 0.0,
+              "relative_to_largest": 0.0,
+              "contour_points": 6,
+              "retained": false
+            }
+          ]
+        },
+        "selected_points": 853,
+        "components": [
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 673,
+            "selected_points": 319,
+            "left_angle_deg": 310.482447581455,
+            "right_angle_deg": 323.1479829028582,
+            "maximal_cone_span_deg": 12.665535321403146,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                29.703640298306855,
+                -3.3210487701499907
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                30.866111636496854,
+                -3.069840567076211
+              ]
+            ],
+            "selected_left_hit_xy": [
+              29.703640298306855,
+              -3.3210487701499907
+            ],
+            "selected_right_hit_xy": [
+              30.866111636496854,
+              -3.069840567076211
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 4.430241189738249,
+            "alternate_median_camera_distance_m": 4.670916907463502,
+            "scored_arc_length_m": 1.6081937343428456,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 319,
+            "points_after_image_edge_trim": 319,
+            "image_edge_points_removed": 0
+          },
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 1059,
+            "selected_points": 534,
+            "left_angle_deg": 303.2030799126231,
+            "right_angle_deg": 329.9165203462022,
+            "maximal_cone_span_deg": 26.713440433579148,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                28.77022735187843,
+                -2.842684213232901
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                31.56473973136966,
+                -2.8239772193869803
+              ]
+            ],
+            "selected_left_hit_xy": [
+              28.77022735187843,
+              -2.842684213232901
+            ],
+            "selected_right_hit_xy": [
+              31.56473973136966,
+              -2.8239772193869803
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 4.098770538776723,
+            "alternate_median_camera_distance_m": 4.142586472435028,
+            "scored_arc_length_m": 2.942066044074547,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 569,
+            "points_after_image_edge_trim": 534,
+            "image_edge_points_removed": 35
+          }
+        ]
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "vehicle_geometry": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "shadow_geometry": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "shadow_mask": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/archived/SSE-v5-c/run-20260908T085246Z-five-scene-global-top3-tangent/scene-017/t025_cam2/vehicle_01_instance-19/shadow_postprocess/04_shadow_postprocessed.png"
+    }
+  ],
+  "search": {
+    "coarse_az_step": 5,
+    "coarse_elevation": [
+      20,
+      70,
+      5
+    ],
+    "local_radius_deg": 5,
+    "local_basins": 3
+  },
+  "mainline_branch": "feedforward_infinidepth",
+  "mainline_version": "SSE-v6"
+}

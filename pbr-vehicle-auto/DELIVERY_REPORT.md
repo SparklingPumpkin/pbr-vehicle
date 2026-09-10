@@ -9,6 +9,7 @@
 - full Viser template preservation for vehicle pose, projection, fixed material and all non-fitted state;
 - fitting limited to sun intensity, fill light and environment CCT; vehicle saturation is manual only;
 - one rear-view PBR-to-ordinary-Gaussian DC bake and opacity-weighted luminance CDF-L1 evaluation.
+- a projection template whose extension is the continuous parallel-light sweep between the vehicle footprint and its ground-projected footprint.
 
 The promoted P-v4 asset path is `pbr-vehicle-single-ply-v1`: it reads `files.pbr`, its `normal_0..2`, and global `material.albedo_rgb`. No proxy, mapping, or compatibility field family is required.
 

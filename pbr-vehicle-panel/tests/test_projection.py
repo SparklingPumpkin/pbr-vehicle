@@ -36,6 +36,30 @@ def test_contact_is_sun_invariant_and_extension_changes():
     assert not np.array_equal(first["extension"]["rgba"], second["extension"]["rgba"])
 
 
+def test_low_sun_extension_contains_vehicle_footprint_and_casts_opposite_sun():
+    proxy, config = _proxy(), _config()
+    azimuth = np.deg2rad(66.0)
+    elevation = np.deg2rad(7.0)
+    sun = np.array([
+        np.cos(elevation) * np.cos(azimuth),
+        np.cos(elevation) * np.sin(azimuth),
+        np.sin(elevation),
+    ], dtype=np.float32)
+    result = build_projection_masks(proxy, sun, config)
+    outline = result["cast_outline_xyz"][:, :2]
+
+    # The swept hull must retain every source footprint point, so the cast
+    # cannot start at a detached far-end silhouette.
+    from scipy.spatial import Delaunay
+    hull = Delaunay(outline)
+    assert np.all(hull.find_simplex(proxy.centers[:, :2]) >= 0)
+
+    # Its farthest displacement is opposite the horizontal sun direction.
+    source_center = proxy.centers[:, :2].mean(axis=0)
+    farthest = outline[np.argmin((outline - source_center) @ sun[:2])]
+    assert float((farthest - source_center) @ sun[:2]) < -1.0
+
+
 def test_glb_uses_blend_material():
     glb = rgba_plane_glb(np.full((8, 8, 4), 255, np.uint8), 2.0, 1.0)
     assert glb[:4] == b"glTF"

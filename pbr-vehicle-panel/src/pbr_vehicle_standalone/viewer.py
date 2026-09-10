@@ -27,15 +27,18 @@ DISPLAY_MODES = (
 
 
 def _ui_to_value(value: float, kind: str) -> float:
-    value = float(np.clip(value, -1.0, 1.0))
+    value = float(value)
     if kind == "sun_intensity":
+        value = float(np.clip(value, -1.0, 1.0))
         return 1.0 + value * (1.0 if value < 0.0 else 7.0)
     if kind == "brightness":
+        value = float(np.clip(value, -1.0, 1.0))
         return 0.35 + value * (0.35 if value < 0.0 else 0.65)
     if kind == "temperature":
-        return 6500.0 + value * (4500.0 if value < 0.0 else 5500.0)
+        value = float(np.clip(value, -0.5, 0.5))
+        return 6500.0 + value * (9000.0 if value < 0.0 else 11000.0)
     if kind == "saturation":
-        return 1.0 + value
+        return float(np.clip(value, 0.0, 2.0))
     raise ValueError(kind)
 
 
@@ -46,9 +49,9 @@ def _value_to_ui(value: float, kind: str) -> float:
     if kind == "brightness":
         return (value - 0.35) / (0.35 if value < 0.35 else 0.65)
     if kind == "temperature":
-        return (value - 6500.0) / (4500.0 if value < 6500.0 else 5500.0)
+        return (value - 6500.0) / (9000.0 if value < 6500.0 else 11000.0)
     if kind == "saturation":
-        return value - 1.0
+        return float(np.clip(value, 0.0, 2.0))
     raise ValueError(kind)
 
 
@@ -80,7 +83,7 @@ class StandaloneViewer:
             load_button = self.server.gui.add_button("Load / replace scene")
             clear_button = self.server.gui.add_button("Clear scene")
         with self.server.gui.add_folder("Shared lighting", expand_by_default=True):
-            self.handles["env_temperature"] = self.server.gui.add_slider("环境光色温", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
+            self.handles["env_temperature"] = self.server.gui.add_slider("环境光色温", min=-0.5, max=0.5, step=0.01, initial_value=0.0)
             self.handles["sun_intensity"] = self.server.gui.add_slider("太阳光强度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
             self.handles["sun_azimuth"] = self.server.gui.add_slider("太阳方位角", min=-180.0, max=180.0, step=1.0, initial_value=45.0)
             self.handles["sun_elevation"] = self.server.gui.add_slider("太阳高度角", min=-10.0, max=89.0, step=1.0, initial_value=35.0)
@@ -249,8 +252,8 @@ class VehicleController:
             self.handles["light_sun_intensity"] = self.server.gui.add_slider("太阳光强度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
             self.handles["light_sun_azimuth"] = self.server.gui.add_slider("太阳方位角", min=-180.0, max=180.0, step=1.0, initial_value=45.0)
             self.handles["light_sun_elevation"] = self.server.gui.add_slider("太阳高度角", min=-10.0, max=89.0, step=1.0, initial_value=35.0)
-            self.handles["light_temperature"] = self.server.gui.add_slider("车辆色温", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
-            self.handles["saturation"] = self.server.gui.add_slider("饱和度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
+            self.handles["light_temperature"] = self.server.gui.add_slider("车辆色温", min=-0.5, max=0.5, step=0.01, initial_value=0.0)
+            self.handles["saturation"] = self.server.gui.add_slider("饱和度", min=0.0, max=2.0, step=0.01, initial_value=1.0)
             self.handles["ambient_fill"] = self.server.gui.add_slider("亮度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
             center_button = self.server.gui.add_button("Center orbit on this vehicle")
             config_folder = self.server.gui.add_folder("Config", expand_by_default=False)
@@ -268,7 +271,7 @@ class VehicleController:
                 material_folder = self.server.gui.add_folder("Material", expand_by_default=False)
             with material_folder:
                 self.handles["ambient_fill_advanced"] = self.server.gui.add_slider("亮度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
-                self.handles["saturation_advanced"] = self.server.gui.add_slider("饱和度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
+                self.handles["saturation_advanced"] = self.server.gui.add_slider("饱和度", min=0.0, max=2.0, step=0.01, initial_value=1.0)
                 self.handles["roughness"] = self.server.gui.add_slider("Roughness", min=0.02, max=0.98, step=0.01, initial_value=0.4)
                 self.handles["reflectance"] = self.server.gui.add_slider("Reflectance", min=0.02, max=0.20, step=0.005, initial_value=0.04)
                 self.handles["metallic"] = self.server.gui.add_slider("Metallic", min=0.0, max=1.0, step=0.02, initial_value=0.0)
@@ -278,7 +281,7 @@ class VehicleController:
             with advanced_folder:
                 lighting_folder = self.server.gui.add_folder("R3GW Lighting", expand_by_default=False)
             with lighting_folder:
-                self.handles["light_temperature_advanced"] = self.server.gui.add_slider("车辆色温", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
+                self.handles["light_temperature_advanced"] = self.server.gui.add_slider("车辆色温", min=-0.5, max=0.5, step=0.01, initial_value=0.0)
                 self.handles["light_sun_intensity_advanced"] = self.server.gui.add_slider("太阳光强度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
                 self.handles["light_sun_azimuth_advanced"] = self.server.gui.add_slider("太阳方位角", min=-180.0, max=180.0, step=1.0, initial_value=45.0)
                 self.handles["light_sun_elevation_advanced"] = self.server.gui.add_slider("太阳高度角", min=-10.0, max=89.0, step=1.0, initial_value=35.0)

@@ -85,12 +85,12 @@
       "vehicle pose",
       "projection parameters"
     ],
-    "algorithm": "render an analytic vehicle-local rounded-rectangle contact mask and a filled, smoothed parallel-light vehicle-outline mask from the current PBR Gaussian and configuration"
+    "algorithm": "render an analytic vehicle-local rounded-rectangle contact mask and a filled, smoothed parallel-light swept hull spanning the current PBR Gaussian footprint and its ground-projected footprint"
   },
   "projection_stats": {
     "model": "procedural-mask-contact-silhouette-v4",
     "runtime": "receiver_space_mask_v1",
-    "geometry": "analytic-rounded-rectangle-plus-parallel-light-projected-pbr-gaussian-outline",
+    "geometry": "analytic-rounded-rectangle-plus-parallel-light-swept-pbr-gaussian-outline",
     "ground_z": -0.67148756980896,
     "vehicle_z_anchor": {
       "mode": "gaussian_bottom_surface",

@@ -63,7 +63,8 @@ python -m pbr_vehicle_standalone \
 
 - 场景保持普通 Gaussian SH 颜色，不执行 R3GW PBR。
 - 场景与车辆始终加载全部 Gaussian，不提供数量限制或抽样选项。
-- 车辆面板直接展示太阳强度、方位角、高度角、车辆色温、饱和度、补光强度和 Center orbit；配置操作收入 `Config`，完整参数按 `Transform / Material / R3GW Lighting / Projection` 四类直接平铺在外层“高级”下，子面板不再嵌套“高级”或“次要参数”。
+- 车辆面板直接展示太阳光强度、太阳方位角、太阳高度角、车辆色温、饱和度、亮度和 Center orbit；配置操作收入 `Config`，完整参数按 `Transform / Material / R3GW Lighting / Projection` 四类直接平铺在外层“高级”下，子面板不再嵌套“高级”或“次要参数”。
+- 车辆/环境色温范围为 `-0.5~0.5`（`0=6500K`），饱和度为直接倍率 `0~2`（`1` 为中性），亮度为 `-1~1`（`0` 对应 fill light `0.35`）。
 - 顶部六项参数会与“高级”中 Material / R3GW Lighting 分类下的同名参数双向同步。
 - 环境光仅展示色温，RGB 由色温派生并写入兼容配置；太阳 RGB 仍独立保存在“次要参数”中。
 - 车辆 Albedo 饱和度是 P0 参数；`Relight Original` 中直接作用于可见 PBR Gaussian 颜色，重光照比率按同一点计算，不依赖 mapping。

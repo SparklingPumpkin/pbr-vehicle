@@ -1,0 +1,43 @@
+{
+  "package": "pbr-vehicle-sun",
+  "package_version": "1.0.0",
+  "mainline": "SSE-v6",
+  "compiled": true,
+  "pytest": "2 passed",
+  "wheel_built": true,
+  "wheel_sha256": "db5f84cfbea0378272a2e63c5521b0be3bde1106cfde714e2a8a7f56c7f5bc48",
+  "wheel_path_audit_hits": [],
+  "isolated_install": true,
+  "cli_help_checks": [
+    "pbr-vehicle-sun-fit",
+    "pbr-vehicle-sun-scene",
+    "pbr-vehicle-sun-evidence",
+    "pbr-vehicle-sun-shadow-postprocess",
+    "pbr-vehicle-sun-shadow-lift",
+    "pbr-vehicle-sun-vehicle-geometry"
+  ],
+  "dry_run_contract": {
+    "execution_mode": "single_frame",
+    "geometry_source": "feedforward_infinidepth",
+    "visibility_mode": "camera_cone_middle",
+    "exclude_image_edge_components": true,
+    "observed_floor_subtraction": false,
+    "predicted_floor_subtraction": false
+  },
+  "real_single_frame": {
+    "sample": "scene-017/t025/cam2/vehicle-instance-19",
+    "azimuth_deg": 181.0,
+    "elevation_deg": 15.0,
+    "joint_score": -0.1527805903612691,
+    "observed_boundary_points_used": 534,
+    "pred_boundary_support_0p35m": 0.9149700598802395,
+    "top25_same_objective": true,
+    "wall_seconds": 137.91,
+    "matches_upstream_sse_v5_f": {
+      "best": true,
+      "objective": true,
+      "camera_contract": true,
+      "visibility_and_subtraction_flags": true
+    }
+  }
+}

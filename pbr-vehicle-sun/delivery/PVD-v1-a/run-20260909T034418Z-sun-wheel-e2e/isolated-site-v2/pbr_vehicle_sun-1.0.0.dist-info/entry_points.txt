@@ -1,0 +1,7 @@
+[console_scripts]
+pbr-vehicle-sun-evidence = pbr_vehicle_sun.make_sse_vehicle_evidence_bundles:main
+pbr-vehicle-sun-fit = pbr_vehicle_sun.run_sse_mainline:main
+pbr-vehicle-sun-scene = pbr_vehicle_sun.run_sse_scene_global_top3:main
+pbr-vehicle-sun-shadow-lift = pbr_vehicle_sun.lift_source_shadow_with_infinidepth:main
+pbr-vehicle-sun-shadow-postprocess = pbr_vehicle_sun.postprocess_shadow_mask:main
+pbr-vehicle-sun-vehicle-geometry = pbr_vehicle_sun.extract_infinidepth_vehicle_geometry:main

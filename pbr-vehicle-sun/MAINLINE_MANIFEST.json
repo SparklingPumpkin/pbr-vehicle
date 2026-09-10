@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "package": "pbr-vehicle-sun",
+  "package_version": "1.0.0",
+  "scope_id": "scene-sun-estimation",
+  "mainline_version_id": "SSE-v6",
+  "promoted_from_candidate_id": "SSE-v5-f",
+  "source_contract": {
+    "core": "vendored SSE-v6 numerical modules",
+    "full_scene": "YOLO + SAM2 + MTMT + pure-RGB InfiniDepth with explicit external paths"
+  },
+  "defaults": {
+    "geometry_source": "feedforward_infinidepth",
+    "visibility_mode": "camera_cone_middle",
+    "exclude_source_image_edge_shadow": true,
+    "observed_floor_subtraction": false,
+    "predicted_floor_subtraction": false,
+    "top_physical_vehicles": 3
+  },
+  "upstream_evidence": "work/scene-sun-estimation/single-vehicle-shadow-geometry/SSE-v5-f/run-20260909T024245Z-edge-excluded-rgb-contours/report.md",
+  "delivery_verification": "delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/verification_summary.json",
+  "wheel_sha256": "db5f84cfbea0378272a2e63c5521b0be3bde1106cfde714e2a8a7f56c7f5bc48"
+}
