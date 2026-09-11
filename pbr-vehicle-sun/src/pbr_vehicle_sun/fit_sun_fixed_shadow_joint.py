@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""Joint two-frame sun fit against fixed, postprocessed shadow contours.
-
-The observation is frozen before searching: only the largest connected
-component of the already postprocessed MTMT shadow is used (the vehicle mask
-has already been subtracted upstream).  Each candidate projects the complete
-InfiniDepth vehicle Gaussian support and removes only the fixed vehicle-floor
-contact footprint.  A shared azimuth/elevation is ranked by the sum of the
-same bidirectional contour distance in both frames; IoU is diagnostic only.
-"""
+"""Shared numerical helpers and legacy fixed-contour sun fitting."""
 from __future__ import annotations
 import argparse, csv, json
 from pathlib import Path
@@ -24,7 +16,7 @@ except ImportError:
 
 def component_filter(sd, mask_path: Path, max_components: int = 1,
                      exclude_image_edge: bool = False):
-    """Return near-ground points in the largest postprocessed components."""
+    """Map lifted near-ground points to selected source-mask components."""
     mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
     if mask is None:
         raise FileNotFoundError(mask_path)
@@ -37,7 +29,7 @@ def component_filter(sd, mask_path: Path, max_components: int = 1,
     if exclude_image_edge:
         edge_labels = sorted(set(np.r_[labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]].tolist()) - {0})
         ranked = [label for label in ranked if label not in edge_labels]
-    retained = ranked[:max_components]
+    retained = ranked if max_components <= 0 else ranked[:max_components]
     pix = sd["near_ground_shadow_pixels_xy"].astype(int)
     inside = (pix[:, 0] >= 0) & (pix[:, 0] < binary.shape[1]) & (pix[:, 1] >= 0) & (pix[:, 1] < binary.shape[0])
     keep = np.zeros(len(pix), bool)
@@ -50,20 +42,26 @@ def component_filter(sd, mask_path: Path, max_components: int = 1,
                                     "points_kept": int(len(pts)), "points_before": int(len(pix))}
 
 
-def robust(pred, obs):
+def robust(pred, obs, percentile: float = .90):
     if len(pred) < 8 or len(obs) < 8: return None
     dt = cKDTree(pred); ot = cKDTree(obs)
     dp = ot.query(pred, k=1, workers=-1)[0]; do = dt.query(obs, k=1, workers=-1)[0]
-    p90, med, r90 = np.quantile(dp, .90), np.median(dp), np.quantile(do, .90)
+    tail, med, reverse_tail = np.quantile(dp, percentile), np.median(dp), np.quantile(do, percentile)
     support = np.mean(dp <= .35)
-    score = -(0.40*p90 + 0.25*med + 0.25*r90 + 0.10*(1-support))
-    return {"score": float(score), "pred_to_observed_p90_m": float(p90),
-            "pred_to_observed_median_m": float(med), "observed_to_predicted_p90_m": float(r90),
+    score = -(0.40*tail + 0.25*med + 0.25*reverse_tail + 0.10*(1-support))
+    return {"score": float(score), "distance_percentile": float(percentile),
+            "pred_to_observed_tail_m": float(tail), "observed_to_predicted_tail_m": float(reverse_tail),
+            # Legacy keys remain aliases so existing evidence consumers keep
+            # working; use the generic tail keys when percentile != 0.90.
+            "pred_to_observed_p90_m": float(tail),
+            "pred_to_observed_median_m": float(med), "observed_to_predicted_p90_m": float(reverse_tail),
             "pred_boundary_support_0p35m": float(support), "observed_boundary_points_used": int(len(obs))}
 
 
 def setup(vd, sd, shadow_mask, size, max_points, seed, observed_components=1,
-          subtract_observed_floor=True, exclude_image_edge=False):
+          subtract_observed_floor=True, exclude_image_edge=False,
+          projection_elevation_min_deg: float | None = None,
+          shadow_point_quantile: float = .995):
     plane = sd["plane_z_ax_by_c"].astype(float); n,e1,e2,anchor = basis(plane)
     v = vd["positions_world"].astype(float); h = (v-anchor) @ n
     keep = (h >= .02) & (h <= 5.0); v,h = v[keep],h[keep]
@@ -84,17 +82,34 @@ def setup(vd, sd, shadow_mask, size, max_points, seed, observed_components=1,
         edge_world = sd["near_ground_shadow_points_world"].astype(float)[edge]
     vxy=plane_xy(v,e1,e2,anchor); sxy=plane_xy(s,e1,e2,anchor)
     centre=np.median(vxy,axis=0); rel=sxy-centre; rr=np.linalg.norm(rel,axis=1)
-    sxy=sxy[rr<=np.quantile(rr,.995)]
+    if shadow_point_quantile < 1.0:
+        sxy=sxy[rr<=np.quantile(rr,shadow_point_quantile)]
     stacked=np.vstack((vxy,sxy)); lo,hi=np.quantile(stacked,(.002,.998),axis=0); pad=np.maximum((hi-lo)*.08,.6); lo-=pad; hi+=pad
+    # A candidate was previously rasterised into bounds estimated only from
+    # the unprojected vehicle and observed shadow. Low-elevation projections
+    # could therefore leave the raster and acquire an artificial straight
+    # crop boundary. Cover the complete azimuth search envelope instead.
+    max_projection_shift_m = 0.0
+    if projection_elevation_min_deg is not None:
+        angle = np.deg2rad(max(float(projection_elevation_min_deg), 1e-3))
+        max_projection_shift_m = float(np.max(np.maximum(h, 0.0)) / np.tan(angle))
+        envelope_lo = np.min(vxy, axis=0) - max_projection_shift_m
+        envelope_hi = np.max(vxy, axis=0) + max_projection_shift_m
+        lo = np.minimum(lo, envelope_lo - .6)
+        hi = np.maximum(hi, envelope_hi + .6)
     dense=np.zeros((size,size),np.uint8); pp=points_to_px(sxy,lo,hi,size); ok=(pp[:,0]>=0)&(pp[:,0]<size)&(pp[:,1]>=0)&(pp[:,1]<size); dense[pp[ok,1],pp[ok,0]]=1
     dense=cv2.dilate(dense,np.ones((3,3),np.uint8)); dense=cv2.morphologyEx(dense,cv2.MORPH_CLOSE,np.ones((7,7),np.uint8));
     # Keep at most the largest two components, matching the upstream contract.
-    cn,lab,st,_=cv2.connectedComponentsWithStats(dense,8); ids=sorted(range(1,cn),key=lambda i:int(st[i,cv2.CC_STAT_AREA]),reverse=True)[:2]; dense=np.isin(lab,ids)
+    cn,lab,st,_=cv2.connectedComponentsWithStats(dense,8)
+    ids=sorted(range(1,cn),key=lambda i:int(st[i,cv2.CC_STAT_AREA]),reverse=True)
+    if observed_components > 0:
+        ids=ids[:observed_components]
+    dense=np.isin(lab,ids)
     floor=gaussian_union_mask(vxy,cov,np.c_[e1,e2],2.0,lo,hi,size)
     obs=(dense & ~cv2.dilate(floor.astype(np.uint8),np.ones((5,5),np.uint8)).astype(bool)
          if subtract_observed_floor else dense.astype(bool))
     edge_xy = plane_xy(edge_world, e1, e2, anchor) if len(edge_world) else edge_world.reshape(0, 2)
-    return {"n":n,"e1":e1,"e2":e2,"anchor":anchor,"vxy":vxy,"h":h,"cov":cov,"floor":floor,"obs_mask":obs,"obs_boundary":contour_xy(obs,lo,hi),"lo":lo,"hi":hi,"size":size,"component":comp,"points":len(s),"image_edge_shadow_xy":edge_xy,"source_image_shape":source_mask.shape[:2]}
+    return {"n":n,"e1":e1,"e2":e2,"anchor":anchor,"vxy":vxy,"h":h,"cov":cov,"floor":floor,"obs_mask":obs,"obs_boundary":contour_xy(obs,lo,hi),"lo":lo,"hi":hi,"size":size,"component":comp,"points":len(s),"image_edge_shadow_xy":edge_xy,"source_image_shape":source_mask.shape[:2],"max_projection_shift_m":max_projection_shift_m,"projection_elevation_min_deg":projection_elevation_min_deg,"shadow_point_quantile":shadow_point_quantile}
 
 
 def main():

@@ -386,7 +386,7 @@ def main() -> None:
             "min_vehicle_height_m": args.min_vehicle_height_m,
             "visualization": "red=complete projected support envelope; yellow=post-contact-subtraction scored boundary; blue=vehicle support envelope",
         },
-        "observed_geometry": "source-view postprocessed MTMT pixels independently unprojected by same-frame InfiniDepth metric camera-z, then gated to 0.20m from the fitted road",
+        "observed_geometry": "official SSISv2 associated source-view shadow pixels independently unprojected by same-frame InfiniDepth metric camera-z, then gated to 0.20m from the fitted road; source mask unchanged",
         "inputs": {"vehicle_geometry": str(args.vehicle_geometry.resolve()), "shadow_geometry": str(args.shadow_geometry.resolve())},
         "plane_z_ax_by_c": plane.tolist(), "plane_bounds": {"min": lo.tolist(), "max": hi.tolist()},
         "vehicle_points": int(len(vehicle)), "shadow_points": int(len(shadow_xy)), "observed_boundary_points": int(len(observed_boundary)),

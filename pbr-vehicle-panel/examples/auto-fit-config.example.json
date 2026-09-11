@@ -1,0 +1,6 @@
+{
+  "executable": "pbr-vehicle-auto-fit",
+  "max_seconds": 480,
+  "bins": 512,
+  "timeout": 600
+}

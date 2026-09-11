@@ -1,0 +1,16 @@
+{
+  "executable": "pbr-vehicle-sun-scene",
+  "scene": "SCENE_ID",
+  "data_root": "datasets/processed/SCENE_ID",
+  "yolo_weights": "models/yolo.pt",
+  "sam2_root": "third_party/sam2",
+  "sam2_checkpoint": "models/sam2.1_hiera_tiny.pt",
+  "sam2_python": "envs/sam2/bin/python",
+  "ssis_root": "third_party/SSISv2",
+  "ssis_weights": "models/ssisv2.pth",
+  "ssis_python": "envs/ssisv2/bin/python",
+  "infinidepth_root": "third_party/InfiniDepth",
+  "infinidepth_python": "envs/infinidepth/bin/python",
+  "top_vehicles": 3,
+  "device": "0"
+}

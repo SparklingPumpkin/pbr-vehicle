@@ -9,7 +9,17 @@ from pbr_vehicle_standalone.types import LightingState, VehicleState
 
 
 def test_viewer_config_round_trip(tmp_path):
-    state = VehicleState(vehicle_id="vehicle_001", asset_folder="assets/test", projection={"contact": {}, "extension": {}, "anchor": {}})
+    state = VehicleState(
+        vehicle_id="vehicle_001",
+        asset_folder="assets/test",
+        environment_map_enabled=True,
+        environment_map_resolution=64,
+        environment_preview_visible=True,
+        environment_preview_follow_vehicle=False,
+        environment_preview_position=[1.0, 2.0, 3.0],
+        environment_preview_offset=[4.0, 5.0, 6.0],
+        projection={"contact": {}, "extension": {}, "anchor": {}},
+    )
     path = save_viewer_config(tmp_path / "config.json", {"name": "scene", "path": "scenes/test.ply"}, LightingState(), state, {})
     restored, scene_light = state_from_config(read_config(path), state)
     assert restored.to_dict() == state.to_dict()

@@ -34,7 +34,7 @@ def verify_shadow_lineage(shadow_npz: Path, shadow_mask: Path) -> dict:
     contained = valid & (mask[np.clip(pixels[:, 1], 0, mask.shape[0] - 1), np.clip(pixels[:, 0], 0, mask.shape[1] - 1)] > 0)
     fraction = float(np.mean(contained))
     if fraction < 0.99:
-        raise RuntimeError(f"shadow geometry is not derived from the supplied postprocessed mask: {fraction:.4%}")
+        raise RuntimeError(f"shadow geometry is not derived from the supplied SSISv2 associated mask: {fraction:.4%}")
     return {"near_ground_points": int(len(pixels)), "mask_containment_fraction": fraction, "mask_sha256": sha256(shadow_mask)}
 
 

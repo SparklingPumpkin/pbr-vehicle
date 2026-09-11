@@ -99,7 +99,7 @@ def candidate_score(pred_xy, observed_boundary, centre, shadow_vec, contact_radi
     d_pred = tree.query(pred_xy, k=1, workers=-1)[0]
     reverse = cKDTree(pred_xy).query(obs, k=1, workers=-1)[0]
     # Boundary agreement is primary; reverse support is deliberately weaker so
-    # broad MTMT road spill does not force a large IoU-style penalty.
+    # Broad detector spill should not force a large IoU-style penalty.
     p90 = float(np.quantile(d_pred, 0.90))
     med = float(np.median(d_pred))
     support = float(np.mean(d_pred <= 0.35))

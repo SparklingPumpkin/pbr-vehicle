@@ -4,6 +4,7 @@ import numpy as np
 
 from pbr_vehicle_standalone.math3d import sun_direction
 from pbr_vehicle_standalone.math3d import color_temperature_to_rgb
+from pbr_vehicle_standalone.environment_map import EnvironmentMap
 from pbr_vehicle_standalone.shading import shade_proxy, shade_vehicle
 from pbr_vehicle_standalone.types import GaussianLayer, LightingState, MaterialState, VehicleAsset
 
@@ -75,3 +76,38 @@ def test_saturation_affects_colored_original_with_grayscale_proxy():
     assert not np.allclose(gray, vivid)
     assert np.allclose(gray[0, 0], gray[0, 1])
     assert np.allclose(gray[0, 1], gray[0, 2])
+
+
+def test_environment_map_specular_uses_current_view_direction():
+    proxy = _proxy()
+    proxy.normals[:] = [1.0, 0.0, 0.0]
+    proxy.albedo[:] = [0.5, 0.5, 0.5]
+    faces = np.zeros((6, 8, 8, 3), dtype=np.float32)
+    faces[0] = [1.0, 0.0, 0.0]
+    faces[1] = [0.0, 1.0, 0.0]
+    environment = EnvironmentMap.from_faces(faces)
+    material = MaterialState(
+        use_asset_material=False,
+        roughness=0.02,
+        metallic=1.0,
+        ambient_fill=1.0,
+    )
+    lighting = LightingState(sun_enabled=False)
+    toward_positive_x = shade_proxy(
+        proxy,
+        material,
+        lighting,
+        environment_map=environment,
+        world_normals=proxy.normals,
+        view_directions=np.asarray([[1.0, 0.0, 0.0]], dtype=np.float32),
+    )
+    toward_negative_x = shade_proxy(
+        proxy,
+        material,
+        lighting,
+        environment_map=environment,
+        world_normals=proxy.normals,
+        view_directions=np.asarray([[-1.0, 0.0, 0.0]], dtype=np.float32),
+    )
+    assert toward_positive_x[0, 0] > toward_positive_x[0, 1]
+    assert toward_negative_x[0, 1] > toward_negative_x[0, 0]

@@ -1,7 +1,13 @@
-# PBR Vehicle Sun 1.0.0 Delivery Report
+# PBR Vehicle Sun 1.2.0 Delivery Report
 
-本交付包将 `PBR-Inserts` 的场景太阳识别 `SSE-v6` 主线冻结为独立 Python wheel。核心拟合器只消费对齐后的 NPZ/mask，不依赖上游源码路径；完整场景入口将外部 YOLO、SAM2、MTMT 与 InfiniDepth 仓库/权重作为显式参数。
+本交付包冻结 `SSE-v8`：上游严格采用 `SSE-v6-b` 的 SSISv2 官方关联阴影 mask 协议，下游继承 `SSE-v7` 的 P95 相机可见轮廓及通用 1–5 车置信度门控/联合拟合。
 
-默认无 Gaussian 合同是纯 RGB InfiniDepth、全场景跨帧物理车辆 Top-3、阴影概率/面积 fail-closed 门、源图边缘段剔除，以及观测/预测统一的最大相机锥形近侧完整轮廓。观测阴影默认不再扣除车辆 floor，候选车辆投影也不执行会制造贴车 footprint 红线的布尔差集；两项旧行为均为显式兼容开关。
+默认场景入口已纳入两轮换车合同：首轮使用全局排名 1–3；仅在首轮正常完成但无有效角时，复用 YOLO 检测和 SAM2 排名，更换为排名 4–6。第二轮仍无有效角才返回 `no_valid_sun_information`。进程、文件或资源失败保持独立失败类型，不触发换车。
 
-交付验证包含源码测试、wheel 内容审计、隔离目录安装、CLI 帮助、默认分派 manifest，以及使用冻结真实几何输入完成一次核心角度拟合。最终结果为 `2 passed`，6 个 CLI 入口均可加载，wheel 未包含机器绝对路径；冻结 `scene-017/t025/cam2` 样本严格复现上游 `181°/15°`、分数 `-0.1527805903612691` 和相机轮廓合同。验证记录位于 `delivery/PVD-v1-a/run-20260909T034418Z-sun-wheel-e2e/`。
+活动执行链中已移除旧阴影检测器、阴影减车辆、连通域清洗、形态学修改及其概率图证据门。SSISv2 object member 与 YOLO/SAM2 目标车辆通过 IoU 绑定，关联 shadow member 直接进入同帧 InfiniDepth 几何提升。
+
+Argoverse 000–049 的冻结审计结果为 26/50 场景发布太阳角、24/50 场景返回无有效太阳信息、0 个进程失败。007–049 中有 9 个场景由第二轮排名 4–6 的替换车辆挽救。
+
+交付 wheel 仅包含通用代码。外部仓库、权重、解释器、数据和输出路径均由调用参数提供，不捆绑场景资产。wheel SHA256 记录于本目录 `dist/SHA256SUMS`。
+
+交付验收：完整测试 `9 passed`；Python 3.8 源码编译通过；Python 3.12 隔离安装通过；默认与高级 console script 映射通过；wheel 机器路径和实验产物扫描通过。

@@ -20,6 +20,9 @@ LUMA = np.asarray([0.2126, 0.7152, 0.0722], dtype=np.float64)
 CCT_MIN_KELVIN = 3500.0
 CCT_MAX_KELVIN = 7200.0
 ENVIRONMENT_ENERGY = 0.612338
+# These deltas are expressed in the Viser sliders' [-1, 1] coordinates.
+AMBIENT_FILL_UI_DELTA = 0.30
+SUN_INTENSITY_UI_DELTA = 0.15
 PACKAGE_ROOT = Path(__file__).resolve().parent
 DEFAULT_TEMPLATE_PATH = PACKAGE_ROOT / "templates/default_vehicle_pbr_viser_template.json"
 
@@ -30,6 +33,17 @@ def digest(path: Path) -> str:
         for block in iter(lambda: stream.read(4 * 1024 * 1024), b""):
             result.update(block)
     return result.hexdigest()
+
+
+def write_progress(output_dir: Path, progress: float, stage: str) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / "progress.json"
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps({
+        "progress": float(np.clip(progress, 0.0, 1.0)),
+        "stage": stage,
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
 
 
 def normalize(values: np.ndarray) -> np.ndarray:
@@ -252,7 +266,7 @@ def template_material(base: Mapping[str, Any], vehicle: Mapping[str, Any] | None
     return material
 
 
-def fixed_template_light(base: Mapping[str, Any], vehicle: Mapping[str, Any] | None) -> tuple[np.ndarray, float, float]:
+def fixed_template_light(base: Mapping[str, Any], vehicle: Mapping[str, Any] | None) -> tuple[np.ndarray, float, float, float]:
     base_light = base.get("light", {})
     vehicle_light = vehicle.get("vehicle_lighting", {}) if vehicle is not None else {}
     if not isinstance(vehicle_light, Mapping):
@@ -260,7 +274,41 @@ def fixed_template_light(base: Mapping[str, Any], vehicle: Mapping[str, Any] | N
     sun_rgb = np.asarray(vehicle_light.get("sun_color_rgb", base_light.get("sun_color_rgb", base_light.get("color_rgb", [1.0, 1.0, 1.0]))), dtype=np.float64)
     if sun_rgb.shape != (3,) or not np.isfinite(sun_rgb).all():
         raise ValueError("template fixed sun color must have three finite values")
-    return sun_rgb, float(vehicle_light.get("sun_azimuth", base_light.get("sun_azimuth_degrees", 90.0))), float(vehicle_light.get("sun_elevation", base_light.get("sun_elevation_degrees", 45.0)))
+    return (
+        sun_rgb,
+        float(vehicle_light.get("sun_azimuth", base_light.get("sun_azimuth_degrees", 90.0))),
+        float(vehicle_light.get("sun_elevation", base_light.get("sun_elevation_degrees", 45.0))),
+        max(float(vehicle_light.get("sun_intensity", base_light.get("intensity", 1.0))), 0.0),
+    )
+
+
+def ui_to_value(value: float, kind: str) -> float:
+    """Mirror the Panel Viser slider mapping for fitted lighting controls."""
+    value = float(np.clip(value, -1.0, 1.0))
+    if kind == "sun_intensity":
+        return 1.0 + value * (1.0 if value < 0.0 else 7.0)
+    if kind == "brightness":
+        return 0.35 + value * (0.35 if value < 0.0 else 0.65)
+    raise ValueError(kind)
+
+
+def value_to_ui(value: float, kind: str) -> float:
+    """Mirror the inverse Panel Viser slider mapping for fitted controls."""
+    value = float(value)
+    if kind == "sun_intensity":
+        result = (value - 1.0) / (1.0 if value < 1.0 else 7.0)
+    elif kind == "brightness":
+        result = (value - 0.35) / (0.35 if value < 0.35 else 0.65)
+    else:
+        raise ValueError(kind)
+    return float(np.clip(result, -1.0, 1.0))
+
+
+def bounded_grid(center_ui: float, delta_ui: float, count: int) -> np.ndarray:
+    """Sample a closed Viser UI interval, retaining clipped boundary walls."""
+    lower = float(np.clip(center_ui - delta_ui, -1.0, 1.0))
+    upper = float(np.clip(center_ui + delta_ui, -1.0, 1.0))
+    return np.linspace(lower, upper, count, dtype=np.float64)
 
 
 def emit_config(template: Mapping[str, Any], base: Mapping[str, Any], vehicle: Mapping[str, Any] | None, material: Mapping[str, float], light: Mapping[str, Any], metadata: Mapping[str, Any]) -> dict[str, Any]:
@@ -299,6 +347,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--bins", type=int, default=512)
     args = parser.parse_args(argv)
     started = time.perf_counter()
+    write_progress(args.output_dir, 0.03, "加载场景与车辆 Gaussian")
     if args.template_config is not None and args.base_config is not None:
         raise ValueError("use only one of --template-config and --base-config")
     template_argument = args.template_config or args.base_config
@@ -317,13 +366,19 @@ def main(argv: list[str] | None = None) -> None:
     target_chroma, neutral = neutral_chroma(scene_rgb, scene_weight)
     cct_initial = choose_cct(target_chroma)
     material = template_material(base, vehicle)
-    sun_rgb, sun_azimuth, sun_elevation = fixed_template_light(base, vehicle)
+    sun_rgb, sun_azimuth, sun_elevation, sun_base = fixed_template_light(base, vehicle)
+    fill_base = float(material["ambient_fill"])
+    sun_ui_base = value_to_ui(sun_base, "sun_intensity")
+    fill_ui_base = value_to_ui(fill_base, "brightness")
+    sun_ui_bounds = tuple(bounded_grid(sun_ui_base, SUN_INTENSITY_UI_DELTA, 2))
+    fill_ui_bounds = tuple(bounded_grid(fill_ui_base, AMBIENT_FILL_UI_DELTA, 2))
     rear_x = float(np.quantile(centers[:, 0], 0.005))
     target = np.quantile(centers, 0.5, axis=0)
     camera = np.asarray([rear_x - 4.0, target[1], target[2] + 0.5], dtype=np.float32)
     views = normalize(camera[None, :] - centers)
     phases: dict[str, float] = {"load_seconds": time.perf_counter() - started}
     records: list[dict[str, Any]] = []
+    write_progress(args.output_dir, 0.20, "分析场景亮度与中性色温")
 
     def evaluate(stage: str, sun_intensity: float, fill: float, cct_kelvin: float) -> dict[str, Any]:
         candidate_material = dict(material, ambient_fill=float(fill))
@@ -339,24 +394,36 @@ def main(argv: list[str] | None = None) -> None:
 
     phase_start = time.perf_counter()
     brightness = []
-    for sun in (0.50, 0.75, 1.00, 1.50, 2.00, 3.00):
-        for fill in (0.15, 0.30, 0.45, 0.60, 0.85):
+    brightness_total = 30
+    for sun_ui in bounded_grid(sun_ui_base, SUN_INTENSITY_UI_DELTA, 6):
+        for fill_ui in bounded_grid(fill_ui_base, AMBIENT_FILL_UI_DELTA, 5):
             if time.perf_counter() - started > args.max_seconds: break
+            sun = ui_to_value(sun_ui, "sun_intensity")
+            fill = ui_to_value(fill_ui, "brightness")
             item = evaluate("brightness", sun, fill, cct_initial); brightness.append(item); records.append(item)
+            write_progress(args.output_dir, 0.22 + 0.34 * len(brightness) / brightness_total, f"搜索太阳光强度与环境亮度 ({len(brightness)}/{brightness_total})")
     if not brightness: raise RuntimeError("time limit expired before brightness search")
     best = min(brightness, key=lambda item: item["luminance_cdf_l1"])
     phases["brightness_seconds"] = time.perf_counter() - phase_start
     phase_start = time.perf_counter()
     colour = []
-    for cct_kelvin in np.unique(np.clip(cct_initial + np.arange(-4, 5) * 350.0, CCT_MIN_KELVIN, CCT_MAX_KELVIN)):
+    colour_grid = np.unique(np.clip(cct_initial + np.arange(-4, 5) * 350.0, CCT_MIN_KELVIN, CCT_MAX_KELVIN))
+    for colour_index, cct_kelvin in enumerate(colour_grid, start=1):
         item = evaluate("cct", best["sun_intensity"], best["ambient_fill"], float(cct_kelvin)); item["colour_cost"] = float(0.85 * np.mean(np.abs(cct_tint(cct_kelvin) - target_chroma)) + 0.15 * item["luminance_cdf_l1"]); colour.append(item); records.append(item)
+        write_progress(args.output_dir, 0.58 + 0.16 * colour_index / len(colour_grid), f"搜索车辆环境色温 ({colour_index}/{len(colour_grid)})")
     if colour: best = min(colour, key=lambda item: item["colour_cost"])
     phases["colour_seconds"] = time.perf_counter() - phase_start
     phase_start = time.perf_counter()
     final = []
-    for sun_scale in (0.85, 1.0, 1.15):
-        for delta in (-0.10, 0.0, 0.10):
-            item = evaluate("finish", best["sun_intensity"] * sun_scale, float(np.clip(best["ambient_fill"] + delta, 0.05, 1.20)), best["environment_cct_kelvin"]); final.append(item); records.append(item)
+    final_total = 9
+    best_sun_ui = value_to_ui(best["sun_intensity"], "sun_intensity")
+    best_fill_ui = value_to_ui(best["ambient_fill"], "brightness")
+    for sun_ui in np.unique(np.clip(best_sun_ui + np.asarray([-0.05, 0.0, 0.05]), *sun_ui_bounds)):
+        for fill_ui in np.unique(np.clip(best_fill_ui + np.asarray([-0.10, 0.0, 0.10]), *fill_ui_bounds)):
+            sun = ui_to_value(sun_ui, "sun_intensity")
+            fill = ui_to_value(fill_ui, "brightness")
+            item = evaluate("finish", float(sun), float(fill), best["environment_cct_kelvin"]); final.append(item); records.append(item)
+            write_progress(args.output_dir, 0.76 + 0.14 * len(final) / final_total, f"联合精调车辆参数 ({len(final)}/{final_total})")
     best = min(final, key=lambda item: item["luminance_cdf_l1"])
     phases["finish_seconds"] = time.perf_counter() - phase_start
     phases["total_seconds"] = time.perf_counter() - started
@@ -371,9 +438,10 @@ def main(argv: list[str] | None = None) -> None:
     for name in baked.dtype.names or ():
         if name.startswith("f_rest_"): baked[name] = 0.0
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    write_progress(args.output_dir, 0.93, "保存候选配置与评估指标")
     baked_path = args.output_dir / f"{base.get('asset_id', 'vehicle')}_rear_view_cct_pbr_dc_baked.ply"
     PlyData([PlyElement.describe(baked, "vertex")], text=False).write(str(baked_path))
-    metadata = {"schema_version": 2, "status": "candidate_only" if accepted else "rejected_no_improvement", "method": "template_cct_environment_brightness_luminance_fit", "contract": {"scene_kind": "ordinary_gaussian_dc", "sun_direction_source": "manual_template_input", "sun_rgb": "fixed_template_value", "environment_cct_kelvin_range": [CCT_MIN_KELVIN, CCT_MAX_KELVIN], "environment_energy": "fixed", "free_material_parameters": [], "manual_only_material_parameters": ["saturation"], "free_brightness_parameters": ["sun_intensity", "ambient_fill"], "free_colour_parameters": ["environment_cct_kelvin"]}, "inputs": {"scene_ply": str(args.scene_ply), "scene_sha256": digest(args.scene_ply), "template_config": template_reference, "template_config_sha256": digest(template_path), "template_kind": "viser_state" if vehicle is not None else "pbr_asset"}, "metric": {"name": "bilateral_opacity_weighted_luminance_cdf_l1_512", "raw": raw_distance, "baked": baked_distance, "improvement_percent": 100.0 * (raw_distance - baked_distance) / raw_distance if raw_distance > 1e-12 else 0.0}, "candidate_metric": {"baked": candidate_distance}, "colour": {"neutral_scene": neutral, "selected_cct_kelvin": best["environment_cct_kelvin"], "selected_tint": cct_tint(best["environment_cct_kelvin"]).tolist(), "environment_energy_fixed": ENVIRONMENT_ENERGY, "vehicle_saturation": "manual_only_not_fitted"}, "search": {"candidates_evaluated": len(records), "phase_times": phases}}
+    metadata = {"schema_version": 2, "status": "candidate_only" if accepted else "rejected_no_improvement", "method": "template_cct_environment_brightness_luminance_fit", "contract": {"scene_kind": "ordinary_gaussian_dc", "sun_direction_source": "manual_template_input", "sun_rgb": "fixed_template_value", "environment_cct_kelvin_range": [CCT_MIN_KELVIN, CCT_MAX_KELVIN], "environment_energy": "fixed", "free_material_parameters": [], "manual_only_material_parameters": ["saturation"], "free_brightness_parameters": ["sun_intensity", "ambient_fill"], "free_colour_parameters": ["environment_cct_kelvin"]}, "inputs": {"scene_ply": str(args.scene_ply), "scene_sha256": digest(args.scene_ply), "template_config": template_reference, "template_config_sha256": digest(template_path), "template_kind": "viser_state" if vehicle is not None else "pbr_asset"}, "metric": {"name": "bilateral_opacity_weighted_luminance_cdf_l1_512", "raw": raw_distance, "baked": baked_distance, "improvement_percent": 100.0 * (raw_distance - baked_distance) / raw_distance if raw_distance > 1e-12 else 0.0}, "candidate_metric": {"baked": candidate_distance}, "colour": {"neutral_scene": neutral, "selected_cct_kelvin": best["environment_cct_kelvin"], "selected_tint": cct_tint(best["environment_cct_kelvin"]).tolist(), "environment_energy_fixed": ENVIRONMENT_ENERGY, "vehicle_saturation": "manual_only_not_fitted"}, "search": {"candidates_evaluated": len(records), "phase_times": phases, "bounds": {"ambient_fill": {"ui_base": fill_ui_base, "ui_delta": AMBIENT_FILL_UI_DELTA, "ui_min": fill_ui_bounds[0], "ui_max": fill_ui_bounds[1], "value_base": fill_base, "value_min": ui_to_value(fill_ui_bounds[0], "brightness"), "value_max": ui_to_value(fill_ui_bounds[1], "brightness")}, "sun_intensity": {"ui_base": sun_ui_base, "ui_delta": SUN_INTENSITY_UI_DELTA, "ui_min": sun_ui_bounds[0], "ui_max": sun_ui_bounds[1], "value_base": sun_base, "value_min": ui_to_value(sun_ui_bounds[0], "sun_intensity"), "value_max": ui_to_value(sun_ui_bounds[1], "sun_intensity")}, "boundary_candidates_allowed": True}}}
     payload = emit_config(template, base, vehicle, best["material"], best["light"], metadata) if accepted else copy.deepcopy(template)
     if not accepted:
         payload["auto_fit"] = metadata
@@ -382,6 +450,7 @@ def main(argv: list[str] | None = None) -> None:
     compact = [{key: value for key, value in record.items() if key not in {"colors", "material", "light"}} for record in records]
     (args.output_dir / "candidates.json").write_text(json.dumps(compact, indent=2) + "\n", encoding="utf-8")
     (args.output_dir / "metrics.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    write_progress(args.output_dir, 1.0, "车辆参数识别完成")
     print(json.dumps({"final_config": str(args.final_config), "baked_ply": str(baked_path), **metadata["metric"], "elapsed_seconds": phases["total_seconds"]}))
 
 

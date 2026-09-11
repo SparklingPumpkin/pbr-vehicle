@@ -2,7 +2,7 @@
 
 ## Delivered Scope
 
-`pbr-vehicle-auto 1.2.0` implements the promoted `ALM-v5` auto-light-material contract:
+`pbr-vehicle-auto 1.2.1` implements the promoted `ALM-v5` auto-light-material contract:
 
 - fixed and independent direct sun RGB;
 - a luminance-normalized `3500-7200 K` CCT environment path at fixed energy;
@@ -10,6 +10,7 @@
 - fitting limited to sun intensity, fill light and environment CCT; vehicle saturation is manual only;
 - one rear-view PBR-to-ordinary-Gaussian DC bake and opacity-weighted luminance CDF-L1 evaluation.
 - a projection template whose extension is the continuous parallel-light sweep between the vehicle footprint and its ground-projected footprint.
+- parameter walls around the input template in Viewer slider coordinates: `sun_intensity +/-0.15` and `ambient_fill +/-0.30`, enforced in both coarse and final searches before conversion to internal values.
 
 The promoted P-v4 asset path is `pbr-vehicle-single-ply-v1`: it reads `files.pbr`, its `normal_0..2`, and global `material.albedo_rgb`. No proxy, mapping, or compatibility field family is required.
 

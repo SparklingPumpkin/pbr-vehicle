@@ -8,7 +8,7 @@
 - Direct `sun_color_rgb` is fixed and independent from environment colour.
 - Environment color is constrained to a luminance-normalized `3500-7200 K` CCT path at fixed energy.
 - Vehicle material is not fitted. `material.saturation` is manual only, with `1.0` meaning unchanged.
-- Only `sun_intensity`, `ambient_fill`, and `environment_cct_kelvin` are searched.
+- Only `sun_intensity`, `ambient_fill`, and `environment_cct_kelvin` are searched. The bounds are in the Panel/Viser `[-1, 1]` slider coordinates: relative to the template, `sun_intensity` is `+/-0.15` and `ambient_fill` (the brightness slider) is `+/-0.30`. Both clipped slider-wall values are valid candidates.
 - The objective is opacity-weighted vehicle/scene DC luminance CDF-L1, using one vehicle rear view. The optional bake writes those PBR colours as ordinary Gaussian DC and clears higher-order SH.
 - A candidate that does not beat the original vehicle DC objective is rejected; its output preserves the base configuration and reports `rejected_no_improvement`.
 

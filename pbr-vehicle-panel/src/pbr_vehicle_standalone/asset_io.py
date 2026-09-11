@@ -3,10 +3,16 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
+import shutil
+import sys
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import yaml
 from plyfile import PlyData, PlyElement
 
 from .math3d import normalize, quaternion_to_rotation, sigmoid
@@ -15,6 +21,7 @@ from .types import GaussianLayer, VehicleAsset
 
 SH_C0 = 0.28209479177387814
 SUPPORTED_CONTRACTS = {"pbr-vehicle-config-folder-v2", "pbr-vehicle-config-folder-v4", "pbr-vehicle-single-ply-v1"}
+_TORCH_CHECKPOINT_LOAD_LOCK = threading.Lock()
 
 
 def _read_vertices(path: Path) -> np.ndarray:
@@ -248,6 +255,25 @@ def _checkpoint_background(state: Any) -> dict[str, Any] | None:
     return None
 
 
+def _load_torch_checkpoint(torch: Any, source: Path) -> Any:
+    aliases = {
+        "numpy._core": np.core,
+        "numpy._core.multiarray": np.core.multiarray,
+        "numpy._core.numeric": np.core.numeric,
+    }
+    with _TORCH_CHECKPOINT_LOAD_LOCK:
+        added = []
+        try:
+            for name, module in aliases.items():
+                if name not in sys.modules:
+                    sys.modules[name] = module
+                    added.append(name)
+            return torch.load(str(source), map_location="cpu", weights_only=False)
+        finally:
+            for name in reversed(added):
+                sys.modules.pop(name, None)
+
+
 def materialize_pth_scene(path: str | Path, cache_dir: str | Path) -> Path:
     try:
         import torch
@@ -259,30 +285,41 @@ def materialize_pth_scene(path: str | Path, cache_dir: str | Path) -> Path:
     output = cache / f"{source.stem}_{hashlib.sha256(str(source).encode()).hexdigest()[:12]}.ply"
     if output.is_file() and output.stat().st_mtime_ns >= source.stat().st_mtime_ns:
         return output
+    temporary = output.with_name(f"{output.name}.{os.getpid()}.{time.time_ns()}.tmp")
     paired = source.with_suffix(".ply")
-    if paired.is_file():
-        output.write_bytes(paired.read_bytes())
-        return output
-    state = torch.load(str(source), map_location="cpu", weights_only=False)
-    background = _checkpoint_background(state)
-    if background is None:
-        raise ValueError("Checkpoint has no serialized Background model")
-    def array(key: str, columns: int) -> np.ndarray:
-        item = background.get(key)
-        if hasattr(item, "detach"):
-            item = item.detach().cpu().numpy()
-        result = np.asarray(item, dtype=np.float32).reshape(len(background["_means"]), -1)
-        return result[:, :columns]
-    means = array("_means", 3)
-    fields = [("x", "f4"), ("y", "f4"), ("z", "f4"), ("opacity", "f4")]
-    fields += [(f"f_dc_{i}", "f4") for i in range(3)] + [(f"scale_{i}", "f4") for i in range(3)] + [(f"rot_{i}", "f4") for i in range(4)]
-    vertex = np.empty(len(means), dtype=fields)
-    vertex["x"], vertex["y"], vertex["z"] = means.T
-    vertex["opacity"] = array("_opacities", 1)[:, 0]
-    for i, values in enumerate(array("_features_dc", 3).T): vertex[f"f_dc_{i}"] = values
-    for i, values in enumerate(array("_scales", 3).T): vertex[f"scale_{i}"] = values
-    for i, values in enumerate(array("_quats", 4).T): vertex[f"rot_{i}"] = values
-    PlyData([PlyElement.describe(vertex, "vertex")], text=False).write(str(output))
+    try:
+        if paired.is_file():
+            try:
+                os.link(paired, temporary)
+            except OSError:
+                shutil.copy2(paired, temporary)
+        else:
+            state = _load_torch_checkpoint(torch, source)
+            background = _checkpoint_background(state)
+            if background is None:
+                raise ValueError("Checkpoint has no serialized Background model")
+
+            def array(key: str, columns: int) -> np.ndarray:
+                item = background.get(key)
+                if hasattr(item, "detach"):
+                    item = item.detach().cpu().numpy()
+                result = np.asarray(item, dtype=np.float32).reshape(len(background["_means"]), -1)
+                return result[:, :columns]
+
+            means = array("_means", 3)
+            fields = [("x", "f4"), ("y", "f4"), ("z", "f4"), ("opacity", "f4")]
+            fields += [(f"f_dc_{i}", "f4") for i in range(3)] + [(f"scale_{i}", "f4") for i in range(3)] + [(f"rot_{i}", "f4") for i in range(4)]
+            vertex = np.empty(len(means), dtype=fields)
+            vertex["x"], vertex["y"], vertex["z"] = means.T
+            vertex["opacity"] = array("_opacities", 1)[:, 0]
+            for i, values in enumerate(array("_features_dc", 3).T): vertex[f"f_dc_{i}"] = values
+            for i, values in enumerate(array("_scales", 3).T): vertex[f"scale_{i}"] = values
+            for i, values in enumerate(array("_quats", 4).T): vertex[f"rot_{i}"] = values
+            PlyData([PlyElement.describe(vertex, "vertex")], text=False).write(str(temporary))
+        temporary.replace(output)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
     return output
 
 
@@ -294,3 +331,34 @@ def load_scene(path: str | Path,
     if source.suffix.lower() != ".ply":
         raise ValueError(f"Scene must be .ply or .pth: {source}")
     return load_gaussian_layer(source, center=False)
+
+
+def resolve_scene_context(path: str | Path) -> dict[str, Any]:
+    source = Path(path).expanduser().resolve()
+    config_path = source.parent / "config.yaml"
+    name = source.parent.name if source.suffix.lower() == ".pth" else source.stem
+    if not config_path.is_file():
+        return {"name": name, "data_root": None, "config_path": None}
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    data = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(data, dict) or not data.get("data_root") or data.get("scene_idx") is None:
+        return {"name": name, "data_root": None, "config_path": str(config_path)}
+    raw_root = Path(str(data["data_root"])).expanduser()
+    scene = f"{int(data['scene_idx']):03d}"
+    candidates = [raw_root] if raw_root.is_absolute() else [Path.cwd() / raw_root]
+    if not raw_root.is_absolute():
+        ancestors = (config_path.parent, *config_path.parents)
+        candidates.extend(parent / raw_root for parent in ancestors)
+        if raw_root.parts and raw_root.parts[0] == "data":
+            relative = Path(*raw_root.parts[1:])
+            candidates.extend(parent / relative for parent in ancestors)
+    seen = set()
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        scene_root = candidate / scene
+        if scene_root.is_dir():
+            return {"name": name, "data_root": str(scene_root), "config_path": str(config_path)}
+    return {"name": name, "data_root": None, "config_path": str(config_path)}

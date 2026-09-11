@@ -5,10 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
+
+
+VEHICLE_EVIDENCE_EXIT_CODE = 42
+
+
+class VehicleEvidenceError(RuntimeError):
+    pass
 
 
 def camera_to_world(data_root: Path, timestep: int, camera: int) -> np.ndarray:
@@ -74,7 +82,7 @@ def main() -> None:
     road_pixels = road & ~vehicle
     road_world, _ = unproject(road_pixels, depth, intrinsic, c2w)
     if len(road_world) < 1000:
-        raise RuntimeError("insufficient valid predicted-depth road pixels")
+        raise VehicleEvidenceError("insufficient valid predicted-depth road pixels")
     rng = np.random.default_rng(args.seed)
     sample = road_world[rng.choice(len(road_world), min(len(road_world), args.max_plane_points), replace=False)]
     plane = fit_plane(sample)
@@ -91,7 +99,7 @@ def main() -> None:
     near_world = shadow_world[near]
     near_xy = shadow_xy[near]
     if len(near_world) < 1000:
-        raise RuntimeError(f"only {len(near_world)} lifted shadow pixels lie near the fitted road")
+        raise VehicleEvidenceError(f"only {len(near_world)} lifted shadow pixels lie near the fitted road")
     np.savez_compressed(
         args.output_dir / "infinidepth_shadow_geometry.npz",
         road_points_world=sample,
@@ -119,13 +127,14 @@ def main() -> None:
     residual_view = cv2.applyColorMap(np.rint(residual_norm * 255).astype(np.uint8), cv2.COLORMAP_TURBO)
     residual_view[~shadow] = 0
     review = cv2.vconcat((
-        cv2.hconcat((label(source_shadow, "source-view postprocessed shadow"), label(depth_view, "InfiniDepth metric camera-z"))),
+        cv2.hconcat((label(source_shadow, "source-view SSISv2 associated shadow"), label(depth_view, "InfiniDepth metric camera-z"))),
         cv2.hconcat((label(lifted, "orange=all lifted; green=within 0.20m of road"), label(residual_view, "absolute residual to fitted road (0-1m)"))),
     ))
     cv2.imwrite(str(args.output_dir / "01_source_shadow_depth_lift_review.jpg"), review, [cv2.IMWRITE_JPEG_QUALITY, 96])
     manifest = {
         "timestep": args.timestep, "camera": args.camera,
         "depth_semantics": "same-frame InfiniDepth metric camera-z; one depth value per retained source-view shadow pixel",
+        "source_shadow_contract": "official SSISv2 associated shadow mask, unchanged before geometric lifting",
         "shadow_pixels": int(shadow.sum()), "lifted_shadow_points": int(len(shadow_world)),
         "near_ground_shadow_points": int(len(near_world)), "near_ground_fraction": float(near.mean()),
         "road_pixels_with_valid_depth": int(len(road_world)), "road_plane_fit_points": int(len(sample)),
@@ -138,4 +147,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except VehicleEvidenceError as error:
+        print(f"vehicle evidence rejected: {error}", file=sys.stderr)
+        raise SystemExit(VEHICLE_EVIDENCE_EXIT_CODE)

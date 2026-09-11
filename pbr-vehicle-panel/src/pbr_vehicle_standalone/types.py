@@ -124,6 +124,12 @@ class VehicleState:
     material: MaterialState = field(default_factory=MaterialState)
     use_scene_lighting: bool = True
     lighting: LightingState = field(default_factory=LightingState)
+    environment_map_enabled: bool = False
+    environment_map_resolution: int = 128
+    environment_preview_visible: bool = False
+    environment_preview_follow_vehicle: bool = True
+    environment_preview_position: list[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
+    environment_preview_offset: list[float] = field(default_factory=lambda: [0.0, -4.0, 2.0])
     projection_visible: bool = True
     projection_opacity: float = 1.0
     projection: dict[str, Any] = field(default_factory=dict)

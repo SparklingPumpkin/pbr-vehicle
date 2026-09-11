@@ -2,7 +2,7 @@
 
 这是从 DriveStudio 训练/数据加载链路中拆出的最小运行包。它直接加载场景 Gaussian PLY（或从 PTH 提取 Background）、完整车辆 PBR 资产文件夹，并通过独立 Viser 面板完成车辆变换、材质、逐车/共享光照和两层投影调节。
 
-当前交付实现对应 PBR-Inserts 项目控制面的 `VSP-v2` 主线；机器可读身份和证据指针见 [MAINLINE_MANIFEST.json](MAINLINE_MANIFEST.json)。
+当前交付实现对应 PBR-Inserts 项目控制面的 `VSP-v2` 主线；机器可读身份和证据指针见 [MAINLINE_MANIFEST.json](MAINLINE_MANIFEST.json)。版本 `1.7.1` 同步动态场景数据绑定、两轮太阳估计进度与全车辆角度回填，并兼容跨 NumPy 版本的 PTH；继续集成 `pbr-vehicle-sun 1.2.0 / SSE-v8` 太阳角估计和 `pbr-vehicle-auto 1.2.1 / ALM-v5` 车辆外观识别。
 
 ## 资产约定
 
@@ -55,6 +55,16 @@ python -m pbr_vehicle_standalone \
 
 浏览器访问 `http://localhost:18091`。面板可在运行时替换场景、添加/删除多辆车，并为每辆车选择共享场景光照或独立光照。保存按钮会在车辆目录的 `configs/` 下创建 `config_<场景>_<车辆>_<序号>_<时间>.json`。
 
+每辆车的“高级 / R3GW Lighting”中可选“使用场景环境贴图”。启用后，Panel 在车辆中心对不含插入车辆和投影的场景渲染六个 `90°` cubemap 面：漫反射使用二阶 irradiance SH，镜面项使用当前观察相机方向和反射方向采样 cubemap，并按 roughness 选择 mip。车辆位置变化会重新捕获；相机位置变化只重算车辆颜色。该开关默认关闭，关闭或捕获失败时继续使用原有 SH 环境光预览。
+
+同一区域的“Environment-map 预览”可显示贴有当前环境图的球体。独立模式下，环境球 XYZ 同时是采样和显示位置，移动后重新捕获；“跟随车辆”模式下，采样中心固定为车辆中心，显示偏移 XYZ 只把球移到便于观察的位置，不会改变贴图内容。捕获期间会隐藏所有车辆、两层投影和已有环境球，避免自反射。
+
+Scene 区域新增“太阳估计”。安装相邻 `pbr-vehicle-sun` wheel、准备其外部模型环境，并在“太阳估计配置”填写可移植 JSON 后，点击按钮会异步执行场景级 SSE-v8。中间文件保留在系统临时目录；成功后自动启用太阳并回填共享光照的方位角和高度角。示例配置见 [examples/sun-estimator-config.example.json](examples/sun-estimator-config.example.json)。
+
+加载 PTH 时，Panel 会读取同目录 `config.yaml` 的 `data_root` 与 `scene_idx`，将太阳估计绑定到当前场景的 RGB、标定和道路 mask；换场景后不会沿用旧数据。两轮估计会显示阶段进度，只采用 `two_round_result.json` 指定的发布轮次。成功后同时更新共享场景和所有现有车辆的太阳角，但保持每辆车原有的共享/独立光照模式。
+
+每辆车顶部新增“Auto 识别车辆参数”。安装相邻 `pbr-vehicle-auto` wheel 后，按钮会在后台用完整普通 Gaussian 场景执行 ALM-v5；PTH 会先转换成不抽样的缓存 PLY。只有 fitter 发布 `candidate_only` 时才切换该车为独立光照，并回填太阳光强度、亮度和车辆色温；无改善、失败或超时均不覆盖当前面板。太阳角度、太阳 RGB、饱和度和其他材质参数始终保留。可移植配置示例见 [examples/auto-fit-config.example.json](examples/auto-fit-config.example.json)。
+
 已安装时也可运行 `pbr-vehicle-panel`；`pbr-vehicle-viewer` 保留为兼容别名。
 
 完整启动命令、全部参数含义和常用组合见 [使用指南.md](使用指南.md)。文档中的资产与场景路径均为相对路径示例。
@@ -62,6 +72,9 @@ python -m pbr_vehicle_standalone \
 ## 范围与边界
 
 - 场景保持普通 Gaussian SH 颜色，不执行 R3GW PBR。
+- Environment-map 是可选的交互预览分支，默认关闭；使用当前浏览器对场景做 LDR cubemap 捕获，不声称恢复物理 HDR 辐射值。
+- 太阳估计只依赖数据集 RGB/标定与独立 `pbr-vehicle-sun` 模型链，不改变场景 Gaussian；没有通过置信度门时不会覆盖当前太阳参数。
+- Auto 识别使用普通 Gaussian 场景的 DC/opacity 与当前车辆状态，只拟合太阳光强度、亮度和车辆色温；它是外观匹配代理，不代表物理光照或材质真值。
 - 场景与车辆始终加载全部 Gaussian，不提供数量限制或抽样选项。
 - 车辆面板直接展示太阳光强度、太阳方位角、太阳高度角、车辆色温、饱和度、亮度和 Center orbit；配置操作收入 `Config`，完整参数按 `Transform / Material / R3GW Lighting / Projection` 四类直接平铺在外层“高级”下，子面板不再嵌套“高级”或“次要参数”。
 - 车辆/环境色温范围为 `-0.5~0.5`（`0=6500K`），饱和度为直接倍率 `0~2`（`1` 为中性），亮度为 `-1~1`（`0` 对应 fill light `0.35`）。
@@ -70,7 +83,7 @@ python -m pbr_vehicle_standalone \
 - 车辆 Albedo 饱和度是 P0 参数；`Relight Original` 中直接作用于可见 PBR Gaussian 颜色，重光照比率按同一点计算，不依赖 mapping。
 - contact core 固定在车辆底部；cast extension 根据太阳方向重新生成，两层直接 alpha 叠加。
 - 投影以 glTF `alphaMode=BLEND` 平面发送给 Viser，不依赖修改 Viser 前端安装文件。
-- 这是交互预览实现，不包含 DriveStudio 相机批渲染、训练器、数据集或 CUDA rasterizer；它不宣称与 DriveStudio 原生 GGX rasterizer 像素一致。
+- 这是交互预览实现，不包含 DriveStudio 相机批渲染、训练器、数据集或 CUDA rasterizer；roughness 使用 cubemap mip 近似预过滤，不宣称与原生 GGX importance-sampled prefilter 或 DriveStudio rasterizer 像素一致。
 
 ## 测试
 

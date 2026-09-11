@@ -4,7 +4,7 @@ from importlib.resources import files
 import numpy as np
 
 from pbr_vehicle_auto.defaults import normalize_default
-from pbr_vehicle_auto.fitter import cct_tint, proxy_lighting
+from pbr_vehicle_auto.fitter import bounded_grid, cct_tint, proxy_lighting, ui_to_value, value_to_ui
 
 
 def test_cct_path_is_luminance_normalized_and_bounded():
@@ -44,3 +44,14 @@ def test_default_template_keeps_extension_distance_to_white_disabled():
     )
     assert template["pbr_asset"]["projection"]["extension"]["brightness_distance_to_white"] == 0.0
     assert template["vehicle"]["projection"]["extension"]["brightness_distance_to_white"] == 0.0
+
+
+def test_viser_ui_bounds_include_both_constraint_walls():
+    assert np.allclose(bounded_grid(0.9, 0.15, 6)[[0, -1]], [0.75, 1.0])
+    assert np.allclose(bounded_grid(-0.9, 0.3, 5)[[0, -1]], [-1.0, -0.6])
+
+
+def test_viser_fitted_lighting_mappings_round_trip():
+    for kind, values in (("sun_intensity", [-1.0, -0.15, 0.0, 0.15, 1.0]), ("brightness", [-1.0, -0.3, 0.0, 0.3, 1.0])):
+        for ui_value in values:
+            assert np.isclose(value_to_ui(ui_to_value(ui_value, kind), kind), ui_value)

@@ -1,9 +1,17 @@
 # pbr-vehicle-sun 版本说明
 
-## 当前版本：1.0.0
+## 当前版本：1.2.0
 
-- 首次独立交付场景太阳方位角/高度角识别包，对应 `SSE-v6`。
-- 提供核心单/多帧、原生/前馈 Gaussian 双分支 CLI。
-- 默认无 Gaussian 链使用纯 RGB InfiniDepth、逐连通域最大相机锥形近侧弧、源图边缘证据剔除和完整候选投影；观测阴影和候选投影均不再执行车辆 floor/footprint 二次差集。
-- 提供 Argoverse 全场景跨帧 Top-3 车辆选择、MTMT/SAM2/InfiniDepth 外部模型编排与 fail-closed 阴影证据门。
-- 提供 RGB 轮廓回投影及六联高清审计图。
+- 默认 `pbr-vehicle-sun-scene` 已加入两轮换车：首轮全局排名 1–3，无有效角时复用检测和排名并更换为排名 4–6。
+- 第二轮仍无有效角才返回 `no_valid_sun_information`；进程失败立即停止并返回非零码，不触发换车。
+- 新增轮级重试、完成结果恢复和 `two_round_result.json`；保留 `pbr-vehicle-sun-scene-round` 作为高级单轮入口。
+- Argoverse 000–049 审计中 26/50 发布、24/50 无有效角、0 个进程失败；007–049 中 9 个场景由第二轮挽救。
+
+## 1.1.0
+
+- 对应研究主线 `SSE-v8`，其阴影协议严格采用实验 `SSE-v6-b`，并继承 `SSE-v7` 的通用多车门控。
+- 以 SSISv2 object-shadow association 替换已弃用的旧阴影检测链。
+- 官方 SSISv2 shadow mask 直接参与 InfiniDepth 提升，不执行差集、连通域清洗或形态学后处理。
+- 默认全场景 Top 3 物理车辆，通用支持 Top 1–5。
+- 每车执行 P95 相机可见轮廓拟合和双硬门；保留通过车辆的加权角与共享角联合拟合，全部拒绝时不发布太阳角。
+- wheel 不包含模型、权重、数据资产、缓存结果或机器绝对路径。

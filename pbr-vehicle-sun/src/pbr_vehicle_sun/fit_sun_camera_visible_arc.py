@@ -5,20 +5,99 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
+from scipy.ndimage import gaussian_filter1d
+from scipy.signal import find_peaks
 from scipy.spatial import cKDTree
 
 try:
     from .fit_sun_fixed_full_contour import gaussian_union_mask
     from .fit_sun_fixed_shadow_joint import robust, setup
     from .fit_sun_from_dense_shadow_boundary import contour_xy, plane_xy
-except ImportError:  # direct script execution by the packaged dispatcher
+except ImportError:
     from fit_sun_fixed_full_contour import gaussian_union_mask
     from fit_sun_fixed_shadow_joint import robust, setup
     from fit_sun_from_dense_shadow_boundary import contour_xy, plane_xy
+
+
+VEHICLE_EVIDENCE_EXIT_CODE = 42
+
+
+class VehicleEvidenceError(RuntimeError):
+    pass
+
+
+def sampled_arc_structure(arc: np.ndarray, spacing_m: float = .025,
+                          smooth_m: float = .075) -> dict | None:
+    """Resample and smooth one open arc before taking local derivatives."""
+    arc = np.asarray(arc, dtype=np.float64)
+    if len(arc) < 4:
+        return None
+    keep = np.r_[True, np.linalg.norm(np.diff(arc, axis=0), axis=1) > 1e-8]
+    arc = arc[keep]
+    if len(arc) < 4:
+        return None
+    distance = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(arc, axis=0), axis=1))]
+    length = float(distance[-1])
+    if length < .12:
+        return None
+    count = int(np.clip(np.ceil(length / spacing_m) + 1, 12, 768))
+    sample_s = np.linspace(0.0, length, count)
+    points = np.c_[np.interp(sample_s, distance, arc[:, 0]),
+                   np.interp(sample_s, distance, arc[:, 1])]
+    actual_spacing = length / max(count - 1, 1)
+    sigma = max(.5, smooth_m / max(actual_spacing, 1e-6))
+    points = gaussian_filter1d(points, sigma=sigma, axis=0, mode="nearest")
+    derivative = np.gradient(points, actual_spacing, axis=0)
+    norm = np.linalg.norm(derivative, axis=1)
+    tangent = derivative / np.maximum(norm[:, None], 1e-8)
+    curvature = np.linalg.norm(np.gradient(tangent, actual_spacing, axis=0), axis=1)
+    peak_distance = max(1, int(round(.15 / max(actual_spacing, 1e-6))))
+    peaks, properties = find_peaks(curvature, distance=peak_distance, prominence=.40)
+    peaks = peaks[curvature[peaks] >= .65]
+    return {"points": points, "tangent": tangent, "curvature": curvature,
+            "bump_points": points[peaks], "length_m": length,
+            "spacing_m": actual_spacing, "bump_count": int(len(peaks))}
+
+
+def structure_metrics(predicted_arcs: list[np.ndarray],
+                      observed_arcs: list[np.ndarray]) -> dict:
+    """Compare tangent changes, curvature and localized bumps at nearby points."""
+    pred = [item for arc in predicted_arcs if (item := sampled_arc_structure(arc)) is not None]
+    obs = [item for arc in observed_arcs if (item := sampled_arc_structure(arc)) is not None]
+    if not pred or not obs:
+        return {"structure_valid": False, "structure_penalty_m": .25,
+                "tangent_p80_rad": float(np.pi / 2), "curvature_log_p80": 1.0,
+                "bump_support": 0.0, "predicted_bump_count": 0,
+                "observed_bump_count": 0}
+    pp = np.vstack([x["points"] for x in pred]); pt = np.vstack([x["tangent"] for x in pred]); pc = np.concatenate([x["curvature"] for x in pred])
+    op = np.vstack([x["points"] for x in obs]); ot = np.vstack([x["tangent"] for x in obs]); oc = np.concatenate([x["curvature"] for x in obs])
+    p_to_o = cKDTree(op).query(pp, k=1, workers=-1)[1]
+    o_to_p = cKDTree(pp).query(op, k=1, workers=-1)[1]
+    tangent_error = np.r_[np.arccos(np.clip(np.abs(np.sum(pt * ot[p_to_o], axis=1)), 0, 1)),
+                           np.arccos(np.clip(np.abs(np.sum(ot * pt[o_to_p], axis=1)), 0, 1))]
+    pc_desc, oc_desc = np.log1p(.15 * pc), np.log1p(.15 * oc)
+    curvature_error = np.r_[np.abs(pc_desc - oc_desc[p_to_o]),
+                             np.abs(oc_desc - pc_desc[o_to_p])]
+    pb = np.vstack([x["bump_points"] for x in pred if len(x["bump_points"])]) if any(len(x["bump_points"]) for x in pred) else np.empty((0, 2))
+    ob = np.vstack([x["bump_points"] for x in obs if len(x["bump_points"])]) if any(len(x["bump_points"]) for x in obs) else np.empty((0, 2))
+    if len(pb) and len(ob):
+        dp = cKDTree(ob).query(pb, k=1, workers=-1)[0]
+        do = cKDTree(pb).query(ob, k=1, workers=-1)[0]
+        bump_support = float(.5 * (np.mean(np.exp(-(dp / .18) ** 2)) + np.mean(np.exp(-(do / .18) ** 2))))
+    else:
+        bump_support = 1.0 if not len(pb) and not len(ob) else 0.0
+    tangent_p80 = float(np.quantile(tangent_error, .80))
+    curvature_p80 = float(np.quantile(curvature_error, .80))
+    penalty = .08 * tangent_p80 + .04 * curvature_p80 + .12 * (1.0 - bump_support)
+    return {"structure_valid": True, "structure_penalty_m": float(penalty),
+            "tangent_p80_rad": tangent_p80, "curvature_log_p80": curvature_p80,
+            "bump_support": bump_support, "predicted_bump_count": int(len(pb)),
+            "observed_bump_count": int(len(ob))}
 
 
 def cross2(a: np.ndarray, b: np.ndarray) -> float:
@@ -192,7 +271,7 @@ def contour_components_xy(binary: np.ndarray, lo: np.ndarray, hi: np.ndarray,
     for rank, contour in enumerate(ranked, 1):
         area = float(cv2.contourArea(contour))
         relative_area = area / largest_area if largest_area > 0 else 0.0
-        retained = (rank <= max_components and relative_area >= min_relative_area
+        retained = ((max_components <= 0 or rank <= max_components) and relative_area >= min_relative_area
                     and len(contour) >= 8)
         audit.append({"rank": rank, "area_pixels": area,
                       "relative_to_largest": relative_area,
@@ -369,9 +448,13 @@ def component_tangent_edges(binary: np.ndarray, frame: dict,
 
 def component_camera_cone_middle_edges(binary: np.ndarray,
                                        frame: dict,
-                                       trim_image_edge: bool = False) -> tuple[list[np.ndarray], dict]:
+                                       trim_image_edge: bool = False,
+                                       max_components: int = 2,
+                                       min_relative_area: float = .50) -> tuple[list[np.ndarray], dict]:
     """Apply the same maximal-camera-cone contract to each retained island."""
-    components, component_audit = contour_components_xy(binary, frame["lo"], frame["hi"])
+    components, component_audit = contour_components_xy(binary, frame["lo"], frame["hi"],
+                                                         max_components=max_components,
+                                                         min_relative_area=min_relative_area)
     arcs, audits = [], []
     for component in components:
         arc, audit = maximal_camera_cone_middle_arc(component, frame["camera_xy"])
@@ -413,7 +496,7 @@ def component_camera_cone_middle_edges(binary: np.ndarray,
         "input_components": len(component_audit),
         "contract_components": len(components),
         "retained_components": len(arcs),
-        "component_gate": {"max_components": 2, "min_relative_area": 0.50,
+        "component_gate": {"max_components": max_components, "min_relative_area": min_relative_area,
                            "components": component_audit},
         "selected_points": int(sum(len(arc) for arc in arcs)),
         "components": audits,
@@ -442,13 +525,15 @@ def add_camera_contract(frame: dict, vehicle_data: np.lib.npyio.NpzFile,
         observed_arc = np.vstack(observed_arcs) if observed_arcs else np.empty((0, 2))
     elif visibility_mode == "camera_cone_middle":
         observed_arcs, audit = component_camera_cone_middle_edges(
-            frame["obs_mask"], frame, trim_image_edge=frame.get("trim_image_edge", False))
+            frame["obs_mask"], frame, trim_image_edge=frame.get("trim_image_edge", False),
+            max_components=0 if frame.get("direct_shadow_mask", False) else 2,
+            min_relative_area=0.0 if frame.get("direct_shadow_mask", False) else .50)
         observed_arc = np.vstack(observed_arcs) if observed_arcs else np.empty((0, 2))
     else:
         observed_arc, audit = visible_edge(observed_full, frame, visibility_mode, angular_bins)
         observed_arcs = [observed_arc] if len(observed_arc) else []
     if len(observed_arc) < 8:
-        raise RuntimeError(f"camera visibility operator did not yield a usable observed edge: {audit}")
+        raise VehicleEvidenceError(f"camera visibility operator did not yield a usable observed edge: {audit}")
     frame["observed_full_boundary"] = observed_full
     frame["obs_boundary"] = observed_arc
     frame["observed_arcs"] = observed_arcs
@@ -477,7 +562,23 @@ def main() -> None:
     parser.add_argument("--exclude-image-edge-components", action="store_true",
                         help="exclude shadow components touching any source-image edge")
     parser.add_argument("--contact-exclusion-m", type=float, default=0.0)
+    parser.add_argument("--direct-shadow-mask", action="store_true",
+                        help="consume every official detector-mask component and disable radial shadow-point quantile trimming")
+    parser.add_argument("--fixed-azimuth", type=float)
+    parser.add_argument("--fixed-elevation", type=float)
+    parser.add_argument("--structure-aware", action="store_true",
+                        help="rank candidates with explicit tangent, curvature and localized-bump correspondence in addition to point-set distance")
+    parser.add_argument("--distance-percentile", type=float, default=.90,
+                        help="symmetric robust contour tail quantile, e.g. .90, .95 or .97")
+    parser.add_argument("--top-candidates", type=int, default=25,
+                        help="number of ranked candidates to visualize")
+    parser.add_argument("--top-page-size", type=int, default=25,
+                        help="candidates per contact sheet; must be 25")
     args = parser.parse_args()
+    if not .50 <= args.distance_percentile <= 1.0:
+        raise ValueError("--distance-percentile must be in [0.50, 1.0]")
+    if args.top_candidates < 1 or args.top_page_size != 25:
+        raise ValueError("--top-candidates must be positive and --top-page-size must be 25")
     counts = {len(args.vehicle_geometry), len(args.shadow_geometry), len(args.shadow_mask)}
     if len(counts) != 1:
         raise ValueError("vehicle geometry, shadow geometry, and shadow mask lists must have equal lengths")
@@ -487,10 +588,14 @@ def main() -> None:
     for index, (vehicle_path, shadow_path, mask_path) in enumerate(zip(args.vehicle_geometry, args.shadow_geometry, args.shadow_mask)):
         vehicle_data, shadow_data = np.load(vehicle_path), np.load(shadow_path)
         frame = setup(vehicle_data, shadow_data, mask_path, args.raster_size, args.max_vehicle_points,
-                      args.seed + index, observed_components=2 if args.visibility_mode in ("component_tangent_arcs", "camera_cone_middle") else 1,
+                      args.seed + index,
+                      observed_components=(0 if args.direct_shadow_mask else 2) if args.visibility_mode in ("component_tangent_arcs", "camera_cone_middle") else 1,
                       subtract_observed_floor=not args.no_observed_floor_subtraction,
-                      exclude_image_edge=False)
+                      exclude_image_edge=False,
+                      projection_elevation_min_deg=args.coarse_elev_min,
+                      shadow_point_quantile=1.0 if args.direct_shadow_mask else .995)
         frame["trim_image_edge"] = args.exclude_image_edge_components
+        frame["direct_shadow_mask"] = args.direct_shadow_mask
         add_camera_contract(frame, vehicle_data, args.visibility_mode, args.angular_bins,
                             args.contact_exclusion_m)
         frames.append(frame)
@@ -501,10 +606,10 @@ def main() -> None:
         projected = frame["vxy"] - frame["h"][:, None] * cotangent * horizontal[None]
         world_to_plane = np.c_[frame["e1"], frame["e2"]] - frame["n"][:, None] * cotangent * horizontal[None]
         raw_mask = gaussian_union_mask(projected, frame["cov"], world_to_plane, 2.0, frame["lo"], frame["hi"], frame["size"])
-        # The observed shadow has already undergone source-view shadow-minus-
-        # vehicle subtraction. Candidate floor subtraction is optional because
-        # a Boolean difference creates a synthetic boundary identical to the
-        # blue footprint; camera-cone mode normally scores the raw projection.
+        # SSE-v6-b consumes the SSISv2 associated source mask unchanged.
+        # Candidate floor subtraction remains optional because a Boolean
+        # difference creates a synthetic boundary identical to the blue
+        # footprint; camera-cone mode normally scores the raw projection.
         predicted_mask = (raw_mask if args.no_predicted_floor_subtraction else raw_mask & ~cv2.dilate(
             frame["floor"].astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool))
         full_boundary = contour_xy(predicted_mask, frame["lo"], frame["hi"])
@@ -520,9 +625,20 @@ def main() -> None:
             visible_arcs = [visible_arc] if len(visible_arc) else []
         if len(visible_arc) < 8:
             return None
-        metrics = robust(visible_arc, frame["obs_boundary"])
+        metrics = robust(visible_arc, frame["obs_boundary"], args.distance_percentile)
         if metrics is None:
             return None
+        distance_only_score = float(metrics["score"])
+        structure = (structure_metrics(visible_arcs, frame["observed_arcs"])
+                     if args.structure_aware else
+                     {"structure_valid": False, "structure_penalty_m": 0.0,
+                      "tangent_p80_rad": 0.0, "curvature_log_p80": 0.0,
+                      "bump_support": 0.0, "predicted_bump_count": 0,
+                      "observed_bump_count": 0})
+        metrics.update(structure)
+        metrics["distance_only_score"] = distance_only_score
+        if args.structure_aware:
+            metrics["score"] = distance_only_score - structure["structure_penalty_m"]
         intersection = np.count_nonzero(raw_mask & frame["obs_mask"])
         union = np.count_nonzero(raw_mask | frame["obs_mask"])
         result = dict(metrics)
@@ -542,24 +658,37 @@ def main() -> None:
         return {"score": float(np.mean([result["score"] for result in per_frame])),
                 "azimuth_deg": float(azimuth), "elevation_deg": float(elevation), "frames": per_frame}
 
-    coarse = []
-    for elevation in range(args.coarse_elev_min, args.coarse_elev_max + 1, 5):
-        for azimuth in range(0, 360, args.coarse_az_step):
-            result = evaluate(azimuth, elevation)
-            if result is not None:
-                coarse.append(result)
-    seeds = sorted(coarse, key=lambda row: row["score"], reverse=True)[:args.local_basins]
-    refined = []
-    for seed in seeds:
-        for elevation in range(max(2, int(seed["elevation_deg"]) - args.local_radius_deg), int(seed["elevation_deg"]) + args.local_radius_deg + 1):
-            for delta in range(-args.local_radius_deg, args.local_radius_deg + 1):
-                result = evaluate((int(seed["azimuth_deg"]) + delta) % 360, elevation)
+    if (args.fixed_azimuth is None) != (args.fixed_elevation is None):
+        raise ValueError("--fixed-azimuth and --fixed-elevation must be provided together")
+    coarse, refined = [], []
+    if args.fixed_azimuth is not None:
+        fixed = evaluate(args.fixed_azimuth % 360.0, args.fixed_elevation)
+        if fixed is None:
+            raise VehicleEvidenceError("fixed angle did not yield usable contours for every frame")
+        coarse = [fixed]
+        best = fixed
+    else:
+        for elevation in range(args.coarse_elev_min, args.coarse_elev_max + 1, 5):
+            for azimuth in range(0, 360, args.coarse_az_step):
+                result = evaluate(azimuth, elevation)
                 if result is not None:
-                    refined.append(result)
-    best = max(refined or coarse, key=lambda row: row["score"])
+                    coarse.append(result)
+        seeds = sorted(coarse, key=lambda row: row["score"], reverse=True)[:args.local_basins]
+        for seed in seeds:
+            lower = max(args.coarse_elev_min, int(seed["elevation_deg"]) - args.local_radius_deg)
+            upper = min(args.coarse_elev_max, int(seed["elevation_deg"]) + args.local_radius_deg)
+            for elevation in range(lower, upper + 1):
+                for delta in range(-args.local_radius_deg, args.local_radius_deg + 1):
+                    result = evaluate((int(seed["azimuth_deg"]) + delta) % 360, elevation)
+                    if result is not None:
+                        refined.append(result)
+        best = max(refined or coarse, key=lambda row: row["score"])
 
-    metric_names = ("score", "pred_to_observed_p90_m", "pred_to_observed_median_m",
-                    "observed_to_predicted_p90_m", "pred_boundary_support_0p35m", "iou_diagnostic")
+    metric_names = ("score", "distance_only_score", "distance_percentile", "pred_to_observed_tail_m",
+                    "pred_to_observed_median_m", "observed_to_predicted_tail_m",
+                    "pred_boundary_support_0p35m", "iou_diagnostic",
+                    "structure_penalty_m", "tangent_p80_rad", "curvature_log_p80", "bump_support",
+                    "predicted_bump_count", "observed_bump_count")
     for rows, filename in ((coarse, "coarse_scores.csv"), (refined, "refined_scores.csv")):
         fields = ["score", "azimuth_deg", "elevation_deg"] + [f"frame{i}_{name}" for i in range(len(frames)) for name in metric_names]
         with (args.output_dir / filename).open("w", newline="") as handle:
@@ -571,34 +700,44 @@ def main() -> None:
                              for i in range(len(frames)) for name in metric_names})
                 writer.writerow(flat)
 
-    def to_pixels(points: np.ndarray, frame: dict) -> np.ndarray:
-        q = (points - frame["lo"]) / (frame["hi"] - frame["lo"])
-        return np.rint(np.c_[q[:, 0] * 699, (1.0 - q[:, 1]) * 699]).astype(np.int32)
-
     def panel(frame: dict, result: dict, title: str) -> np.ndarray:
         image = np.full((700, 700, 3), 250, np.uint8)
-        observed = cv2.resize(frame["obs_mask"].astype(np.uint8), (700, 700), interpolation=cv2.INTER_NEAREST).astype(bool)
+        focus = frame["obs_mask"] | result["predicted_mask"] | frame["floor"]
+        yy, xx = np.nonzero(focus)
+        if len(xx):
+            span = max(int(xx.max() - xx.min()), int(yy.max() - yy.min()), 1)
+            pad = max(12, int(round(.12 * span)))
+            x0, x1 = max(0, int(xx.min()) - pad), min(frame["size"] - 1, int(xx.max()) + pad)
+            y0, y1 = max(0, int(yy.min()) - pad), min(frame["size"] - 1, int(yy.max()) + pad)
+        else:
+            x0, x1, y0, y1 = 0, frame["size"] - 1, 0, frame["size"] - 1
+        observed = cv2.resize(frame["obs_mask"][y0:y1 + 1, x0:x1 + 1].astype(np.uint8), (700, 700), interpolation=cv2.INTER_NEAREST).astype(bool)
         image[observed] = (90, 90, 90)
-        vehicle = cv2.resize(frame["floor"].astype(np.uint8), (700, 700), interpolation=cv2.INTER_NEAREST)
+        vehicle = cv2.resize(frame["floor"][y0:y1 + 1, x0:x1 + 1].astype(np.uint8), (700, 700), interpolation=cv2.INTER_NEAREST)
         contours, _ = cv2.findContours(vehicle, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         cv2.drawContours(image, contours, -1, (255, 80, 0), 2)
+        def display_pixels(points: np.ndarray) -> np.ndarray:
+            q = (points - frame["lo"]) / (frame["hi"] - frame["lo"])
+            raster = np.c_[q[:, 0] * (frame["size"] - 1), (1.0 - q[:, 1]) * (frame["size"] - 1)]
+            return np.rint(np.c_[(raster[:, 0] - x0) / max(x1 - x0, 1) * 699,
+                                 (raster[:, 1] - y0) / max(y1 - y0, 1) * 699]).astype(np.int32)
         # Thin pale line audits the rejected full contour. Thick red is the only
         # predicted arc used in the score; green is the fixed observed arc.
-        full_px = to_pixels(result["full_boundary"], frame)
-        pred_arcs_px = [to_pixels(arc, frame) for arc in result.get("visible_arcs", [result["visible_arc"]])]
-        obs_arcs_px = [to_pixels(arc, frame) for arc in frame.get("observed_arcs", [frame["obs_boundary"]])]
+        full_px = display_pixels(result["full_boundary"])
+        pred_arcs_px = [display_pixels(arc) for arc in result.get("visible_arcs", [result["visible_arc"]])]
+        obs_arcs_px = [display_pixels(arc) for arc in frame.get("observed_arcs", [frame["obs_boundary"]])]
         if len(full_px) > 1: cv2.polylines(image, [full_px], True, (185, 185, 255), 1, cv2.LINE_AA)
         for pred_px in pred_arcs_px:
             if len(pred_px) > 1: cv2.polylines(image, [pred_px], False, (0, 0, 255), 4, cv2.LINE_AA)
         # Observed evidence is drawn last so exact overlap remains visible.
         for obs_px in obs_arcs_px:
             if len(obs_px) > 1: cv2.polylines(image, [obs_px], False, (0, 210, 0), 2, cv2.LINE_AA)
-        camera_px = to_pixels(frame["camera_xy"][None], frame)[0]
+        camera_px = display_pixels(frame["camera_xy"][None])[0]
         extent = 30.0
         if args.visibility_mode == "ray_arc":
             for angle in (frame["left_angle"], frame["right_angle"]):
                 endpoint = frame["camera_xy"] + extent * np.array((np.cos(angle), np.sin(angle)))
-                cv2.line(image, tuple(camera_px), tuple(to_pixels(endpoint[None], frame)[0]), (180, 80, 180), 1, cv2.LINE_AA)
+                cv2.line(image, tuple(camera_px), tuple(display_pixels(endpoint[None])[0]), (180, 80, 180), 1, cv2.LINE_AA)
         elif args.visibility_mode == "camera_cone_middle":
             # Draw the actually solved per-component cone boundaries. Solid
             # purple audits the observed contour; pale purple audits candidate.
@@ -610,11 +749,11 @@ def main() -> None:
                             continue
                         angle = np.deg2rad(component[key])
                         endpoint = frame["camera_xy"] + extent * np.array((np.cos(angle), np.sin(angle)))
-                        cv2.line(image, tuple(camera_px), tuple(to_pixels(endpoint[None], frame)[0]), color, 1, cv2.LINE_AA)
+                        cv2.line(image, tuple(camera_px), tuple(display_pixels(endpoint[None])[0]), color, 1, cv2.LINE_AA)
         cv2.putText(image, title, (8, 28), cv2.FONT_HERSHEY_SIMPLEX, .48, (0, 0, 0), 2, cv2.LINE_AA)
         return image
 
-    chosen = sorted(refined or coarse, key=lambda row: row["score"], reverse=True)[:25]
+    chosen = sorted(refined or coarse, key=lambda row: row["score"], reverse=True)[:args.top_candidates]
     for index, frame in enumerate(frames):
         cv2.imwrite(str(args.output_dir / f"frame{index}_best_camera_visible_arc.png"),
                     panel(frame, best["frames"][index], f"frame {index} | shared az {best['azimuth_deg']:.1f} el {best['elevation_deg']:.1f}"))
@@ -634,25 +773,41 @@ def main() -> None:
             camera_to_world=np.load(args.vehicle_geometry[index])["camera_to_world"],
             intrinsics=np.load(args.vehicle_geometry[index])["intrinsics"],
         )
-    cells = [cv2.hconcat([panel(frames[i], row["frames"][i], f"az {row['azimuth_deg']:.0f} el {row['elevation_deg']:.0f} score {row['score']:.3f}") for i in range(len(frames))]) for row in chosen]
-    while len(cells) < 25:
-        cells.append(cells[-1])
-    sheet = cv2.vconcat([cv2.hconcat(cells[index:index + 5]) for index in range(0, 25, 5)])
-    cv2.imwrite(str(args.output_dir / "top25_camera_visible_arc_candidates.jpg"), sheet, [cv2.IMWRITE_JPEG_QUALITY, 96])
+    cells = [cv2.hconcat([panel(frames[i], row["frames"][i], f"rank {rank + 1} | az {row['azimuth_deg']:.0f} el {row['elevation_deg']:.0f} score {row['score']:.3f}") for i in range(len(frames))]) for rank, row in enumerate(chosen)]
+    page_files = []
+    for start in range(0, len(cells), args.top_page_size):
+        page = cells[start:start + args.top_page_size]
+        while len(page) < args.top_page_size:
+            page.append(np.full_like(cells[0], 250))
+        sheet = cv2.vconcat([cv2.hconcat(page[index:index + 5]) for index in range(0, args.top_page_size, 5)])
+        filename = ("top25_camera_visible_arc_candidates.jpg" if args.top_candidates == 25 else
+                    f"top{args.top_candidates}_camera_visible_arc_candidates_page{start // args.top_page_size + 1:02d}.jpg")
+        cv2.imwrite(str(args.output_dir / filename), sheet, [cv2.IMWRITE_JPEG_QUALITY, 96])
+        page_files.append(filename)
 
     scalar_frame = lambda result: {key: value for key, value in result.items() if key not in ("raw_mask", "predicted_mask", "full_boundary", "visible_arc", "visible_arcs")}
     output = {
         "best": {"azimuth_deg": best["azimuth_deg"], "elevation_deg": best["elevation_deg"],
                  "joint_score": best["score"], "frames": [scalar_frame(result) for result in best["frames"]]},
-        "objective": (("per-connected-component maximal camera cone boundary intersections and complete intervening near contour arcs, identically applied to observed shadow and candidate projection" if args.visibility_mode == "camera_cone_middle" else "per-connected-component camera tangent intersections and intervening near contour arcs, identically applied to observed shadow and candidate projection" if args.visibility_mode == "component_tangent_arcs" else "camera-angular nearest contour edge for both fixed observed shadow and candidate vehicle projection" if args.visibility_mode == "angular_near_edge" else "camera-visible near contour arcs between fixed left/right camera rays") + "; mean bidirectional robust contour distance across frames; IoU diagnostic only"),
+        "objective": (("per-connected-component maximal camera cone boundary intersections and complete intervening near contour arcs, identically applied to observed shadow and candidate projection" if args.visibility_mode == "camera_cone_middle" else "per-connected-component camera tangent intersections and intervening near contour arcs, identically applied to observed shadow and candidate projection" if args.visibility_mode == "component_tangent_arcs" else "camera-angular nearest contour edge for both fixed observed shadow and candidate vehicle projection" if args.visibility_mode == "angular_near_edge" else "camera-visible near contour arcs between fixed left/right camera rays") + ("; bidirectional robust contour distance plus smoothed tangent, curvature and localized-bump correspondence; IoU diagnostic only" if args.structure_aware else "; mean bidirectional robust contour distance across frames; IoU diagnostic only")),
         "visibility_mode": args.visibility_mode,
         "angular_bins": args.angular_bins if args.visibility_mode == "angular_near_edge" else None,
         "observed_floor_subtraction": not args.no_observed_floor_subtraction,
         "contact_exclusion_m": args.contact_exclusion_m,
         "predicted_floor_subtraction": not args.no_predicted_floor_subtraction,
         "exclude_image_edge_components": args.exclude_image_edge_components,
+        "direct_shadow_mask": args.direct_shadow_mask,
+        "distance_percentile": args.distance_percentile,
+        "structure_aware": args.structure_aware,
+        "structure_objective": ({"resample_spacing_m": .025, "smoothing_scale_m": .075,
+                                 "bump_min_curvature_per_m": .65, "bump_min_prominence_per_m": .40,
+                                 "bump_match_scale_m": .18,
+                                 "penalty_m": "0.08*tangent_p80_rad + 0.04*curvature_log_p80 + 0.12*(1-bump_support)"}
+                                if args.structure_aware else None),
         "visualization": "gray=observed mask; green=scored observed camera-facing edge; blue=vehicle floor; pale-red=rejected full candidate contour; red=scored candidate camera-facing edge; purple=legacy side rays when ray_arc is selected",
         "top25_same_objective": True,
+        "candidate_visualization": {"requested": args.top_candidates, "page_size": args.top_page_size,
+                                    "pages": page_files},
         "execution_mode": "single_frame" if len(frames) == 1 else "multi_frame_shared_angle",
         "frame_count": len(frames),
         "camera_contract": [{"camera_xy": frame["camera_xy"].tolist(), "left_angle_deg": float(np.rad2deg(frame["left_angle"])),
@@ -660,11 +815,19 @@ def main() -> None:
         "inputs": [{"vehicle_geometry": str(v.resolve()), "shadow_geometry": str(s.resolve()), "shadow_mask": str(m.resolve())}
                    for v, s, m in zip(args.vehicle_geometry, args.shadow_geometry, args.shadow_mask)],
         "search": {"coarse_az_step": args.coarse_az_step, "coarse_elevation": [args.coarse_elev_min, args.coarse_elev_max, 5],
-                   "local_radius_deg": args.local_radius_deg, "local_basins": args.local_basins},
+                   "local_radius_deg": args.local_radius_deg, "local_basins": args.local_basins,
+                   "fixed_angle": None if args.fixed_azimuth is None else [args.fixed_azimuth % 360.0, args.fixed_elevation],
+                   "full_projection_canvas": True,
+                   "frame_canvas_bounds": [{"lo": frame["lo"].tolist(), "hi": frame["hi"].tolist(),
+                                            "max_projection_shift_m": frame["max_projection_shift_m"]} for frame in frames]},
     }
     (args.output_dir / "fit_result.json").write_text(json.dumps(output, indent=2) + "\n")
     print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except VehicleEvidenceError as error:
+        print(f"vehicle evidence rejected: {error}", file=sys.stderr)
+        raise SystemExit(VEHICLE_EVIDENCE_EXIT_CODE)

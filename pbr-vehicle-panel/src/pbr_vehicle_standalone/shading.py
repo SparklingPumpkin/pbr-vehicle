@@ -5,6 +5,7 @@ from dataclasses import replace
 import numpy as np
 
 from .asset_io import SH_C0
+from .environment_map import EnvironmentMap
 from .math3d import adjust_rgb_saturation, normalize, sun_direction
 from .types import GaussianLayer, LightingState, MaterialState, VehicleAsset
 
@@ -43,7 +44,10 @@ def apply_environment_gain(env_sh: np.ndarray | None, lighting: LightingState) -
 
 
 def shade_proxy(proxy: GaussianLayer, material: MaterialState, lighting: LightingState,
-                env_sh: np.ndarray | None = None) -> np.ndarray:
+                env_sh: np.ndarray | None = None,
+                environment_map: EnvironmentMap | None = None,
+                world_normals: np.ndarray | None = None,
+                view_directions: np.ndarray | None = None) -> np.ndarray:
     if proxy.albedo is None or proxy.normals is None:
         raise ValueError("Proxy layer has no PBR albedo/normals")
     normals = normalize(proxy.normals)
@@ -54,6 +58,53 @@ def shade_proxy(proxy: GaussianLayer, material: MaterialState, lighting: Lightin
     else:
         roughness = np.full((len(albedo), 1), material.roughness, dtype=np.float32)
         metallic = np.full((len(albedo), 1), material.metallic, dtype=np.float32)
+    if environment_map is not None:
+        shading_normals = normalize(world_normals if world_normals is not None else normals)
+        if view_directions is None:
+            view_directions = np.broadcast_to(
+                normalize(np.asarray([[0.0, -1.0, 0.6]], dtype=np.float32))[0],
+                shading_normals.shape,
+            )
+        else:
+            view_directions = normalize(view_directions)
+        roughness = np.clip(roughness, 0.02, 0.98)
+        metallic = np.clip(metallic, 0.0, 1.0)
+        reflectance = np.full((len(albedo), 1), material.reflectance, dtype=np.float32)
+        f0 = reflectance * (1.0 - metallic) + albedo * metallic
+        gain = np.asarray(lighting.environment_rgb, dtype=np.float32)[None, :] * float(
+            lighting.environment_intensity
+        )
+        fill_scale = max(float(material.ambient_fill), 0.0)
+        environment_diffuse = environment_map.diffuse(shading_normals) * gain * fill_scale
+        environment_specular = environment_map.reflection(
+            shading_normals, view_directions, roughness[:, 0]
+        ) * gain * fill_scale
+        sun_light = np.zeros_like(environment_diffuse)
+        sun_specular = np.zeros_like(environment_diffuse)
+        if lighting.sun_enabled:
+            light_dir = sun_direction(lighting.sun_azimuth_deg, lighting.sun_elevation_deg)
+            light_dirs = np.broadcast_to(light_dir[None, :], shading_normals.shape)
+            ndotl = np.maximum(np.sum(shading_normals * light_dirs, axis=1, keepdims=True), 0.0)
+            sun_light = (
+                np.asarray(lighting.sun_rgb, dtype=np.float32)[None, :]
+                * ndotl * max(float(lighting.sun_intensity), 0.0)
+                * np.clip(float(lighting.visibility), 0.0, 1.0)
+            )
+            half_dirs = normalize(light_dirs + view_directions)
+            specular_angle = np.maximum(
+                np.sum(shading_normals * half_dirs, axis=1, keepdims=True), 0.0
+            )
+            gloss = np.square(1.0 - roughness)
+            broad = np.power(specular_angle, 1.0 + 3.0 * gloss)
+            tight = np.power(specular_angle, 4.0 + 40.0 * gloss)
+            sun_specular = sun_light * f0 * (0.45 + 14.0 * gloss) * (0.85 * broad + 2.5 * tight)
+        ndotv = np.maximum(np.sum(shading_normals * view_directions, axis=1, keepdims=True), 0.0)
+        fresnel = f0 + (1.0 - f0) * np.power(1.0 - ndotv, 5.0)
+        environment_specular *= fresnel * (1.0 - 0.45 * roughness)
+        diffuse = albedo * (environment_diffuse + sun_light) * (1.0 - metallic)
+        return np.clip(
+            (diffuse + environment_specular + sun_specular) * material.exposure, 0.0, 1.0
+        ).astype(np.float32)
     environment = apply_environment_gain(env_sh, lighting)
     view_dir = normalize(np.asarray([[0.0, -1.0, 0.6]], dtype=np.float32))[0]
     ambient_light = shade_environment(normals, environment) * max(float(material.ambient_fill), 0.0)
@@ -87,9 +138,20 @@ def shade_proxy(proxy: GaussianLayer, material: MaterialState, lighting: Lightin
 
 
 def shade_vehicle(asset: VehicleAsset, material: MaterialState, lighting: LightingState,
-                  env_sh: np.ndarray | None = None, mode: str = "Relight Original") -> tuple[GaussianLayer, np.ndarray]:
+                  env_sh: np.ndarray | None = None, mode: str = "Relight Original",
+                  environment_map: EnvironmentMap | None = None,
+                  world_normals: np.ndarray | None = None,
+                  view_directions: np.ndarray | None = None) -> tuple[GaussianLayer, np.ndarray]:
     proxy_material = replace(material, saturation=1.0) if mode == "Relight Original" else material
-    proxy_lit = shade_proxy(asset.proxy, proxy_material, lighting, env_sh)
+    proxy_lit = shade_proxy(
+        asset.proxy,
+        proxy_material,
+        lighting,
+        env_sh,
+        environment_map=environment_map,
+        world_normals=world_normals,
+        view_directions=view_directions,
+    )
     if mode == "Proxy Lit":
         return asset.proxy, proxy_lit
     if mode == "Original SH":

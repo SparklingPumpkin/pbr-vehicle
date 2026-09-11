@@ -10,13 +10,17 @@ from typing import Any
 
 import numpy as np
 import viser
+import viser.transforms as vt
 
-from .asset_io import load_scene, load_vehicle_asset
+from .asset_io import load_scene, load_vehicle_asset, materialize_pth_scene, resolve_scene_context
+from .auto_fit import run_vehicle_auto_fit
 from .config_io import next_config_path, read_config, save_viewer_config, state_from_config
+from .environment_map import EnvironmentMap, cube_face_rotations, textured_environment_sphere
 from .math3d import color_temperature_to_rgb, euler_to_wxyz, normalize, quaternion_to_rotation, sun_direction
 from .projection import build_projection_masks
 from .rendering import pack_gaussian_buffer, rgba_plane_glb
 from .shading import shade_vehicle
+from .sun_estimation import run_sun_estimator
 from .types import LightingState, MaterialState, TransformState, VehicleAsset, VehicleState
 
 
@@ -45,11 +49,14 @@ def _ui_to_value(value: float, kind: str) -> float:
 def _value_to_ui(value: float, kind: str) -> float:
     value = float(value)
     if kind == "sun_intensity":
-        return (value - 1.0) / (1.0 if value < 1.0 else 7.0)
+        result = (value - 1.0) / (1.0 if value < 1.0 else 7.0)
+        return float(np.clip(result, -1.0, 1.0))
     if kind == "brightness":
-        return (value - 0.35) / (0.35 if value < 0.35 else 0.65)
+        result = (value - 0.35) / (0.35 if value < 0.35 else 0.65)
+        return float(np.clip(result, -1.0, 1.0))
     if kind == "temperature":
-        return (value - 6500.0) / (9000.0 if value < 6500.0 else 11000.0)
+        result = (value - 6500.0) / (9000.0 if value < 6500.0 else 11000.0)
+        return float(np.clip(result, -0.5, 0.5))
     if kind == "saturation":
         return float(np.clip(value, 0.0, 2.0))
     raise ValueError(kind)
@@ -61,11 +68,21 @@ class StandaloneViewer:
         self.server = viser.ViserServer(port=args.port)
         self.scene_handle = None
         self.scene_path = ""
+        self.scene_context = {"name": "empty_scene", "data_root": None, "config_path": None}
         self.scene_visible = True
         self.controllers: list[VehicleController] = []
         self.next_vehicle_index = 1
         self.handles: dict[str, Any] = {}
+        self._environment_capture_lock = threading.RLock()
+        self._environment_camera_lock = threading.Lock()
+        self._environment_camera_timer = None
+        self._environment_camera_generation = 0
+        self._environment_generation = 0
+        self._environment_client = None
+        self._environment_client_ids: set[int] = set()
+        self._sun_estimation_thread = None
         self._build_gui()
+        self.server.on_client_connect(self._on_environment_client_connect)
         if args.scene:
             self.replace_scene(args.scene)
         if args.vehicle_asset_folder:
@@ -82,6 +99,19 @@ class StandaloneViewer:
             self.handles["scene_visible"] = self.server.gui.add_checkbox("Show scene", initial_value=True)
             load_button = self.server.gui.add_button("Load / replace scene")
             clear_button = self.server.gui.add_button("Clear scene")
+            self.handles["sun_estimator_config"] = self.server.gui.add_text(
+                "太阳估计配置",
+                initial_value=str(getattr(self.args, "sun_estimator_config", "") or ""),
+                hint=(
+                    "JSON 配置可提供 pbr-vehicle-sun-scene 的 command 或模型权重路径；"
+                    "估计结果写入临时目录并自动回填太阳角度。"
+                ),
+            )
+            self.handles["estimate_sun"] = self.server.gui.add_button("太阳估计")
+            self.handles["sun_inference_progress"] = self.server.gui.add_progress_bar(0.0)
+            self.handles["sun_inference_status"] = self.server.gui.add_text("太阳估计状态", initial_value="等待启动", disabled=True)
+            self.handles["sun_inference_stage"] = self.server.gui.add_text("当前阶段", initial_value="尚未执行", disabled=True)
+            self.handles["sun_inference_result"] = self.server.gui.add_text("推理结果", initial_value="尚无结果", multiline=True, disabled=True)
         with self.server.gui.add_folder("Shared lighting", expand_by_default=True):
             self.handles["env_temperature"] = self.server.gui.add_slider("环境光色温", min=-0.5, max=0.5, step=0.01, initial_value=0.0)
             self.handles["sun_intensity"] = self.server.gui.add_slider("太阳光强度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
@@ -99,10 +129,16 @@ class StandaloneViewer:
         with self.server.gui.add_folder("Vehicles", expand_by_default=True):
             self.handles["asset_folder"] = self.server.gui.add_text("Vehicle asset folder", initial_value=str(self.args.vehicle_asset_folder or ""))
             self.handles["vehicle_config"] = self.server.gui.add_text("Initial config path (optional)", initial_value=str(self.args.config or ""))
+            self.handles["auto_fit_config"] = self.server.gui.add_text(
+                "Auto 识别配置",
+                initial_value=str(getattr(self.args, "auto_fit_config", "") or ""),
+                hint="可选 JSON；默认调用 pbr-vehicle-auto-fit。过程文件写入临时目录。",
+            )
             add_button = self.server.gui.add_button("Add vehicle")
 
         load_button.on_click(lambda event: self._load_scene_event(event))
         clear_button.on_click(lambda _: self.clear_scene())
+        self.handles["estimate_sun"].on_click(lambda event: self._estimate_sun_event(event))
         self.handles["scene_visible"].on_update(lambda _: self._sync_scene_visibility())
         add_button.on_click(lambda event: self._add_vehicle_event(event))
         for key in ("env_temperature", "env_intensity", "sun_enabled", "sun_intensity", "sun_r", "sun_g", "sun_b", "sun_azimuth", "sun_elevation", "visibility"):
@@ -116,6 +152,82 @@ class StandaloneViewer:
         except Exception as exc:
             traceback.print_exc()
             self._notify(event, "Scene load failed", f"{type(exc).__name__}: {exc}")
+
+    def _estimate_sun_event(self, event) -> None:
+        """Start SSE without blocking Viser's GUI event thread."""
+        if self._sun_estimation_thread is not None and self._sun_estimation_thread.is_alive():
+            self._notify(event, "太阳估计进行中", "请等待当前估计完成")
+            return
+        self.handles["estimate_sun"].disabled = True
+        self._set_sun_inference_progress(0.0, "运行中", "准备当前场景输入", "等待预测结果")
+        self._notify(event, "太阳估计已启动", "模型正在运行，完成后会自动回填太阳角度")
+        self._sun_estimation_thread = threading.Thread(
+            target=self._run_sun_estimation,
+            args=(event,),
+            daemon=True,
+        )
+        self._sun_estimation_thread.start()
+
+    def _set_sun_inference_progress(self, progress, status, stage, result=None) -> None:
+        self.handles["sun_inference_progress"].value = 100.0 * float(np.clip(progress, 0.0, 1.0))
+        self.handles["sun_inference_status"].value = str(status)
+        self.handles["sun_inference_stage"].value = str(stage)
+        if result is not None:
+            self.handles["sun_inference_result"].value = str(result)
+
+    def _run_sun_estimation(self, event) -> None:
+        try:
+            scene_path = str(self.handles["scene_path"].value).strip()
+            if not scene_path and not self.scene_path:
+                raise ValueError("请先加载或填写场景路径")
+            result = run_sun_estimator(
+                config_path=str(self.handles["sun_estimator_config"].value).strip() or None,
+                scene=str(getattr(self.args, "sun_estimator_scene", "") or self.scene_context["name"]),
+                data_root=str(getattr(self.args, "sun_estimator_data_root", "") or self.scene_context.get("data_root") or ""),
+                scene_path=self.scene_path or scene_path,
+                timeout=float(getattr(self.args, "sun_estimator_timeout", 3600.0)),
+                progress_callback=lambda progress, stage: self._set_sun_inference_progress(progress, "运行中", stage),
+            )
+            world_direction = result.get("world_direction")
+            if world_direction is not None:
+                direction = normalize(np.asarray(world_direction, dtype=np.float32).reshape(1, 3))[0]
+                estimated_azimuth = math.degrees(math.atan2(float(direction[1]), float(direction[0])))
+                estimated_elevation = math.degrees(math.asin(float(np.clip(direction[2], -1.0, 1.0))))
+            else:
+                estimated_azimuth = float(result["azimuth_deg"])
+                estimated_elevation = float(result["elevation_deg"])
+            values = {
+                "sun_enabled": True,
+                "sun_azimuth": ((estimated_azimuth + 180.0) % 360.0) - 180.0,
+                "sun_elevation": float(np.clip(estimated_elevation, -10.0, 89.0)),
+            }
+            payload = result.get("payload", {})
+            weighted = payload.get("weighted_angle", {}) if isinstance(payload, dict) else {}
+            if isinstance(weighted, dict) and "sun_intensity" in weighted:
+                values["sun_intensity"] = _value_to_ui(weighted["sun_intensity"], "sun_intensity")
+            self.apply_estimated_sun_angles(values["sun_azimuth"], values["sun_elevation"])
+            if "sun_intensity" in values:
+                self.handles["sun_intensity"].value = values["sun_intensity"]
+                self._shared_lighting_changed("sun_estimate")
+            published_round = result.get("published_round")
+            round_text = f"；发布轮次 {published_round}" if published_round is not None else ""
+            result_text = (
+                f"太阳方位角：{values['sun_azimuth']:.1f}°\n"
+                f"太阳高度角：{values['sun_elevation']:.1f}°{round_text}\n"
+                f"结果目录：{result['output_dir']}"
+            )
+            self._set_sun_inference_progress(1.0, "成功", "角度已通过发布门并回填面板", result_text)
+            self._notify(
+                event,
+                "太阳估计完成",
+                f"方位角 {values['sun_azimuth']:.1f}°，高度角 {values['sun_elevation']:.1f}°；结果保留在 {result['output_dir']}",
+            )
+        except Exception as exc:
+            traceback.print_exc()
+            self._set_sun_inference_progress(1.0, "失败", "推理终止，面板参数未修改", f"{type(exc).__name__}: {exc}")
+            self._notify(event, "太阳估计失败", f"{type(exc).__name__}: {exc}")
+        finally:
+            self.handles["estimate_sun"].disabled = False
 
     def _add_vehicle_event(self, event) -> None:
         try:
@@ -140,6 +252,8 @@ class StandaloneViewer:
         )
         self.scene_handle = new_handle
         self.scene_path = str(Path(path).expanduser().resolve())
+        self.scene_context = resolve_scene_context(self.scene_path)
+        self.invalidate_environment_maps()
         print(f"Loaded scene {self.scene_path}: {len(layer.centers):,}/{layer.total_splats:,} splats", flush=True)
 
     def clear_scene(self) -> None:
@@ -147,10 +261,146 @@ class StandaloneViewer:
             self.scene_handle.remove()
         self.scene_handle = None
         self.scene_path = ""
+        self.scene_context = {"name": "empty_scene", "data_root": None, "config_path": None}
+        self.invalidate_environment_maps()
+
+    def apply_estimated_sun_angles(self, azimuth: float, elevation: float) -> int:
+        azimuth = ((float(azimuth) + 180.0) % 360.0) - 180.0
+        elevation = float(np.clip(elevation, -10.0, 89.0))
+        active = [controller for controller in self.controllers if not controller._removed]
+        with self.server.atomic():
+            self.handles["sun_enabled"].value = True
+            self.handles["sun_azimuth"].value = azimuth
+            self.handles["sun_elevation"].value = elevation
+            for controller in active:
+                controller._suspend_updates = True
+                try:
+                    controller.handles["light_sun_enabled"].value = True
+                    controller.handles["light_sun_azimuth"].value = azimuth
+                    controller.handles["light_sun_elevation"].value = elevation
+                    controller._sync_mirrored_controls()
+                finally:
+                    controller._suspend_updates = False
+                controller._sync_lighting_enabled()
+        self._shared_lighting_changed("sun_estimate")
+        for controller in active:
+            if not controller.use_scene_lighting():
+                controller.schedule_update("sun_estimate")
+        return len(active)
 
     def _sync_scene_visibility(self) -> None:
         if self.scene_handle is not None:
             self.scene_handle.visible = bool(self.handles["scene_visible"].value)
+
+    def _on_environment_client_connect(self, client) -> None:
+        if client.client_id in self._environment_client_ids:
+            return
+        self._environment_client_ids.add(client.client_id)
+        self._environment_client = client
+
+        @client.camera.on_update
+        def _camera_updated(_) -> None:
+            self._environment_client = client
+            self._schedule_environment_camera_update()
+
+        self._schedule_environment_camera_update()
+
+    def _schedule_environment_camera_update(self) -> None:
+        if not any(
+            controller.environment_map_enabled() or controller.environment_preview_enabled()
+            for controller in self.controllers
+            if not controller._removed
+        ):
+            return
+        with self._environment_camera_lock:
+            self._environment_camera_generation += 1
+            generation = self._environment_camera_generation
+            if self._environment_camera_timer is not None:
+                self._environment_camera_timer.cancel()
+            self._environment_camera_timer = threading.Timer(
+                0.12, self._apply_environment_camera_update, args=(generation,)
+            )
+            self._environment_camera_timer.daemon = True
+            self._environment_camera_timer.start()
+
+    def _apply_environment_camera_update(self, generation: int) -> None:
+        with self._environment_camera_lock:
+            if generation != self._environment_camera_generation:
+                return
+        try:
+            for controller in list(self.controllers):
+                if not controller._removed and (
+                    controller.environment_map_enabled() or controller.environment_preview_enabled()
+                ):
+                    controller.update()
+        finally:
+            with self._environment_camera_lock:
+                if generation == self._environment_camera_generation:
+                    self._environment_camera_timer = None
+
+    def environment_camera_position(self) -> np.ndarray | None:
+        clients = self.server.get_clients()
+        client = self._environment_client
+        if client is None or client.client_id not in clients:
+            client = next(iter(clients.values()), None)
+            self._environment_client = client
+        if client is None:
+            return None
+        try:
+            return np.asarray(client.camera.position, dtype=np.float32)
+        except AssertionError:
+            return None
+
+    def invalidate_environment_maps(self) -> None:
+        self._environment_generation += 1
+        for controller in list(self.controllers):
+            controller.invalidate_environment_map()
+
+    def capture_environment_map(self, center: np.ndarray, resolution: int) -> EnvironmentMap:
+        if self.scene_handle is None:
+            raise RuntimeError("Load a scene before enabling the environment map")
+        clients = self.server.get_clients()
+        client = self._environment_client
+        if client is None or client.client_id not in clients:
+            client = next(iter(clients.values()), None)
+        if client is None:
+            raise RuntimeError("Open the Viser page before enabling the environment map")
+        center = np.asarray(center, dtype=np.float32)
+        resolution = int(np.clip(int(resolution), 16, 512))
+        rotations = cube_face_rotations()
+        with self._environment_capture_lock:
+            visibility = []
+            for controller in self.controllers:
+                for handle in (
+                    controller.splat_handle,
+                    controller.contact_handle,
+                    controller.extension_handle,
+                    getattr(controller, "environment_preview_handle", None),
+                ):
+                    if handle is not None:
+                        visibility.append((handle, bool(handle.visible)))
+                        handle.visible = False
+            scene_visible = bool(self.scene_handle.visible)
+            self.scene_handle.visible = True
+            client.flush()
+            try:
+                faces = [
+                    client.get_render(
+                        resolution,
+                        resolution,
+                        wxyz=vt.SO3.from_matrix(rotation).wxyz,
+                        position=center,
+                        fov=math.pi / 2.0,
+                        transport_format="png",
+                    )
+                    for rotation in rotations
+                ]
+            finally:
+                self.scene_handle.visible = scene_visible
+                for handle, visible in visibility:
+                    handle.visible = visible
+                client.flush()
+        return EnvironmentMap.from_faces(faces, rotations)
 
     def shared_lighting(self) -> LightingState:
         temperature = _ui_to_value(self.handles["env_temperature"].value, "temperature")
@@ -196,6 +446,8 @@ class StandaloneViewer:
             vehicle_id=vehicle_id,
             asset_folder=str(asset.root),
             transform=TransformState(position=[float((len(self.controllers) + 1) * self.args.vehicle_spacing), 0.0, 0.0]),
+            environment_map_enabled=bool(getattr(self.args, "enable_environment_map", False)),
+            environment_map_resolution=int(getattr(self.args, "environment_map_resolution", 128)),
             projection=copy.deepcopy(asset.projection),
         )
         if config_path:
@@ -222,7 +474,22 @@ class StandaloneViewer:
             self.controllers.remove(controller)
 
     def scene_snapshot(self) -> dict[str, Any]:
-        return {"name": Path(self.scene_path).stem if self.scene_path else "empty_scene", "path": self.scene_path}
+        return {
+            "name": self.scene_context["name"],
+            "path": self.scene_path,
+            "data_root": self.scene_context.get("data_root"),
+        }
+
+    def scene_ply_for_auto_fit(self) -> Path:
+        source_value = self.scene_path or str(self.handles["scene_path"].value).strip()
+        if not source_value:
+            raise ValueError("请先加载普通 Gaussian 场景")
+        source = Path(source_value).expanduser().resolve()
+        if source.suffix.lower() == ".pth":
+            return materialize_pth_scene(source, self.args.scene_cache_dir)
+        if source.suffix.lower() != ".ply" or not source.is_file():
+            raise ValueError(f"Auto 需要可用的 PLY/PTH 场景: {source}")
+        return source
 
 
 class VehicleController:
@@ -243,6 +510,14 @@ class VehicleController:
         self._lock = threading.Lock()
         self._removed = False
         self._suspend_updates = False
+        self._auto_fit_thread = None
+        self._environment_map_cache = None
+        self._environment_map_cache_key = None
+        self._environment_map_error = None
+        self._environment_preview_cache = None
+        self._environment_preview_cache_key = None
+        self.environment_preview_handle = None
+        self._environment_preview_mesh_key = None
         self._build_gui()
         self.apply_state(state)
 
@@ -256,6 +531,7 @@ class VehicleController:
             self.handles["saturation"] = self.server.gui.add_slider("饱和度", min=0.0, max=2.0, step=0.01, initial_value=1.0)
             self.handles["ambient_fill"] = self.server.gui.add_slider("亮度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
             center_button = self.server.gui.add_button("Center orbit on this vehicle")
+            self.handles["auto_fit"] = self.server.gui.add_button("Auto 识别车辆参数")
             config_folder = self.server.gui.add_folder("Config", expand_by_default=False)
             advanced_folder = self.server.gui.add_folder("高级", expand_by_default=False)
             with advanced_folder:
@@ -292,6 +568,40 @@ class VehicleController:
                 self.handles["use_scene_lighting"] = self.server.gui.add_checkbox("Use scene lighting", initial_value=True)
                 self.handles["light_sun_enabled"] = self.server.gui.add_checkbox("Directional sun", initial_value=True)
                 self.handles["light_visibility"] = self.server.gui.add_slider("Visibility scale", min=0.0, max=1.0, step=0.05, initial_value=1.0)
+                self.handles["environment_map_enabled"] = self.server.gui.add_checkbox(
+                    "使用场景环境贴图",
+                    initial_value=bool(self.state.environment_map_enabled),
+                    hint=(
+                        "在车辆中心捕获 scene-only cubemap，并用车辆法线、粗糙度、金属度和当前观察方向计算 IBL。"
+                        "关闭时完全回退到原有 SH 环境光预览。"
+                    ),
+                )
+                self.handles["environment_map_resolution"] = self.server.gui.add_dropdown(
+                    "环境贴图分辨率",
+                    options=("32", "64", "128", "256"),
+                    initial_value=str(int(self.state.environment_map_resolution)),
+                    hint="每个 cubemap 面的分辨率；车辆位置变化后自动重新捕获。",
+                )
+                self.handles["environment_map_refresh"] = self.server.gui.add_button("刷新环境贴图")
+                preview_folder = self.server.gui.add_folder("Environment-map 预览", expand_by_default=False)
+                with preview_folder:
+                    self.handles["environment_preview_visible"] = self.server.gui.add_checkbox(
+                        "显示环境球", initial_value=bool(self.state.environment_preview_visible)
+                    )
+                    self.handles["environment_preview_follow_vehicle"] = self.server.gui.add_checkbox(
+                        "跟随车辆",
+                        initial_value=bool(self.state.environment_preview_follow_vehicle),
+                        hint="开启后从车辆中心捕获环境；XYZ 偏移只移动显示球，不改变采样中心。",
+                    )
+                    for index, axis in enumerate(("x", "y", "z")):
+                        self.handles[f"environment_preview_{axis}"] = self.server.gui.add_slider(
+                            f"独立采样 {axis.upper()}", min=-100.0, max=100.0, step=0.1,
+                            initial_value=float(self.state.environment_preview_position[index]),
+                        )
+                        self.handles[f"environment_preview_offset_{axis}"] = self.server.gui.add_slider(
+                            f"显示偏移 {axis.upper()}", min=-20.0, max=20.0, step=0.1,
+                            initial_value=float(self.state.environment_preview_offset[index]),
+                        )
             with advanced_folder:
                 projection_folder = self.server.gui.add_folder("Projection", expand_by_default=False)
             with projection_folder:
@@ -343,7 +653,11 @@ class VehicleController:
         mirrored_controls = self._mirrored_controls()
         mirrored_keys = set(mirrored_controls) | set(mirrored_controls.values())
         for key, handle in self.handles.items():
-            if key != "config_path" and key not in mirrored_keys:
+            if (
+                key not in {"config_path", "auto_fit"}
+                and key != "environment_map_refresh"
+                and key not in mirrored_keys
+            ):
                 handle.on_update(lambda _, source=key: self._control_changed(source))
         for canonical, advanced in mirrored_controls.items():
             self.handles[canonical].on_update(
@@ -358,6 +672,8 @@ class VehicleController:
         load_button.on_click(lambda event: self._load_event(event))
         delete_button.on_click(lambda _: self.app.remove_vehicle(self))
         center_button.on_click(self._center_orbit_on_vehicle)
+        self.handles["auto_fit"].on_click(self._auto_fit_event)
+        self.handles["environment_map_refresh"].on_click(self._refresh_environment_map)
 
     @staticmethod
     def _mirrored_controls() -> dict[str, str]:
@@ -396,6 +712,13 @@ class VehicleController:
     def _control_changed(self, source: str) -> None:
         if self._suspend_updates or self._removed:
             return
+        if source in {
+            "x", "y", "z", "roll", "pitch", "yaw", "scale",
+            "environment_map_enabled", "environment_map_resolution",
+            "environment_preview_visible", "environment_preview_follow_vehicle",
+            "environment_preview_x", "environment_preview_y", "environment_preview_z",
+        }:
+            self.invalidate_environment_map()
         self._sync_lighting_enabled()
         self.schedule_update(source)
 
@@ -411,6 +734,15 @@ class VehicleController:
             "light_sun_azimuth", "light_sun_azimuth_advanced", "light_sun_elevation", "light_sun_elevation_advanced",
         ):
             self.handles[key].disabled = False
+        environment_enabled = self.environment_map_enabled()
+        preview_enabled = bool(self.handles["environment_preview_visible"].value)
+        follow_vehicle = bool(self.handles["environment_preview_follow_vehicle"].value)
+        self.handles["environment_map_resolution"].disabled = not (environment_enabled or preview_enabled)
+        self.handles["environment_map_refresh"].disabled = not (environment_enabled or preview_enabled)
+        self.handles["environment_preview_follow_vehicle"].disabled = not preview_enabled
+        for axis in ("x", "y", "z"):
+            self.handles[f"environment_preview_{axis}"].disabled = (not preview_enabled) or follow_vehicle
+            self.handles[f"environment_preview_offset_{axis}"].disabled = (not preview_enabled) or (not follow_vehicle)
 
     def _center_orbit_on_vehicle(self, event=None) -> None:
         mode = str(self.handles["mode"].value)
@@ -469,6 +801,234 @@ class VehicleController:
         values["ambient_fill"] = _ui_to_value(values["ambient_fill"], "brightness")
         return MaterialState(**values)
 
+    def environment_map_enabled(self) -> bool:
+        return bool(self.handles.get("environment_map_enabled")) and bool(
+            self.handles["environment_map_enabled"].value
+        )
+
+    def environment_preview_enabled(self) -> bool:
+        return bool(self.handles.get("environment_preview_visible")) and bool(
+            self.handles["environment_preview_visible"].value
+        )
+
+    def invalidate_environment_map(self) -> None:
+        self._environment_map_cache = None
+        self._environment_map_cache_key = None
+        self._environment_map_error = None
+        self._environment_preview_cache = None
+        self._environment_preview_cache_key = None
+
+    def _vehicle_environment_center(self, rotation: np.ndarray, transform: TransformState) -> np.ndarray:
+        local_min = np.min(self.asset.proxy.centers, axis=0)
+        local_max = np.max(self.asset.proxy.centers, axis=0)
+        local_center = 0.5 * (local_min + local_max) * transform.scale
+        return np.asarray(transform.position, dtype=np.float32) + rotation @ local_center
+
+    def _remove_environment_preview(self) -> None:
+        if self.environment_preview_handle is not None:
+            self.environment_preview_handle.remove()
+            self.environment_preview_handle = None
+        self._environment_preview_mesh_key = None
+
+    def _update_environment_preview(
+        self,
+        environment_map: EnvironmentMap | None,
+        cache_key,
+        vehicle_center: np.ndarray,
+        sample_center: np.ndarray,
+    ) -> None:
+        if not self.environment_preview_enabled():
+            self._remove_environment_preview()
+            return
+        if bool(self.handles["environment_preview_follow_vehicle"].value):
+            offset = np.asarray(
+                [
+                    float(self.handles[f"environment_preview_offset_{axis}"].value)
+                    for axis in ("x", "y", "z")
+                ],
+                dtype=np.float32,
+            )
+            display_position = vehicle_center + offset
+        else:
+            display_position = sample_center
+        if environment_map is None:
+            if self.environment_preview_handle is not None:
+                self.environment_preview_handle.position = display_position
+            return
+        if self.environment_preview_handle is None or self._environment_preview_mesh_key != cache_key:
+            self._remove_environment_preview()
+            self.environment_preview_handle = self.server.scene.add_mesh_trimesh(
+                f"/vehicles/{self.vehicle_id}/environment_map_preview",
+                textured_environment_sphere(environment_map),
+                scale=1.5,
+                position=display_position,
+                visible=True,
+                cast_shadow=False,
+                receive_shadow=False,
+            )
+            self._environment_preview_mesh_key = cache_key
+        else:
+            self.environment_preview_handle.position = display_position
+            self.environment_preview_handle.visible = True
+
+    def _environment_map_for(self, rotation: np.ndarray, transform: TransformState):
+        if not self.environment_map_enabled() and not self.environment_preview_enabled():
+            self._remove_environment_preview()
+            return None
+        vehicle_center = self._vehicle_environment_center(rotation, transform)
+        resolution = int(self.handles["environment_map_resolution"].value)
+        vehicle_cache_key = (
+            int(self.app._environment_generation),
+            resolution,
+            tuple(np.round(vehicle_center, 4).tolist()),
+        )
+        vehicle_environment = None
+        if self.environment_map_enabled():
+            if self._environment_map_cache is not None and vehicle_cache_key == self._environment_map_cache_key:
+                vehicle_environment = self._environment_map_cache
+            else:
+                try:
+                    vehicle_environment = self.app.capture_environment_map(vehicle_center, resolution)
+                    self._environment_map_cache = vehicle_environment
+                    self._environment_map_cache_key = vehicle_cache_key
+                    self._environment_map_error = None
+                    print(
+                        f"[environment-map] captured {self.vehicle_id} at {vehicle_center.round(3).tolist()} "
+                        f"({resolution}px x 6)", flush=True,
+                    )
+                except Exception as exc:
+                    message = f"{type(exc).__name__}: {exc}"
+                    if message != self._environment_map_error:
+                        print(
+                            f"[environment-map] {self.vehicle_id} capture failed; using legacy SH: {message}",
+                            flush=True,
+                        )
+                    self._environment_map_error = message
+
+        if self.environment_preview_enabled():
+            follow_vehicle = bool(self.handles["environment_preview_follow_vehicle"].value)
+            preview_center = vehicle_center if follow_vehicle else np.asarray(
+                [float(self.handles[f"environment_preview_{axis}"].value) for axis in ("x", "y", "z")],
+                dtype=np.float32,
+            )
+            preview_key = (
+                int(self.app._environment_generation),
+                resolution,
+                tuple(np.round(preview_center, 4).tolist()),
+            )
+            preview_environment = vehicle_environment if follow_vehicle and vehicle_environment is not None else None
+            if preview_environment is None and self._environment_preview_cache_key == preview_key:
+                preview_environment = self._environment_preview_cache
+            if preview_environment is None:
+                try:
+                    preview_environment = self.app.capture_environment_map(preview_center, resolution)
+                    self._environment_preview_cache = preview_environment
+                    self._environment_preview_cache_key = preview_key
+                except Exception as exc:
+                    message = f"{type(exc).__name__}: {exc}"
+                    if message != self._environment_map_error:
+                        print(f"[environment-map-preview] {self.vehicle_id} capture failed: {message}", flush=True)
+                    self._environment_map_error = message
+            self._update_environment_preview(preview_environment, preview_key, vehicle_center, preview_center)
+        else:
+            self._remove_environment_preview()
+        return vehicle_environment
+
+    def _refresh_environment_map(self, event=None) -> None:
+        self.invalidate_environment_map()
+        try:
+            self.update()
+            active_cache = (
+                self._environment_map_cache
+                if self.environment_map_enabled()
+                else self._environment_preview_cache
+            )
+            if active_cache is None:
+                raise RuntimeError(self._environment_map_error or "environment map is unavailable")
+            self.app._notify(
+                event,
+                "环境贴图已刷新",
+                f"{self.vehicle_id}: {self.handles['environment_map_resolution'].value}px x 6",
+            )
+        except Exception as exc:
+            self.app._notify(event, "环境贴图刷新失败", f"{type(exc).__name__}: {exc}")
+
+    def auto_fit_template(self) -> dict[str, Any]:
+        material = self.material()
+        lighting = self.lighting()
+        state = self.snapshot().to_dict()
+        state.update(material.to_dict())
+        state["vehicle_lighting"] = {
+            "use_scene_lighting": False,
+            "intensity": lighting.environment_intensity,
+            "environment_temperature": lighting.environment_temperature_k,
+            "red": lighting.environment_rgb[0],
+            "green": lighting.environment_rgb[1],
+            "blue": lighting.environment_rgb[2],
+            "sun_enabled": lighting.sun_enabled,
+            "sun_intensity": lighting.sun_intensity,
+            "sun_color_rgb": lighting.sun_rgb,
+            "sun_azimuth": lighting.sun_azimuth_deg,
+            "sun_elevation": lighting.sun_elevation_deg,
+            "visibility": lighting.visibility,
+        }
+        return {
+            "schema_version": 1,
+            "scene": self.app.scene_snapshot(),
+            "pbr_asset": copy.deepcopy(self.asset.canonical_config),
+            "vehicle": state,
+        }
+
+    def _auto_fit_event(self, event) -> None:
+        if self._auto_fit_thread is not None and self._auto_fit_thread.is_alive():
+            self.app._notify(event, "Auto 识别进行中", f"{self.vehicle_id} 正在计算")
+            return
+        self.handles["auto_fit"].disabled = True
+        self.app._notify(event, "Auto 识别已启动", "正在匹配太阳光强度、亮度和车辆色温")
+        self._auto_fit_thread = threading.Thread(target=self._run_auto_fit, args=(event,), daemon=True)
+        self._auto_fit_thread.start()
+
+    def _run_auto_fit(self, event) -> None:
+        try:
+            result = run_vehicle_auto_fit(
+                scene_ply=self.app.scene_ply_for_auto_fit(),
+                asset_dir=self.asset.root,
+                template_payload=self.auto_fit_template(),
+                config_path=str(self.app.handles["auto_fit_config"].value).strip() or None,
+                timeout=float(getattr(self.app.args, "auto_fit_timeout", 600.0)),
+            )
+            temperature = float(result["environment_temperature_k"])
+            self._suspend_updates = True
+            try:
+                with self.server.atomic():
+                    self.handles["use_scene_lighting"].value = False
+                    self.handles["light_sun_enabled"].value = True
+                    self.handles["light_sun_intensity"].value = _value_to_ui(
+                        result["sun_intensity"], "sun_intensity"
+                    )
+                    self.handles["ambient_fill"].value = _value_to_ui(
+                        result["ambient_fill"], "brightness"
+                    )
+                    self.handles["light_temperature"].value = _value_to_ui(
+                        temperature, "temperature"
+                    )
+            finally:
+                self._suspend_updates = False
+            self._sync_mirrored_controls()
+            self._sync_lighting_enabled()
+            self.update()
+            self.app._notify(
+                event,
+                "Auto 识别完成",
+                f"太阳光强度、亮度和车辆色温已更新；改善 {result['improvement_percent']:.2f}%，结果 {result['output_dir']}",
+            )
+        except Exception as exc:
+            traceback.print_exc()
+            self.app._notify(event, "Auto 识别未应用", f"{type(exc).__name__}: {exc}")
+        finally:
+            if not self._removed:
+                self.handles["auto_fit"].disabled = False
+
     def transform(self) -> TransformState:
         return TransformState(
             position=[float(self.handles[key].value) for key in ("x", "y", "z")],
@@ -516,6 +1076,18 @@ class VehicleController:
             vehicle_id=self.vehicle_id, asset_folder=str(self.asset.root),
             visible=bool(self.handles["visible"].value), display_mode=str(self.handles["mode"].value),
             transform=self.transform(), material=self.material(), use_scene_lighting=self.use_scene_lighting(),
+            environment_map_enabled=self.environment_map_enabled(),
+            environment_map_resolution=int(self.handles["environment_map_resolution"].value),
+            environment_preview_visible=bool(self.handles["environment_preview_visible"].value),
+            environment_preview_follow_vehicle=bool(
+                self.handles["environment_preview_follow_vehicle"].value
+            ),
+            environment_preview_position=[
+                float(self.handles[f"environment_preview_{axis}"].value) for axis in ("x", "y", "z")
+            ],
+            environment_preview_offset=[
+                float(self.handles[f"environment_preview_offset_{axis}"].value) for axis in ("x", "y", "z")
+            ],
             lighting=self.lighting() if not self.use_scene_lighting() else LightingState.from_dict({
                 "environment_intensity": float(self.handles["light_intensity"].value),
                 "environment_temperature_k": _ui_to_value(self.handles["light_temperature"].value, "temperature"),
@@ -545,6 +1117,10 @@ class VehicleController:
             "light_sun_r": state.lighting.sun_rgb[0], "light_sun_g": state.lighting.sun_rgb[1], "light_sun_b": state.lighting.sun_rgb[2],
             "light_sun_azimuth": state.lighting.sun_azimuth_deg, "light_sun_elevation": state.lighting.sun_elevation_deg,
             "light_visibility": state.lighting.visibility,
+            "environment_map_enabled": state.environment_map_enabled,
+            "environment_map_resolution": str(state.environment_map_resolution),
+            "environment_preview_visible": state.environment_preview_visible,
+            "environment_preview_follow_vehicle": state.environment_preview_follow_vehicle,
             "projection_visible": state.projection_visible, "projection_opacity": state.projection_opacity,
             "contact_length": c["length_scale"], "contact_width": c["width_scale"],
             "contact_offset_x": c["offset_xy_m"][0], "contact_offset_y": c["offset_xy_m"][1],
@@ -557,6 +1133,14 @@ class VehicleController:
             "ext_softness_exponent": e["edge_softness_distance_exponent"], "ext_distance": e["distance_scale_m"],
             "anchor_percentile": a["bottom_surface_percentile"], "anchor_sigma": a["surface_sigma"], "anchor_z": a["z_offset_m"],
         }
+        values.update({
+            f"environment_preview_{axis}": float(state.environment_preview_position[index])
+            for index, axis in enumerate(("x", "y", "z"))
+        })
+        values.update({
+            f"environment_preview_offset_{axis}": float(state.environment_preview_offset[index])
+            for index, axis in enumerate(("x", "y", "z"))
+        })
         values["saturation"] = _value_to_ui(state.material.saturation, "saturation")
         values["ambient_fill"] = _value_to_ui(state.material.ambient_fill, "brightness")
         with self.server.atomic():
@@ -564,6 +1148,7 @@ class VehicleController:
                 self.handles[key].value = value
         self._sync_mirrored_controls()
         self._sync_lighting_enabled()
+        self.invalidate_environment_map()
         self.update()
 
     def _effective_local_lighting(self, quaternion: np.ndarray) -> tuple[LightingState, np.ndarray]:
@@ -579,16 +1164,43 @@ class VehicleController:
     def update(self) -> None:
         if self._removed:
             return
+        transform = self.transform()
+        quaternion = euler_to_wxyz(**{f"{key}_deg": value for key, value in transform.rotation_deg.items()})
+        rotation = quaternion_to_rotation(quaternion[None, :])[0]
+        environment_map = self._environment_map_for(rotation, transform)
         visible = bool(self.handles["visible"].value)
         if not visible:
             for handle in (self.splat_handle, self.contact_handle, self.extension_handle):
                 if handle is not None:
                     handle.visible = False
             return
-        transform = self.transform()
-        quaternion = euler_to_wxyz(**{f"{key}_deg": value for key, value in transform.rotation_deg.items()})
         local_lighting, local_sun = self._effective_local_lighting(quaternion)
-        layer, colors = shade_vehicle(self.asset, self.material(), local_lighting, mode=str(self.handles["mode"].value))
+        if environment_map is None or not self.environment_map_enabled():
+            layer, colors = shade_vehicle(
+                self.asset, self.material(), local_lighting, mode=str(self.handles["mode"].value)
+            )
+        else:
+            world_normals = normalize(self.asset.proxy.normals @ rotation.T)
+            world_centers = (
+                self.asset.proxy.centers * transform.scale
+            ) @ rotation.T + np.asarray(transform.position, dtype=np.float32)[None, :]
+            camera_position = self.app.environment_camera_position()
+            if camera_position is None:
+                fallback_view = normalize(
+                    np.asarray([[0.0, -1.0, 0.6]], dtype=np.float32) @ rotation.T
+                )[0]
+                view_directions = np.broadcast_to(fallback_view, world_normals.shape)
+            else:
+                view_directions = normalize(camera_position[None, :] - world_centers)
+            layer, colors = shade_vehicle(
+                self.asset,
+                self.material(),
+                self.lighting(),
+                mode=str(self.handles["mode"].value),
+                environment_map=environment_map,
+                world_normals=world_normals,
+                view_directions=view_directions,
+            )
         centers = np.ascontiguousarray(layer.centers * transform.scale, dtype=np.float32)
         covariances = np.ascontiguousarray(layer.covariances * transform.scale ** 2, dtype=np.float32)
         position = np.asarray(transform.position, dtype=np.float32)
@@ -668,7 +1280,12 @@ class VehicleController:
         self._removed = True
         if self._timer is not None:
             self._timer.cancel()
-        for handle in (self.splat_handle, self.contact_handle, self.extension_handle):
+        for handle in (
+            self.splat_handle,
+            self.contact_handle,
+            self.extension_handle,
+            self.environment_preview_handle,
+        ):
             if handle is not None:
                 handle.remove()
         if self.gui_root is not None:

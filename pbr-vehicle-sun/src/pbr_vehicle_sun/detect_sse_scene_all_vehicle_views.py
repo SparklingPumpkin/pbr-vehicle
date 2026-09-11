@@ -90,9 +90,22 @@ def main() -> None:
     model = YOLO(str(args.weights))
     matched = []
     raw_count = 0
-    for result in model.predict(source=[str(p) for p in inputs], stream=True, device=args.device,
-                                classes=sorted(COCO_VEHICLES), conf=args.confidence,
-                                imgsz=args.imgsz, batch=args.batch, verbose=False):
+    batch_size = max(1, int(args.batch))
+    results = (
+        result
+        for start in range(0, len(inputs), batch_size)
+        for result in model.predict(
+            source=[str(path) for path in inputs[start:start + batch_size]],
+            stream=True,
+            device=args.device,
+            classes=sorted(COCO_VEHICLES),
+            conf=args.confidence,
+            imgsz=args.imgsz,
+            batch=batch_size,
+            verbose=False,
+        )
+    )
+    for result in results:
         path = Path(result.path); ts, cam = map(int, path.stem.split("_")); h, w = result.orig_shape
         by_instance = {}
         for xyxy, conf, class_id in zip(result.boxes.xyxy.cpu().tolist(), result.boxes.conf.cpu().tolist(), result.boxes.cls.cpu().tolist()):

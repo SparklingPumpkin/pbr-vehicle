@@ -1,19 +1,15 @@
 # PBR Vehicle Sun
 
-`pbr-vehicle-sun 1.0.0` 是场景太阳方位角/高度角识别的独立交付包，对应研究主线 `SSE-v6`。它从车辆投影几何与原视图车辆阴影恢复太阳角，不修改车辆 PBR 材质，也不拟合太阳 RGB 或强度。默认严格复现已接受的 `SSE-v5-f` 合同：观测阴影不再扣除车辆 floor，候选投影也不做 footprint 差集；两项旧行为只能显式开启。
+`pbr-vehicle-sun 1.2.0` 是场景太阳方位角/高度角识别的独立交付包，对应研究主线 `SSE-v8`。`SSE-v8` 的阴影输入协议严格继承 `SSE-v6-b`，并继承 `SSE-v7` 的通用多车门控：YOLO/SAM2 选定车辆，SSISv2 绑定 object-shadow pair，官方关联 shadow mask 不经过差集、连通域清洗或形态学修改，直接由 InfiniDepth 提升并参与轮廓拟合。
 
-## 两个入口
+默认完整场景链先使用全局排名 1–3 的三辆物理车辆。首轮全部拒绝时，复用已经完成的 YOLO 检测和 SAM2 排名，自动更换为排名 4–6 的车辆再估计一次；第二轮仍全部拒绝才返回 `no_valid_sun_information`。进程异常、文件错误和资源错误不会触发换车，也不会被记成方法拒绝。
 
-- `pbr-vehicle-sun-fit`：核心拟合入口。输入已经对齐的车辆几何 NPZ、阴影深度提升 NPZ 和后处理阴影 mask；支持单帧、多帧以及自带 Gaussian / InfiniDepth 前馈两种几何分支。
-- `pbr-vehicle-sun-scene`：Argoverse 完整场景入口。遍历全部帧和相机，以 YOLO + SAM2 对物理车辆去重，按最大 mask 面积选前三辆；每车执行 MTMT、后处理、阴影证据门、纯 RGB InfiniDepth 几何和独立角度拟合，再按轮廓吻合度选 winner。
+主要入口：
 
-完整中文说明见 [使用指南.md](使用指南.md)。
+- `pbr-vehicle-sun-scene`：默认两轮完整场景链；首轮排名 1–3，无角时自动更换为排名 4–6。
+- `pbr-vehicle-sun-scene-round`：高级单轮入口，支持显式选择 1–5 辆车和 rank offset。
+- `pbr-vehicle-sun-fit`：对已对齐的车辆几何、阴影几何和 SSISv2 mask 执行单帧、多帧或多车拟合。
+- `pbr-vehicle-sun-associate-shadow`：将 SSISv2 object-shadow association 与指定车辆 mask 绑定。
+- `pbr-vehicle-sun-aggregate`：执行 1–5 车独立拟合、硬门、加权角和联合拟合。
 
-## 安装与测试
-
-```bash
-python -m pip install -e '.[scene,test]'
-python -m pytest -q
-```
-
-核心 wheel 不捆绑模型权重。完整场景入口要求调用方显式传入 YOLO、SAM2、MTMT 和 InfiniDepth 的仓库或权重路径。
+模型仓库、解释器、权重和数据均为外部参数；wheel 不包含任何资产或机器路径。完整命令见 [使用指南.md](使用指南.md)。
