@@ -1,6 +1,38 @@
 # pbr-vehicle-panel 版本说明
 
-## 当前版本：1.7.1
+## 当前版本：1.9.1
+
+- 对接 `pbr-vehicle-auto 1.4.1`，将太阳光强度和亮度搜索范围改为 Viser 滑条绝对区间 `[-0.3, 0.3]`。
+- 连续点击 Auto 不再以上一次回填结果为新搜索中心；按钮提示明确展示绝对范围。
+
+## 1.9.0
+
+- 新增 `--device auto`，默认使用当前进程可见的第一个 CUDA GPU；遵循 `CUDA_VISIBLE_DEVICES`，不绑定 A100 型号或物理卡号，无 CUDA/PyTorch 时回退 NumPy CPU。
+- PBR 代理着色、朴素 PBR 着色、环境贴图采样和原始层 mapping 回传均提供 Torch CUDA 路径；车辆静态 Tensor 按车辆缓存，只在 Viser buffer 边界回传 NumPy。
+- Auto 子进程继承面板解析后的设备；对接 `pbr-vehicle-auto 1.4.0`。太阳估计继续由 `pbr-vehicle-sun 1.3.0` 自动选择本地 GPU。
+- 保持完整 Gaussian 默认值和 `use_proxy_relighting` 行为不变。
+
+## 1.8.2
+
+- 对接 `pbr-vehicle-auto 1.3.0`：取消原始 DC 改善接受门，Auto 搜索成功后始终应用网格内最优候选。
+- 面板继续校验 `candidate_only` 输出格式，但不再根据改善率进行拒绝；负改善率会原样显示为诊断信息。
+
+## 1.8.1
+
+- 完成交付边界审计：运行代码无训练仓库 import、无工作区绝对路径、无需工作区 `PYTHONPATH`。
+- 用户文档只引用交付目录内文件和调用方提供的场景/车辆路径，不再声称包内附带大体积演示资产。
+- 新增真实写盘的微型 Gaussian PLY、单 PLY 资产和 CLI 入口测试，并要求 wheel 在干净虚拟环境中安装验证。
+- 场景显示上限默认值为 `0`，即完整加载；启动提示和文档使用 `?fixedDpr=1` 原生分辨率地址。
+
+## 1.8.0
+
+- 每辆车的 `高级 / Material` 新增“使用代理重光照”开关，默认开启。
+- 开启时保持原方法：在代理层计算 PBR 光照，再把光照比例映射/调制到可见 Gaussian 层。
+- 关闭时跳过比例回传，直接显示 PBR Gaussian 的 Albedo、Normal 和材质经过朴素 PBR 着色后的结果。
+- 单 PLY 资产复用同一套 Gaussian 内存作为逻辑可见层和代理层，不复制点；旧三文件资产继续使用真实 proxy 和 mapping。
+- 开关按车辆独立保存为 `use_proxy_relighting`；主线车辆配置 schema 升至 6，旧配置缺失字段时默认开启。
+
+## 1.7.1
 
 - 换 PTH 场景时读取相邻 `config.yaml`，动态绑定对应 `data_root + scene_idx`，避免太阳估计沿用旧场景数据。
 - 两轮太阳估计显示车辆检测、分割、几何准备、逐车拟合和发布门进度；只读取 `published_round` 指定轮次。
@@ -76,4 +108,4 @@
 
 ## 维护规则
 
-每次发布新版本时同步更新 `pyproject.toml`、`MAINLINE_MANIFEST.json`、`DELIVERY_REPORT.md`、本文件、测试和 `dist/SHA256SUMS`。资产合同变化记录在 `../Assets/version.md`，转换器和自动拟合工具分别记录在各自子项目的 `version.md`。
+每次发布新版本时同步更新 `pyproject.toml`、`MAINLINE_MANIFEST.json`、`DELIVERY_REPORT.md`、本文件、测试和 `dist/SHA256SUMS`。本包只维护交付目录内的运行与文档合同；外部资产和可选工具按各自交付说明独立维护。

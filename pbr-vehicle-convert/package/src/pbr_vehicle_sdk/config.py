@@ -147,7 +147,7 @@ class RenderConfig:
     width: int = 1280
     height: int = 720
     background_rgb: tuple[float, float, float] = (0.05, 0.05, 0.05)
-    device: str = "cuda:0"
+    device: str = "auto"
     exposure: float = 1.0
     relight_strength: float = 1.0
     material: MaterialConfig = field(default_factory=MaterialConfig)

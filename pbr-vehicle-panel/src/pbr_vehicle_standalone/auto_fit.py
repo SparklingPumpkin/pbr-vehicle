@@ -14,7 +14,7 @@ from typing import Any, Iterable
 
 
 class VehicleAutoFitError(RuntimeError):
-    """The optional auto fitter failed or rejected its candidate."""
+    """The optional auto fitter failed or returned an unsupported result."""
 
 
 def _read_config(path: str | Path | None) -> dict[str, Any]:
@@ -43,6 +43,7 @@ def build_auto_fit_command(
     template_config: Path,
     output_dir: Path,
     final_config: Path,
+    device: str = "auto",
     command_override: str | Iterable[str] | None = None,
 ) -> list[str]:
     context = {
@@ -71,6 +72,8 @@ def build_auto_fit_command(
         flag = "--" + key.replace("_", "-")
         if flag not in command:
             command.extend([flag, str(config.get(key, default))])
+    if "--device" not in command:
+        command.extend(["--device", str(config.get("device", device))])
     return command
 
 
@@ -89,7 +92,7 @@ def read_auto_fit_result(final_config: str | Path, metrics_path: str | Path) -> 
     metrics = json.loads(metrics_source.read_text(encoding="utf-8"))
     status = str(metrics.get("status", ""))
     if status != "candidate_only":
-        raise VehicleAutoFitError(f"Auto 候选未改善场景匹配（{status or 'unknown'}），保留当前参数")
+        raise VehicleAutoFitError(f"Auto 输出状态无效或不受支持（{status or 'unknown'}），保留当前参数")
     result_source = Path(final_config).expanduser().resolve()
     payload = json.loads(result_source.read_text(encoding="utf-8"))
     vehicle = payload.get("vehicle") if isinstance(payload, dict) else None
@@ -130,6 +133,7 @@ def run_vehicle_auto_fit(
     config_path: str | Path | None = None,
     command_override: str | Iterable[str] | None = None,
     timeout: float | None = None,
+    device: str = "auto",
 ) -> dict[str, Any]:
     """Fit three appearance controls and retain all artifacts in /tmp."""
     config = _read_config(config_path)
@@ -152,6 +156,7 @@ def run_vehicle_auto_fit(
         template_config=template,
         output_dir=output,
         final_config=final_config,
+        device=device,
         command_override=command_override,
     )
     executable = shutil.which(command[0]) or (command[0] if Path(command[0]).exists() else None)
@@ -174,4 +179,3 @@ def run_vehicle_auto_fit(
     result = read_auto_fit_result(final_config, output / "metrics.json")
     result.update({"output_dir": str(root), "command": command, "stdout": completed.stdout[-4000:]})
     return result
-

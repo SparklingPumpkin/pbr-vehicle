@@ -13,7 +13,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--vehicle-asset-folder", type=Path, default=None)
     parser.add_argument("--config", type=Path, default=None, help="Optional asset/viewer JSON config for the first vehicle")
     parser.add_argument("--port", type=int, default=18091)
+    parser.add_argument(
+        "--device", default="auto",
+        help="PBR compute device: auto (local CUDA if available), cpu, cuda, or cuda:N.",
+    )
     parser.add_argument("--scene-cache-dir", type=Path, default=Path(".cache/pbr_vehicle_scenes"))
+    parser.add_argument(
+        "--scene-max-splats",
+        type=int,
+        default=0,
+        help="Maximum scene Gaussians sent to the browser; use 0 for the full scene.",
+    )
     parser.add_argument("--vehicle-spacing", type=float, default=6.0)
     parser.add_argument("--seed", type=int, default=20260831)
     parser.add_argument(
@@ -50,7 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None) -> None:
     args = build_parser().parse_args(argv)
     app = StandaloneViewer(args)
-    print(f"Standalone PBR vehicle viewer: http://localhost:{args.port}", flush=True)
+    print(
+        f"Standalone PBR vehicle viewer (native resolution): "
+        f"http://localhost:{args.port}/?fixedDpr=1",
+        flush=True,
+    )
     while True:
         time.sleep(3600)
 

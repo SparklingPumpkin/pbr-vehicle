@@ -9,6 +9,21 @@ from pbr_vehicle_standalone.shading import shade_proxy, shade_vehicle
 from pbr_vehicle_standalone.types import GaussianLayer, LightingState, MaterialState, VehicleAsset
 
 
+def test_cuda_shading_matches_numpy_when_available():
+    import pytest
+
+    torch = pytest.importorskip("torch")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is unavailable")
+    proxy = _proxy()
+    proxy.albedo[:] = [0.25, 0.50, 0.75]
+    material = MaterialState(saturation=1.4, roughness=0.3, metallic=0.2)
+    lighting = LightingState(sun_intensity=1.7, sun_rgb=[1.0, 0.9, 0.8])
+    cpu = shade_proxy(proxy, material, lighting, device="cpu")
+    gpu = shade_proxy(proxy, material, lighting, device="cuda:0", tensor_cache={})
+    np.testing.assert_allclose(gpu, cpu, atol=2e-5, rtol=2e-5)
+
+
 def _proxy():
     normal = sun_direction(45.0, 35.0)[None, :]
     return GaussianLayer(
@@ -76,6 +91,37 @@ def test_saturation_affects_colored_original_with_grayscale_proxy():
     assert not np.allclose(gray, vivid)
     assert np.allclose(gray[0, 0], gray[0, 1])
     assert np.allclose(gray[0, 1], gray[0, 2])
+
+
+def test_proxy_switch_selects_ratio_transfer_or_direct_pbr():
+    proxy = _proxy()
+    proxy.albedo[:] = [0.25, 0.50, 0.75]
+    original = GaussianLayer(
+        centers=np.zeros((1, 3), np.float32),
+        covariances=np.eye(3, dtype=np.float32)[None],
+        colors=np.array([[0.80, 0.20, 0.10]], np.float32),
+        opacities=np.ones((1, 1), np.float32),
+    )
+    asset = VehicleAsset(
+        root=Path("."), asset_id="test", original=original, proxy=proxy,
+        original_to_proxy=np.array([0]), mapping_indices=np.array([[0]]),
+        mapping_weights=np.array([[1.0]], np.float32), canonical_config_path=Path("config.json"),
+        canonical_config={}, projection={},
+    )
+    material = MaterialState(saturation=1.3)
+    lighting = LightingState(sun_enabled=False)
+
+    proxy_layer, mapped_colors = shade_vehicle(
+        asset, material, lighting, use_proxy_relighting=True
+    )
+    direct_layer, direct_colors = shade_vehicle(
+        asset, material, lighting, use_proxy_relighting=False
+    )
+
+    assert proxy_layer is original
+    assert direct_layer is proxy
+    np.testing.assert_allclose(direct_colors, shade_proxy(proxy, material, lighting))
+    assert not np.allclose(mapped_colors, direct_colors)
 
 
 def test_environment_map_specular_uses_current_view_direction():

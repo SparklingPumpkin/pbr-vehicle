@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pbr-vehicle-panel"
-version = "1.7.1"
+version = "1.9.1"
 description = "Interactive Gaussian PBR vehicle panel with runtime two-layer projections."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -21,6 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 pth = ["torch>=2.1"]
+gpu = ["torch>=2.1"]
 test = ["pytest>=7.4"]
 
 [project.scripts]

@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pbr-vehicle-auto"
-version = "1.2.1"
+version = "1.4.1"
 description = "Constrained ordinary-Gaussian scene to PBR vehicle DC adaptation."
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["numpy>=1.24,<3", "plyfile>=1.0"]
+dependencies = ["numpy>=1.24,<2", "plyfile>=1.0"]
 
 [project.optional-dependencies]
+gpu = ["torch>=2.1"]
 test = ["pytest>=7.4"]
 
 [project.scripts]

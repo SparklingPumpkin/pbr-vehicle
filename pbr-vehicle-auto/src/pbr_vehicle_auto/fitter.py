@@ -14,17 +14,24 @@ from typing import Any, Mapping
 import numpy as np
 from plyfile import PlyData, PlyElement
 
+try:
+    from .device import resolve_compute_device
+except ImportError:  # Support the documented direct-file subprocess adapter.
+    from device import resolve_compute_device
+
 
 SH_C0 = 0.28209479177387814
 LUMA = np.asarray([0.2126, 0.7152, 0.0722], dtype=np.float64)
 CCT_MIN_KELVIN = 3500.0
 CCT_MAX_KELVIN = 7200.0
 ENVIRONMENT_ENERGY = 0.612338
-# These deltas are expressed in the Viser sliders' [-1, 1] coordinates.
-AMBIENT_FILL_UI_DELTA = 0.30
-SUN_INTENSITY_UI_DELTA = 0.15
+# Auto searches a fixed absolute subset of the Viser sliders. The current panel
+# values are inputs for diagnostics only and must not move this search window.
+AUTO_LIGHT_UI_MIN = -0.30
+AUTO_LIGHT_UI_MAX = 0.30
 PACKAGE_ROOT = Path(__file__).resolve().parent
 DEFAULT_TEMPLATE_PATH = PACKAGE_ROOT / "templates/default_vehicle_pbr_viser_template.json"
+SELECTION_POLICY = "always_apply_grid_best"
 
 
 def digest(path: Path) -> str:
@@ -76,6 +83,21 @@ def cdf(values: np.ndarray, weights: np.ndarray, bins: int) -> np.ndarray:
 
 def cdf_l1(values: np.ndarray, weights: np.ndarray, target: np.ndarray, bins: int) -> float:
     return float(np.mean(np.abs(cdf(values, weights, bins) - target)))
+
+
+def grid_best_metric(raw_distance: float, candidate_distance: float) -> dict[str, Any]:
+    """Describe the selected grid optimum without comparing it to raw vehicle DC."""
+    improvement = (
+        100.0 * (raw_distance - candidate_distance) / raw_distance
+        if raw_distance > 1e-12
+        else 0.0
+    )
+    return {
+        "name": "bilateral_opacity_weighted_luminance_cdf_l1_512",
+        "raw": float(raw_distance),
+        "baked": float(candidate_distance),
+        "improvement_percent": float(improvement),
+    }
 
 
 def quantiles(values: np.ndarray, weights: np.ndarray) -> list[float]:
@@ -246,6 +268,126 @@ def adjust_saturation(rgb: np.ndarray, saturation: float) -> np.ndarray:
     return np.clip(luminance + float(saturation) * (values - luminance), 0.0, 1.0).astype(np.float32)
 
 
+class TorchCandidateEvaluator:
+    """Keep all static candidate data on CUDA across the complete grid search."""
+
+    def __init__(self, *, albedo, normals, views, indices, weights, original_rgb,
+                 original_weight, target_cdf, bins: int, device: str):
+        import torch
+
+        self.torch = torch
+        self.device = torch.device(device)
+        self.albedo = torch.from_numpy(np.ascontiguousarray(albedo)).to(self.device)
+        self.normals = self._normalize(torch.from_numpy(np.ascontiguousarray(normals)).to(self.device))
+        self.views = self._normalize(torch.from_numpy(np.ascontiguousarray(views)).to(self.device))
+        self.indices = torch.from_numpy(np.ascontiguousarray(indices)).to(self.device, dtype=torch.long)
+        self.weights = torch.from_numpy(np.ascontiguousarray(weights)).to(self.device)
+        self.original_rgb = torch.from_numpy(np.ascontiguousarray(original_rgb)).to(self.device)
+        self.original_weight = torch.from_numpy(
+            np.ascontiguousarray(original_weight, dtype=np.float64)
+        ).to(self.device)
+        self.target_cdf = torch.from_numpy(np.ascontiguousarray(target_cdf, dtype=np.float64)).to(
+            self.device
+        )
+        self.bins = int(bins)
+        self.luma_weights = torch.tensor(LUMA, dtype=torch.float64, device=self.device)
+
+    def _normalize(self, values):
+        return values / self.torch.linalg.vector_norm(values, dim=-1, keepdim=True).clamp_min(1e-8)
+
+    def _saturation(self, rgb, saturation: float):
+        weights = rgb.new_tensor(LUMA.astype(np.float32))
+        luminance = (rgb * weights).sum(dim=-1, keepdim=True)
+        return (luminance + float(saturation) * (rgb - luminance)).clamp(0.0, 1.0)
+
+    def _fresnel(self, cosine, f0):
+        return f0 + (1.0 - f0) * self.torch.pow(1.0 - cosine.clamp(0.0, 1.0), 5.0)
+
+    def _ggx(self, light_dirs, roughness: float, f0):
+        torch = self.torch
+        half_dirs = self._normalize(self.views + light_dirs)
+        ndotv = (self.normals * self.views).sum(dim=1, keepdim=True).clamp(1e-4, 1.0)
+        ndotl = (self.normals * light_dirs).sum(dim=1, keepdim=True).clamp(0.0, 1.0)
+        ndoth = (self.normals * half_dirs).sum(dim=1, keepdim=True).clamp(0.0, 1.0)
+        vdoth = (self.views * half_dirs).sum(dim=1, keepdim=True).clamp(0.0, 1.0)
+        alpha = min(max(float(roughness), 0.025), 1.0) ** 2
+        alpha2 = alpha ** 2
+        denominator = torch.square(ndoth * ndoth * (alpha2 - 1.0) + 1.0)
+        distribution = alpha2 / (math.pi * denominator).clamp_min(1e-6)
+        k = (float(roughness) + 1.0) ** 2 / 8.0
+        geometry = ndotv / (ndotv * (1.0 - k) + k).clamp_min(1e-6)
+        geometry *= ndotl / (ndotl * (1.0 - k) + k).clamp_min(1e-6)
+        return distribution * geometry * self._fresnel(vdoth, f0) * ndotl / (
+            4.0 * ndotv * ndotl.clamp_min(1e-4)
+        ).clamp_min(1e-5)
+
+    def _proxy_lighting(self, albedo, material, light):
+        torch = self.torch
+        roughness, metallic = float(material["roughness"]), float(material["metallic"])
+        f0 = float(material["reflectance"]) * (1.0 - metallic) + albedo * metallic
+        env_rgb = torch.tensor(light["environment_color_rgb"], dtype=torch.float32,
+                               device=self.device)[None]
+        ambient = torch.broadcast_to(env_rgb * float(material["ambient_fill"]), albedo.shape)
+        diffuse = albedo * ambient * (1.0 - metallic)
+        ndotv = (self.normals * self.views).sum(dim=1, keepdim=True).clamp(1e-4, 1.0)
+        reflected_light = torch.broadcast_to(env_rgb, albedo.shape)
+        specular = reflected_light * self._fresnel(ndotv, f0)
+        specular *= (1.0 - 0.72 * roughness) ** 2 * float(material["environment_reflection"])
+        coat = float(material["clearcoat"])
+        if coat > 0.0:
+            coat_f0 = torch.full_like(albedo, 0.04)
+            coat_env = reflected_light * self._fresnel(ndotv, coat_f0)
+            coat_env *= (1.0 - 0.65 * float(material["clearcoat_roughness"])) ** 2
+            specular = specular * (1.0 - 0.25 * coat)
+            specular += coat * coat_env * float(material["environment_reflection"])
+        direction = torch.tensor(
+            sun_direction(float(light["sun_azimuth_degrees"]), float(light["sun_elevation_degrees"])),
+            dtype=torch.float32, device=self.device,
+        )
+        light_dirs = torch.broadcast_to(direction[None], self.normals.shape)
+        radiance = torch.tensor(light["sun_color_rgb"], dtype=torch.float32,
+                                device=self.device)[None] * float(light["intensity"])
+        radiance = torch.broadcast_to(radiance, albedo.shape)
+        ndotl = (self.normals * light_dirs).sum(dim=1, keepdim=True).clamp(0.0, 1.0)
+        diffuse += albedo * radiance * ndotl * (1.0 - metallic)
+        specular += radiance * self._ggx(light_dirs, roughness, f0)
+        if coat > 0.0:
+            coat_f0 = torch.full_like(albedo, 0.04)
+            specular += coat * radiance * self._ggx(
+                light_dirs, float(material["clearcoat_roughness"]), coat_f0
+            )
+        rgb = (diffuse + specular * float(material["specular_gain"])) * float(material["exposure"])
+        rgb = rgb.clamp_min(0.0)
+        return (rgb * (2.51 * rgb + 0.03) / (rgb * (2.43 * rgb + 0.59) + 0.14).clamp_min(1e-8)).clamp(0.0, 1.0)
+
+    def colors(self, material, light):
+        saturation = float(material["saturation"])
+        proxy_albedo = self._saturation(self.albedo, saturation)
+        proxy = self._proxy_lighting(proxy_albedo, material, light)
+        ratio = proxy / proxy_albedo.clamp(0.03, 1.0)
+        mapped = (ratio[self.indices] * self.weights[:, :, None]).sum(dim=1)
+        original = self._saturation(self.original_rgb, saturation)
+        mixed = 1.0 + float(material["relight_strength"]) * (mapped - 1.0)
+        return (original * mixed * float(material["exposure"])).clamp(0.0, 1.0)
+
+    def score(self, material, light) -> float:
+        torch = self.torch
+        with torch.inference_mode():
+            colors = self.colors(material, light)
+            values = (colors.to(torch.float64) * self.luma_weights).sum(dim=1).clamp(0.0, 1.0)
+            index = torch.minimum(
+                (values * (self.bins - 1)).to(torch.long),
+                torch.full_like(values, self.bins - 1, dtype=torch.long),
+            )
+            histogram = torch.bincount(index, weights=self.original_weight, minlength=self.bins)
+            candidate_cdf = torch.cumsum(histogram, dim=0) / histogram.sum().clamp_min(1e-12)
+            return float(torch.mean(torch.abs(candidate_cdf - self.target_cdf)).item())
+
+    def colors_numpy(self, material, light) -> np.ndarray:
+        with self.torch.inference_mode():
+            return self.colors(material, light).detach().cpu().numpy().astype(np.float32, copy=False)
+
+
 def split_template(payload: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None]:
     asset, vehicle = payload.get("pbr_asset"), payload.get("vehicle")
     if isinstance(asset, Mapping) and isinstance(vehicle, Mapping):
@@ -304,11 +446,9 @@ def value_to_ui(value: float, kind: str) -> float:
     return float(np.clip(result, -1.0, 1.0))
 
 
-def bounded_grid(center_ui: float, delta_ui: float, count: int) -> np.ndarray:
-    """Sample a closed Viser UI interval, retaining clipped boundary walls."""
-    lower = float(np.clip(center_ui - delta_ui, -1.0, 1.0))
-    upper = float(np.clip(center_ui + delta_ui, -1.0, 1.0))
-    return np.linspace(lower, upper, count, dtype=np.float64)
+def auto_light_ui_grid(count: int) -> np.ndarray:
+    """Sample the fixed absolute Auto interval in Viser slider coordinates."""
+    return np.linspace(AUTO_LIGHT_UI_MIN, AUTO_LIGHT_UI_MAX, count, dtype=np.float64)
 
 
 def emit_config(template: Mapping[str, Any], base: Mapping[str, Any], vehicle: Mapping[str, Any] | None, material: Mapping[str, float], light: Mapping[str, Any], metadata: Mapping[str, Any]) -> dict[str, Any]:
@@ -345,7 +485,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--final-config", type=Path, required=True)
     parser.add_argument("--max-seconds", type=float, default=480.0)
     parser.add_argument("--bins", type=int, default=512)
+    parser.add_argument(
+        "--device", default="auto",
+        help="Compute device: auto (first locally visible CUDA GPU), cpu, cuda, or cuda:N.",
+    )
     args = parser.parse_args(argv)
+    compute_device = resolve_compute_device(args.device)
+    print(f"PBR auto-fit compute device: {compute_device.description}", flush=True)
     started = time.perf_counter()
     write_progress(args.output_dir, 0.03, "加载场景与车辆 Gaussian")
     if args.template_config is not None and args.base_config is not None:
@@ -368,10 +514,10 @@ def main(argv: list[str] | None = None) -> None:
     material = template_material(base, vehicle)
     sun_rgb, sun_azimuth, sun_elevation, sun_base = fixed_template_light(base, vehicle)
     fill_base = float(material["ambient_fill"])
-    sun_ui_base = value_to_ui(sun_base, "sun_intensity")
-    fill_ui_base = value_to_ui(fill_base, "brightness")
-    sun_ui_bounds = tuple(bounded_grid(sun_ui_base, SUN_INTENSITY_UI_DELTA, 2))
-    fill_ui_bounds = tuple(bounded_grid(fill_ui_base, AMBIENT_FILL_UI_DELTA, 2))
+    sun_ui_input = value_to_ui(sun_base, "sun_intensity")
+    fill_ui_input = value_to_ui(fill_base, "brightness")
+    sun_ui_bounds = (AUTO_LIGHT_UI_MIN, AUTO_LIGHT_UI_MAX)
+    fill_ui_bounds = (AUTO_LIGHT_UI_MIN, AUTO_LIGHT_UI_MAX)
     rear_x = float(np.quantile(centers[:, 0], 0.005))
     target = np.quantile(centers, 0.5, axis=0)
     camera = np.asarray([rear_x - 4.0, target[1], target[2] + 0.5], dtype=np.float32)
@@ -380,23 +526,34 @@ def main(argv: list[str] | None = None) -> None:
     records: list[dict[str, Any]] = []
     write_progress(args.output_dir, 0.20, "分析场景亮度与中性色温")
 
+    gpu_evaluator = None
+    if compute_device.uses_cuda:
+        gpu_evaluator = TorchCandidateEvaluator(
+            albedo=albedo, normals=normals, views=views, indices=indices, weights=weights,
+            original_rgb=original_rgb, original_weight=original_weight,
+            target_cdf=target_cdf, bins=args.bins, device=compute_device.value,
+        )
+
     def evaluate(stage: str, sun_intensity: float, fill: float, cct_kelvin: float) -> dict[str, Any]:
         candidate_material = dict(material, ambient_fill=float(fill))
         light = {"sun_azimuth_degrees": sun_azimuth, "sun_elevation_degrees": sun_elevation, "intensity": float(sun_intensity), "sun_color_rgb": sun_rgb.tolist(), "color_rgb": sun_rgb.tolist(), "environment_cct_kelvin": float(cct_kelvin), "environment_energy": ENVIRONMENT_ENERGY, "environment_color_rgb": (ENVIRONMENT_ENERGY * cct_tint(cct_kelvin)).tolist()}
-        saturation = float(candidate_material["saturation"])
-        proxy_albedo = adjust_saturation(albedo, saturation)
-        proxy = proxy_lighting(proxy_albedo, normals, views, candidate_material, light)
-        ratio = proxy / np.clip(proxy_albedo, 0.03, 1.0)
-        mapped = np.sum(ratio[indices] * weights[:, :, None], axis=1)
-        colors = np.clip(adjust_saturation(original_rgb, saturation) * (1.0 + candidate_material["relight_strength"] * (mapped - 1.0)) * candidate_material["exposure"], 0.0, 1.0)
-        value = cdf_l1(luma(colors), original_weight, target_cdf, args.bins)
-        return {"stage": stage, "sun_intensity": float(sun_intensity), "ambient_fill": float(fill), "environment_cct_kelvin": float(cct_kelvin), "luminance_cdf_l1": value, "colors": colors, "material": candidate_material, "light": light}
+        if gpu_evaluator is not None:
+            value = gpu_evaluator.score(candidate_material, light)
+        else:
+            saturation = float(candidate_material["saturation"])
+            proxy_albedo = adjust_saturation(albedo, saturation)
+            proxy = proxy_lighting(proxy_albedo, normals, views, candidate_material, light)
+            ratio = proxy / np.clip(proxy_albedo, 0.03, 1.0)
+            mapped = np.sum(ratio[indices] * weights[:, :, None], axis=1)
+            colors = np.clip(adjust_saturation(original_rgb, saturation) * (1.0 + candidate_material["relight_strength"] * (mapped - 1.0)) * candidate_material["exposure"], 0.0, 1.0)
+            value = cdf_l1(luma(colors), original_weight, target_cdf, args.bins)
+        return {"stage": stage, "sun_intensity": float(sun_intensity), "ambient_fill": float(fill), "environment_cct_kelvin": float(cct_kelvin), "luminance_cdf_l1": value, "material": candidate_material, "light": light}
 
     phase_start = time.perf_counter()
     brightness = []
     brightness_total = 30
-    for sun_ui in bounded_grid(sun_ui_base, SUN_INTENSITY_UI_DELTA, 6):
-        for fill_ui in bounded_grid(fill_ui_base, AMBIENT_FILL_UI_DELTA, 5):
+    for sun_ui in auto_light_ui_grid(6):
+        for fill_ui in auto_light_ui_grid(5):
             if time.perf_counter() - started > args.max_seconds: break
             sun = ui_to_value(sun_ui, "sun_intensity")
             fill = ui_to_value(fill_ui, "brightness")
@@ -429,10 +586,23 @@ def main(argv: list[str] | None = None) -> None:
     phases["total_seconds"] = time.perf_counter() - started
 
     raw_distance = cdf_l1(original_luma, original_weight, target_cdf, args.bins)
-    candidate_distance = cdf_l1(luma(best["colors"]), original_weight, target_cdf, args.bins)
-    accepted = candidate_distance < raw_distance - 1e-9
-    final_colors = best["colors"] if accepted else original_rgb
-    baked_distance = candidate_distance if accepted else raw_distance
+    # The grid optimum is always the published result.  Raw vehicle DC remains a
+    # diagnostic baseline, not a second acceptance gate.
+    if gpu_evaluator is not None:
+        final_colors = gpu_evaluator.colors_numpy(best["material"], best["light"])
+    else:
+        saturation = float(best["material"]["saturation"])
+        proxy_albedo = adjust_saturation(albedo, saturation)
+        proxy = proxy_lighting(proxy_albedo, normals, views, best["material"], best["light"])
+        ratio = proxy / np.clip(proxy_albedo, 0.03, 1.0)
+        mapped = np.sum(ratio[indices] * weights[:, :, None], axis=1)
+        final_colors = np.clip(
+            adjust_saturation(original_rgb, saturation)
+            * (1.0 + best["material"]["relight_strength"] * (mapped - 1.0))
+            * best["material"]["exposure"], 0.0, 1.0,
+        )
+    candidate_distance = cdf_l1(luma(final_colors), original_weight, target_cdf, args.bins)
+    baked_distance = candidate_distance
     baked = np.array(original, copy=True)
     for channel in range(3): baked[f"f_dc_{channel}"] = ((final_colors[:, channel] - 0.5) / SH_C0).astype(baked[f"f_dc_{channel}"].dtype)
     for name in baked.dtype.names or ():
@@ -441,13 +611,17 @@ def main(argv: list[str] | None = None) -> None:
     write_progress(args.output_dir, 0.93, "保存候选配置与评估指标")
     baked_path = args.output_dir / f"{base.get('asset_id', 'vehicle')}_rear_view_cct_pbr_dc_baked.ply"
     PlyData([PlyElement.describe(baked, "vertex")], text=False).write(str(baked_path))
-    metadata = {"schema_version": 2, "status": "candidate_only" if accepted else "rejected_no_improvement", "method": "template_cct_environment_brightness_luminance_fit", "contract": {"scene_kind": "ordinary_gaussian_dc", "sun_direction_source": "manual_template_input", "sun_rgb": "fixed_template_value", "environment_cct_kelvin_range": [CCT_MIN_KELVIN, CCT_MAX_KELVIN], "environment_energy": "fixed", "free_material_parameters": [], "manual_only_material_parameters": ["saturation"], "free_brightness_parameters": ["sun_intensity", "ambient_fill"], "free_colour_parameters": ["environment_cct_kelvin"]}, "inputs": {"scene_ply": str(args.scene_ply), "scene_sha256": digest(args.scene_ply), "template_config": template_reference, "template_config_sha256": digest(template_path), "template_kind": "viser_state" if vehicle is not None else "pbr_asset"}, "metric": {"name": "bilateral_opacity_weighted_luminance_cdf_l1_512", "raw": raw_distance, "baked": baked_distance, "improvement_percent": 100.0 * (raw_distance - baked_distance) / raw_distance if raw_distance > 1e-12 else 0.0}, "candidate_metric": {"baked": candidate_distance}, "colour": {"neutral_scene": neutral, "selected_cct_kelvin": best["environment_cct_kelvin"], "selected_tint": cct_tint(best["environment_cct_kelvin"]).tolist(), "environment_energy_fixed": ENVIRONMENT_ENERGY, "vehicle_saturation": "manual_only_not_fitted"}, "search": {"candidates_evaluated": len(records), "phase_times": phases, "bounds": {"ambient_fill": {"ui_base": fill_ui_base, "ui_delta": AMBIENT_FILL_UI_DELTA, "ui_min": fill_ui_bounds[0], "ui_max": fill_ui_bounds[1], "value_base": fill_base, "value_min": ui_to_value(fill_ui_bounds[0], "brightness"), "value_max": ui_to_value(fill_ui_bounds[1], "brightness")}, "sun_intensity": {"ui_base": sun_ui_base, "ui_delta": SUN_INTENSITY_UI_DELTA, "ui_min": sun_ui_bounds[0], "ui_max": sun_ui_bounds[1], "value_base": sun_base, "value_min": ui_to_value(sun_ui_bounds[0], "sun_intensity"), "value_max": ui_to_value(sun_ui_bounds[1], "sun_intensity")}, "boundary_candidates_allowed": True}}}
-    payload = emit_config(template, base, vehicle, best["material"], best["light"], metadata) if accepted else copy.deepcopy(template)
-    if not accepted:
-        payload["auto_fit"] = metadata
+    metadata = {"schema_version": 3, "status": "candidate_only", "selection_policy": SELECTION_POLICY, "method": "template_cct_environment_brightness_luminance_fit", "contract": {"scene_kind": "ordinary_gaussian_dc", "sun_direction_source": "manual_template_input", "sun_rgb": "fixed_template_value", "environment_cct_kelvin_range": [CCT_MIN_KELVIN, CCT_MAX_KELVIN], "environment_energy": "fixed", "free_material_parameters": [], "manual_only_material_parameters": ["saturation"], "free_brightness_parameters": ["sun_intensity", "ambient_fill"], "free_colour_parameters": ["environment_cct_kelvin"]}, "inputs": {"scene_ply": str(args.scene_ply), "scene_sha256": digest(args.scene_ply), "template_config": template_reference, "template_config_sha256": digest(template_path), "template_kind": "viser_state" if vehicle is not None else "pbr_asset"}, "metric": grid_best_metric(raw_distance, baked_distance), "candidate_metric": {"baked": candidate_distance}, "colour": {"neutral_scene": neutral, "selected_cct_kelvin": best["environment_cct_kelvin"], "selected_tint": cct_tint(best["environment_cct_kelvin"]).tolist(), "environment_energy_fixed": ENVIRONMENT_ENERGY, "vehicle_saturation": "manual_only_not_fitted"}, "search": {"candidates_evaluated": len(records), "phase_times": phases, "bounds_policy": "absolute_viser_slider", "bounds": {"ambient_fill": {"ui_input": fill_ui_input, "ui_min": fill_ui_bounds[0], "ui_max": fill_ui_bounds[1], "value_input": fill_base, "value_min": ui_to_value(fill_ui_bounds[0], "brightness"), "value_max": ui_to_value(fill_ui_bounds[1], "brightness")}, "sun_intensity": {"ui_input": sun_ui_input, "ui_min": sun_ui_bounds[0], "ui_max": sun_ui_bounds[1], "value_input": sun_base, "value_min": ui_to_value(sun_ui_bounds[0], "sun_intensity"), "value_max": ui_to_value(sun_ui_bounds[1], "sun_intensity")}, "boundary_candidates_allowed": True}}}
+    metadata["compute"] = {
+        "requested_device": str(args.device),
+        "resolved_device": compute_device.value,
+        "backend": "torch_cuda" if compute_device.uses_cuda else "numpy_cpu",
+        "device_name": compute_device.name,
+    }
+    payload = emit_config(template, base, vehicle, best["material"], best["light"], metadata)
     args.final_config.parent.mkdir(parents=True, exist_ok=True)
     args.final_config.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    compact = [{key: value for key, value in record.items() if key not in {"colors", "material", "light"}} for record in records]
+    compact = [{key: value for key, value in record.items() if key not in {"material", "light"}} for record in records]
     (args.output_dir / "candidates.json").write_text(json.dumps(compact, indent=2) + "\n", encoding="utf-8")
     (args.output_dir / "metrics.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     write_progress(args.output_dir, 1.0, "车辆参数识别完成")

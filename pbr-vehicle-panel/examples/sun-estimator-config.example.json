@@ -12,5 +12,5 @@
   "infinidepth_root": "third_party/InfiniDepth",
   "infinidepth_python": "envs/infinidepth/bin/python",
   "top_vehicles": 3,
-  "device": "0"
+  "device": "auto"
 }

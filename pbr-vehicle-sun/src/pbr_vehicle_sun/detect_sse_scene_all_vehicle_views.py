@@ -18,6 +18,11 @@ import numpy as np
 from ultralytics import YOLO
 
 try:
+    from .device import resolve_device
+except ImportError:
+    from device import resolve_device
+
+try:
     from .audit_argoverse_single_vehicle_views import (
         box_corners, camera_to_world, load_annotations, project_box,
     )
@@ -41,7 +46,7 @@ def main() -> None:
     ap.add_argument("--data-root", type=Path, required=True)
     ap.add_argument("--output", type=Path, required=True)
     ap.add_argument("--weights", type=Path, required=True)
-    ap.add_argument("--device", default="0")
+    ap.add_argument("--device", default="auto")
     ap.add_argument("--cameras", nargs="+", type=int, default=list(range(7)))
     ap.add_argument("--confidence", type=float, default=.25)
     ap.add_argument("--imgsz", type=int, default=960)
@@ -50,6 +55,8 @@ def main() -> None:
     ap.add_argument("--min-yolo-area-ratio", type=float, default=.003)
     ap.add_argument("--border-margin", type=int, default=8)
     args = ap.parse_args(); started = time.perf_counter()
+    compute_device = resolve_device(args.device)
+    print(f"YOLO compute device: {compute_device.description}", flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     annotations, present = load_annotations(args.data_root)
@@ -97,7 +104,7 @@ def main() -> None:
         for result in model.predict(
             source=[str(path) for path in inputs[start:start + batch_size]],
             stream=True,
-            device=args.device,
+            device=compute_device.ultralytics,
             classes=sorted(COCO_VEHICLES),
             conf=args.confidence,
             imgsz=args.imgsz,

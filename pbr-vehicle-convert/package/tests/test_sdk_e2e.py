@@ -59,6 +59,7 @@ def test_convert_relight_bake_round_trip(tmp_path):
 
 def test_public_config_validation():
     config = RenderConfig()
+    assert config.device == "auto"
     assert RenderConfig.from_dict(config.to_dict()) == config
     with pytest.raises(ValueError):
         MaterialConfig(roughness=1.2)

@@ -8,7 +8,13 @@ import numpy as np
 import pytest
 
 import pbr_vehicle_standalone.viewer as viewer_module
-from pbr_vehicle_standalone.viewer import StandaloneViewer, VehicleController, _ui_to_value, _value_to_ui
+from pbr_vehicle_standalone.viewer import (
+    StandaloneViewer,
+    VehicleController,
+    _scene_display_indices,
+    _ui_to_value,
+    _value_to_ui,
+)
 from pbr_vehicle_standalone.environment_map import EnvironmentMap
 from pbr_vehicle_standalone.types import TransformState
 
@@ -18,6 +24,24 @@ class _Handle:
         self.value = value
         self.visible = value
         self.disabled = False
+
+
+def test_scene_display_indices_are_bounded_aligned_and_reproducible():
+    first = _scene_display_indices(total_splats=100, max_splats=20, seed=7)
+    second = _scene_display_indices(total_splats=100, max_splats=20, seed=7)
+
+    np.testing.assert_array_equal(first, second)
+    assert len(first) == 20
+    assert np.all(first[:-1] < first[1:])
+    assert first.min() >= 0
+    assert first.max() < 100
+
+
+def test_scene_display_indices_keep_full_scene_when_limit_is_disabled():
+    values = np.arange(12)
+
+    np.testing.assert_array_equal(values[_scene_display_indices(12, 0, 7)], values)
+    np.testing.assert_array_equal(values[_scene_display_indices(12, 12, 7)], values)
 
 
 def test_scene_only_cubemap_capture_hides_and_restores_vehicle_nodes():
@@ -162,7 +186,9 @@ def test_advanced_panel_has_no_nested_priority_folders():
     source = inspect.getsource(VehicleController._build_gui)
     assert source.count('add_folder("高级"') == 1
     assert "次要参数" not in source
-    assert 'add_button("Auto 识别车辆参数")' in source
+    assert '"Auto 识别车辆参数"' in source
+    assert "绝对 UI 区间 -0.3 到 0.3" in source
+    assert '"使用代理重光照"' in source
     for category in ("Transform", "Material", "R3GW Lighting", "Projection"):
         assert f'add_folder("{category}"' in source
 

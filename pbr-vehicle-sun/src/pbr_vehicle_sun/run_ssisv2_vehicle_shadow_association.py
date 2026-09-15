@@ -17,6 +17,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+try:
+    from .device import resolve_device
+except ImportError:
+    from device import resolve_device
+
 
 def mask_iou(a: np.ndarray, b: np.ndarray) -> float:
     union = int(np.count_nonzero(a | b))
@@ -40,8 +45,10 @@ def main() -> None:
     ap.add_argument("--minimum-object-iou", type=float, default=.05)
     ap.add_argument("--object-class", type=int, default=0,
                     help="Official SSISv2 semantic class used for the casting object; paired opposite class is the shadow.")
-    ap.add_argument("--device", default="cuda")
+    ap.add_argument("--device", default="auto")
     args = ap.parse_args()
+    compute_device = resolve_device(args.device)
+    print(f"SSISv2 compute device: {compute_device.description}", flush=True)
     root = args.ssis_root.resolve()
     sys.path.insert(0, str(root))
     from adet.config import get_cfg
@@ -58,7 +65,7 @@ def main() -> None:
     cfg = get_cfg()
     cfg.merge_from_file(str(root / "configs/SSIS/MS_R_101_BiFPN_SSISv2_demo.yaml"))
     cfg.MODEL.WEIGHTS = str(args.weights.resolve())
-    cfg.MODEL.DEVICE = args.device
+    cfg.MODEL.DEVICE = compute_device.torch
     cfg.MODEL.FCOS.INFERENCE_TH_TEST = args.confidence_threshold
     cfg.freeze()
     output = DefaultPredictor(cfg)(source)[0]["instances"].to("cpu")

@@ -21,6 +21,11 @@ from pathlib import Path
 
 import numpy as np
 
+try:
+    from .device import resolve_device
+except ImportError:
+    from device import resolve_device
+
 
 SCRIPTS = Path(__file__).resolve().parent
 
@@ -78,7 +83,7 @@ def main() -> None:
     ap.add_argument("--ssis-root", type=Path, required=True)
     ap.add_argument("--ssis-weights", type=Path, required=True)
     ap.add_argument("--ssis-python", type=Path, default=Path(sys.executable))
-    ap.add_argument("--ssis-device", default="cuda")
+    ap.add_argument("--ssis-device", default="auto")
     ap.add_argument("--ssis-confidence-threshold", type=float, default=.10)
     ap.add_argument("--minimum-ssis-object-iou", type=float, default=.05)
     ap.add_argument("--infinidepth-root", type=Path, required=True)
@@ -88,7 +93,7 @@ def main() -> None:
     ap.add_argument("--moge2-pretrained", type=Path)
     ap.add_argument("--sky-checkpoint", type=Path)
     ap.add_argument("--infinidepth-sample-points", type=int, default=2_000_000)
-    ap.add_argument("--device", default="0")
+    ap.add_argument("--device", default="auto")
     ap.add_argument("--yolo-batch", type=int, default=16)
     ap.add_argument("--top-vehicles", type=int, choices=range(1, 6), default=3)
     ap.add_argument("--selection-pool-size", type=int)
@@ -100,6 +105,10 @@ def main() -> None:
     ap.add_argument("--existing-detection", type=Path)
     ap.add_argument("--existing-ranking", type=Path)
     args = ap.parse_args()
+    compute_device = resolve_device(args.device)
+    ssis_device = resolve_device(args.ssis_device)
+    args.ssis_device = ssis_device.torch
+    print(f"SSE compute device: {compute_device.description}", flush=True)
     if args.vehicle_rank_offset < 0:
         ap.error("--vehicle-rank-offset must be non-negative")
     selection_pool_size = args.selection_pool_size or args.top_vehicles + args.vehicle_rank_offset
@@ -124,7 +133,7 @@ def main() -> None:
         run_stage("all_frame_all_camera_yolo_identity", [
             py, str(SCRIPTS / "detect_sse_scene_all_vehicle_views.py"),
             "--data-root", str(args.data_root), "--output", str(detection),
-            "--weights", str(args.yolo_weights), "--device", args.device,
+            "--weights", str(args.yolo_weights), "--device", compute_device.ultralytics,
             "--batch", str(args.yolo_batch),
             "--cameras", *map(str, args.cameras),
         ], timings)
@@ -140,7 +149,7 @@ def main() -> None:
             str(args.sam2_python), str(SCRIPTS / "rank_sse_scene_vehicles_by_sam2_mask.py"),
             "--detections", str(detection), "--output-dir", str(ranking_dir),
             "--checkpoint", str(args.sam2_checkpoint), "--config", args.sam2_config,
-            "--device", f"cuda:{args.device.split(':')[-1]}",
+            "--device", compute_device.torch,
             "--top-vehicles", str(selection_pool_size),
             "--min-mask-area-ratio", str(args.min_mask_area_ratio),
         ], timings, sam_env)
@@ -172,7 +181,7 @@ def main() -> None:
                 run_stage(f"view_t{timestep:03d}_cam{camera}_rgb_depth", [
                     str(args.infinidepth_python), str(SCRIPTS / "infer_infinidepth_dense_depth.py"),
                     "--image", str(image), "--output-dir", str(depth_dir),
-                    "--device", f"cuda:{args.device.split(':')[-1]}", "--model-type", "InfiniDepth",
+                    "--device", compute_device.torch, "--model-type", "InfiniDepth",
                     "--infinidepth-root", str(args.infinidepth_root),
                     "--depth-checkpoint", str(depth_checkpoint), "--moge2-pretrained", str(moge2),
                 ], timings, depth_env)
@@ -279,6 +288,12 @@ def main() -> None:
     summary = {
         "scene": args.scene,
         "mainline": "SSE-v8",
+        "compute_device": {
+            "requested": str(args.device),
+            "torch": compute_device.torch,
+            "ultralytics": compute_device.ultralytics,
+            "name": compute_device.name,
+        },
         "protocol_basis": "SSE-v6-b official SSISv2 associated raw shadow mask",
         "status": aggregate_result["status"] if aggregate_result else "no_valid_sun_information",
         "selection_contract": ranking["contract"],

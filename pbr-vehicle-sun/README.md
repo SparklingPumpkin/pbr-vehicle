@@ -1,6 +1,6 @@
 # PBR Vehicle Sun
 
-`pbr-vehicle-sun 1.2.0` 是场景太阳方位角/高度角识别的独立交付包，对应研究主线 `SSE-v8`。`SSE-v8` 的阴影输入协议严格继承 `SSE-v6-b`，并继承 `SSE-v7` 的通用多车门控：YOLO/SAM2 选定车辆，SSISv2 绑定 object-shadow pair，官方关联 shadow mask 不经过差集、连通域清洗或形态学修改，直接由 InfiniDepth 提升并参与轮廓拟合。
+`pbr-vehicle-sun 1.3.0` 是场景太阳方位角/高度角识别的独立交付包，对应研究主线 `SSE-v8`。YOLO、SAM2、SSISv2 与 InfiniDepth 默认通过 `--device auto` 使用当前进程可见的本地 CUDA GPU；无 CUDA时回退 CPU。阴影输入、几何提升和多车门控合同保持不变。
 
 默认完整场景链先使用全局排名 1–3 的三辆物理车辆。首轮全部拒绝时，复用已经完成的 YOLO 检测和 SAM2 排名，自动更换为排名 4–6 的车辆再估计一次；第二轮仍全部拒绝才返回 `no_valid_sun_information`。进程异常、文件错误和资源错误不会触发换车，也不会被记成方法拒绝。
 

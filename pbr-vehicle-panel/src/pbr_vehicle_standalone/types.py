@@ -122,6 +122,7 @@ class VehicleState:
     display_mode: str = "Relight Original"
     transform: TransformState = field(default_factory=TransformState)
     material: MaterialState = field(default_factory=MaterialState)
+    use_proxy_relighting: bool = True
     use_scene_lighting: bool = True
     lighting: LightingState = field(default_factory=LightingState)
     environment_map_enabled: bool = False

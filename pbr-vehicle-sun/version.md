@@ -1,6 +1,13 @@
 # pbr-vehicle-sun 版本说明
 
-## 当前版本：1.2.0
+## 当前版本：1.3.0
+
+- 所有公开推理入口默认使用 `--device auto`；有 CUDA 时选择当前进程可见的第一张本地 GPU，无 CUDA时回退 CPU。
+- 自动把统一设备转换为 Torch/Detectron2 的 `cuda:0` 与 Ultralytics 的 `0`，修复 `auto`/`cpu` 被错误拼成 CUDA 字符串的问题。
+- 遵循 `CUDA_VISIBLE_DEVICES`，不写死 GPU 型号或物理卡号；子进程会打印实际解析设备。
+- 运行依赖约束 NumPy 为 `>=1.24,<2`，避免旧版 Torch 与 NumPy 2 的 ABI 不兼容组合。
+
+## 1.2.0
 
 - 默认 `pbr-vehicle-sun-scene` 已加入两轮换车：首轮全局排名 1–3，无有效角时复用检测和排名并更换为排名 4–6。
 - 第二轮仍无有效角才返回 `no_valid_sun_information`；进程失败立即停止并返回非零码，不触发换车。

@@ -19,6 +19,16 @@ from pbr_vehicle_sun.run_sse_scene_global_top3 import (
     select_ranked_vehicles,
     ssisv2_command,
 )
+from pbr_vehicle_sun.device import resolve_device
+
+
+def test_portable_device_formats_for_torch_and_ultralytics():
+    cpu = resolve_device("cpu")
+    assert (cpu.torch, cpu.ultralytics, cpu.uses_cuda) == ("cpu", "cpu", False)
+    cuda = resolve_device("cuda:3")
+    assert (cuda.torch, cuda.ultralytics, cuda.uses_cuda) == ("cuda:3", "3", True)
+    automatic = resolve_device("auto")
+    assert automatic.torch in {"cpu", "cuda:0"}
 from pbr_vehicle_sun.run_sse_scene_two_round import run_two_round
 
 

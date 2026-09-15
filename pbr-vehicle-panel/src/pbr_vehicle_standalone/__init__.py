@@ -1,6 +1,6 @@
 """Framework-independent runtime for the interactive Gaussian PBR vehicle panel."""
 
-__version__ = "1.7.1"
+__version__ = "1.9.1"
 
 from .asset_io import load_scene, load_vehicle_asset, resolve_asset_folder
 from .auto_fit import read_auto_fit_result, run_vehicle_auto_fit

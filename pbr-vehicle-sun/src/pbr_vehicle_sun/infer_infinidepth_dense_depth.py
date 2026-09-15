@@ -14,6 +14,11 @@ import cv2
 import numpy as np
 import torch
 
+try:
+    from .device import resolve_device
+except ImportError:
+    from device import resolve_device
+
 
 INPUT_SIZE = (768, 1024)
 
@@ -31,7 +36,7 @@ def main() -> None:
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--prompt-depth", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--device", default="auto")
     parser.add_argument("--model-type", choices=("InfiniDepth", "InfiniDepth_DepthSensor"),
                         default="InfiniDepth_DepthSensor")
     parser.add_argument("--infinidepth-root", type=Path, required=True)
@@ -59,7 +64,9 @@ def main() -> None:
     np.random.seed(0)
     torch.manual_seed(0)
     torch.cuda.manual_seed_all(0)
-    device = torch.device(args.device)
+    selection = resolve_device(args.device)
+    device = torch.device(selection.torch)
+    print(f"InfiniDepth compute device: {selection.description}", flush=True)
     original = cv2.imread(str(args.image), cv2.IMREAD_COLOR)
     if original is None:
         raise FileNotFoundError(args.image)

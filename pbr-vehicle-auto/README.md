@@ -8,9 +8,9 @@
 - Direct `sun_color_rgb` is fixed and independent from environment colour.
 - Environment color is constrained to a luminance-normalized `3500-7200 K` CCT path at fixed energy.
 - Vehicle material is not fitted. `material.saturation` is manual only, with `1.0` meaning unchanged.
-- Only `sun_intensity`, `ambient_fill`, and `environment_cct_kelvin` are searched. The bounds are in the Panel/Viser `[-1, 1]` slider coordinates: relative to the template, `sun_intensity` is `+/-0.15` and `ambient_fill` (the brightness slider) is `+/-0.30`. Both clipped slider-wall values are valid candidates.
+- Only `sun_intensity`, `ambient_fill`, and `environment_cct_kelvin` are searched. Both lighting controls use the fixed absolute `[-0.3, 0.3]` subset of the Panel/Viser `[-1, 1]` slider coordinates. The input template values do not move this window, so repeated Auto runs evaluate the same lighting domain.
 - The objective is opacity-weighted vehicle/scene DC luminance CDF-L1, using one vehicle rear view. The optional bake writes those PBR colours as ordinary Gaussian DC and clears higher-order SH.
-- A candidate that does not beat the original vehicle DC objective is rejected; its output preserves the base configuration and reports `rejected_no_improvement`.
+- The best candidate inside the configured grid is always published as `candidate_only`. Original vehicle DC is retained only as a diagnostic baseline; it is no longer a second acceptance gate, so `improvement_percent` may be zero or negative.
 
 This is an appearance-adaptation proxy. It does not claim physical illumination recovery, material truth, spatial correspondence, or multi-view realism.
 
@@ -18,7 +18,7 @@ This is an appearance-adaptation proxy. It does not claim physical illumination 
 
 ```bash
 cd pbr-vehicle/pbr-vehicle-auto
-python -m pip install -e '.[test]'
+python -m pip install -e '.[gpu,test]'
 ```
 
 ## Default Template
@@ -39,8 +39,11 @@ pbr-vehicle-auto-fit \
   --asset-dir <pbr_asset_folder> \
   --template-config templates/default_vehicle_pbr_viser_template.json \
   --output-dir <run_dir> \
-  --final-config <asset_folder>/configs/config_auto_<vehicle>_<scene>.json
+  --final-config <asset_folder>/configs/config_auto_<vehicle>_<scene>.json \
+  --device auto
 ```
+
+`auto` 会使用当前进程可见的第一张 CUDA GPU，并遵循 `CUDA_VISIBLE_DEVICES`；无 CUDA或未安装 PyTorch 时自动使用原 NumPy CPU 路径。
 
 The package does not include vehicle or scene Gaussian assets. The template's `pbr_asset` uses `pbr-vehicle-single-ply-v1`: `files.pbr` is relative to `--asset-dir`, `normal_0..2` are read from that PLY, and `material.albedo_rgb` is broadcast as the global base color. No proxy, mapping, or `r3gw_*` field is required.
 

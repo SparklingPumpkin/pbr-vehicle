@@ -47,7 +47,14 @@ def shade_proxy(proxy: GaussianLayer, material: MaterialState, lighting: Lightin
                 env_sh: np.ndarray | None = None,
                 environment_map: EnvironmentMap | None = None,
                 world_normals: np.ndarray | None = None,
-                view_directions: np.ndarray | None = None) -> np.ndarray:
+                view_directions: np.ndarray | None = None,
+                device: str = "cpu", tensor_cache: dict | None = None) -> np.ndarray:
+    if str(device).startswith("cuda"):
+        from .torch_shading import shade_proxy_cuda
+        return shade_proxy_cuda(
+            proxy, material, lighting, env_sh, environment_map, world_normals,
+            view_directions, str(device), tensor_cache,
+        )
     if proxy.albedo is None or proxy.normals is None:
         raise ValueError("Proxy layer has no PBR albedo/normals")
     normals = normalize(proxy.normals)
@@ -141,8 +148,20 @@ def shade_vehicle(asset: VehicleAsset, material: MaterialState, lighting: Lighti
                   env_sh: np.ndarray | None = None, mode: str = "Relight Original",
                   environment_map: EnvironmentMap | None = None,
                   world_normals: np.ndarray | None = None,
-                  view_directions: np.ndarray | None = None) -> tuple[GaussianLayer, np.ndarray]:
-    proxy_material = replace(material, saturation=1.0) if mode == "Relight Original" else material
+                  view_directions: np.ndarray | None = None,
+                  use_proxy_relighting: bool = True,
+                  device: str = "cpu", tensor_cache: dict | None = None) -> tuple[GaussianLayer, np.ndarray]:
+    if str(device).startswith("cuda") and mode in {"Relight Original", "Proxy Lit"}:
+        from .torch_shading import shade_vehicle_cuda
+        return shade_vehicle_cuda(
+            asset, material, lighting, env_sh, mode, environment_map, world_normals,
+            view_directions, use_proxy_relighting, str(device), tensor_cache,
+        )
+    proxy_material = (
+        replace(material, saturation=1.0)
+        if mode == "Relight Original" and use_proxy_relighting
+        else material
+    )
     proxy_lit = shade_proxy(
         asset.proxy,
         proxy_material,
@@ -151,6 +170,8 @@ def shade_vehicle(asset: VehicleAsset, material: MaterialState, lighting: Lighti
         environment_map=environment_map,
         world_normals=world_normals,
         view_directions=view_directions,
+        device=device,
+        tensor_cache=tensor_cache,
     )
     if mode == "Proxy Lit":
         return asset.proxy, proxy_lit
@@ -169,6 +190,8 @@ def shade_vehicle(asset: VehicleAsset, material: MaterialState, lighting: Lighti
         return asset.proxy, np.repeat(asset.proxy.metallic, 3, axis=1)
     if mode == "SH RGB":
         return asset.proxy, asset.proxy.colors
+    if mode == "Relight Original" and not use_proxy_relighting:
+        return asset.proxy, proxy_lit
     ratio = proxy_lit / np.clip(asset.proxy.albedo, 0.03, 1.0)
     mapped = np.sum(ratio[asset.mapping_indices] * asset.mapping_weights[:, :, None], axis=1)
     mixed = 1.0 + material.relight_strength * (mapped - 1.0)

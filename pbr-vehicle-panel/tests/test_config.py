@@ -12,6 +12,7 @@ def test_viewer_config_round_trip(tmp_path):
     state = VehicleState(
         vehicle_id="vehicle_001",
         asset_folder="assets/test",
+        use_proxy_relighting=False,
         environment_map_enabled=True,
         environment_map_resolution=64,
         environment_preview_visible=True,

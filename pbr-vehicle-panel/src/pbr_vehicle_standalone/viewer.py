@@ -15,6 +15,7 @@ import viser.transforms as vt
 from .asset_io import load_scene, load_vehicle_asset, materialize_pth_scene, resolve_scene_context
 from .auto_fit import run_vehicle_auto_fit
 from .config_io import next_config_path, read_config, save_viewer_config, state_from_config
+from .device import resolve_compute_device
 from .environment_map import EnvironmentMap, cube_face_rotations, textured_environment_sphere
 from .math3d import color_temperature_to_rgb, euler_to_wxyz, normalize, quaternion_to_rotation, sun_direction
 from .projection import build_projection_masks
@@ -28,6 +29,12 @@ DISPLAY_MODES = (
     "Relight Original", "Original SH", "Proxy Lit", "Albedo", "Normal",
     "Roughness", "Reflectance", "Metallic", "SH RGB",
 )
+
+
+def _scene_display_indices(total_splats: int, max_splats: int, seed: int) -> np.ndarray | slice:
+    if max_splats <= 0 or total_splats <= max_splats:
+        return slice(None)
+    return np.sort(np.random.default_rng(seed).choice(total_splats, size=max_splats, replace=False))
 
 
 def _ui_to_value(value: float, kind: str) -> float:
@@ -65,6 +72,8 @@ def _value_to_ui(value: float, kind: str) -> float:
 class StandaloneViewer:
     def __init__(self, args):
         self.args = args
+        self.compute_device = resolve_compute_device(getattr(args, "device", "auto"))
+        print(f"PBR compute device: {self.compute_device.description}", flush=True)
         self.server = viser.ViserServer(port=args.port)
         self.scene_handle = None
         self.scene_path = ""
@@ -243,18 +252,23 @@ class StandaloneViewer:
 
     def replace_scene(self, path: str | Path) -> None:
         layer = load_scene(path, self.args.scene_cache_dir)
+        indices = _scene_display_indices(
+            len(layer.centers),
+            int(getattr(self.args, "scene_max_splats", 0)),
+            int(self.args.seed),
+        )
         if self.scene_handle is not None:
             self.scene_handle.remove()
             self.scene_handle = None
         new_handle = self.server.scene.add_gaussian_splats(
-            "/standalone_scene/splats", centers=layer.centers, covariances=layer.covariances,
-            rgbs=layer.colors, opacities=layer.opacities, visible=bool(self.handles["scene_visible"].value),
+            "/standalone_scene/splats", centers=layer.centers[indices], covariances=layer.covariances[indices],
+            rgbs=layer.colors[indices], opacities=layer.opacities[indices], visible=bool(self.handles["scene_visible"].value),
         )
         self.scene_handle = new_handle
         self.scene_path = str(Path(path).expanduser().resolve())
         self.scene_context = resolve_scene_context(self.scene_path)
         self.invalidate_environment_maps()
-        print(f"Loaded scene {self.scene_path}: {len(layer.centers):,}/{layer.total_splats:,} splats", flush=True)
+        print(f"Loaded scene {self.scene_path}: {len(layer.centers[indices]):,}/{layer.total_splats:,} splats", flush=True)
 
     def clear_scene(self) -> None:
         if self.scene_handle is not None:
@@ -518,6 +532,7 @@ class VehicleController:
         self._environment_preview_cache_key = None
         self.environment_preview_handle = None
         self._environment_preview_mesh_key = None
+        self._pbr_tensor_cache: dict[Any, Any] = {}
         self._build_gui()
         self.apply_state(state)
 
@@ -531,7 +546,10 @@ class VehicleController:
             self.handles["saturation"] = self.server.gui.add_slider("饱和度", min=0.0, max=2.0, step=0.01, initial_value=1.0)
             self.handles["ambient_fill"] = self.server.gui.add_slider("亮度", min=-1.0, max=1.0, step=0.01, initial_value=0.0)
             center_button = self.server.gui.add_button("Center orbit on this vehicle")
-            self.handles["auto_fit"] = self.server.gui.add_button("Auto 识别车辆参数")
+            self.handles["auto_fit"] = self.server.gui.add_button(
+                "Auto 识别车辆参数",
+                hint="太阳光强度和亮度固定在绝对 UI 区间 -0.3 到 0.3 内搜索。",
+            )
             config_folder = self.server.gui.add_folder("Config", expand_by_default=False)
             advanced_folder = self.server.gui.add_folder("高级", expand_by_default=False)
             with advanced_folder:
@@ -552,6 +570,11 @@ class VehicleController:
                 self.handles["reflectance"] = self.server.gui.add_slider("Reflectance", min=0.02, max=0.20, step=0.005, initial_value=0.04)
                 self.handles["metallic"] = self.server.gui.add_slider("Metallic", min=0.0, max=1.0, step=0.02, initial_value=0.0)
                 self.handles["relight_strength"] = self.server.gui.add_slider("Relight mix", min=0.0, max=1.0, step=0.05, initial_value=1.0)
+                self.handles["use_proxy_relighting"] = self.server.gui.add_checkbox(
+                    "使用代理重光照",
+                    initial_value=True,
+                    hint="开启：代理层计算后映射到可见层；关闭：直接显示 PBR 层的朴素着色结果。",
+                )
                 self.handles["use_asset_material"] = self.server.gui.add_checkbox("Use asset material", initial_value=True)
                 self.handles["exposure"] = self.server.gui.add_slider("Exposure", min=0.2, max=3.0, step=0.05, initial_value=1.0)
             with advanced_folder:
@@ -996,6 +1019,7 @@ class VehicleController:
                 template_payload=self.auto_fit_template(),
                 config_path=str(self.app.handles["auto_fit_config"].value).strip() or None,
                 timeout=float(getattr(self.app.args, "auto_fit_timeout", 600.0)),
+                device=getattr(getattr(self.app, "compute_device", None), "value", "auto"),
             )
             temperature = float(result["environment_temperature_k"])
             self._suspend_updates = True
@@ -1020,7 +1044,7 @@ class VehicleController:
             self.app._notify(
                 event,
                 "Auto 识别完成",
-                f"太阳光强度、亮度和车辆色温已更新；改善 {result['improvement_percent']:.2f}%，结果 {result['output_dir']}",
+                f"太阳光强度、亮度和车辆色温已更新；相对原始 DC 指标变化 {result['improvement_percent']:.2f}%，结果 {result['output_dir']}",
             )
         except Exception as exc:
             traceback.print_exc()
@@ -1075,7 +1099,9 @@ class VehicleController:
         return VehicleState(
             vehicle_id=self.vehicle_id, asset_folder=str(self.asset.root),
             visible=bool(self.handles["visible"].value), display_mode=str(self.handles["mode"].value),
-            transform=self.transform(), material=self.material(), use_scene_lighting=self.use_scene_lighting(),
+            transform=self.transform(), material=self.material(),
+            use_proxy_relighting=bool(self.handles["use_proxy_relighting"].value),
+            use_scene_lighting=self.use_scene_lighting(),
             environment_map_enabled=self.environment_map_enabled(),
             environment_map_resolution=int(self.handles["environment_map_resolution"].value),
             environment_preview_visible=bool(self.handles["environment_preview_visible"].value),
@@ -1110,7 +1136,9 @@ class VehicleController:
             "visible": state.visible, "mode": state.display_mode,
             "x": state.transform.position[0], "y": state.transform.position[1], "z": state.transform.position[2],
             **state.transform.rotation_deg, "scale": state.transform.scale,
-            **state.material.to_dict(), "use_scene_lighting": state.use_scene_lighting,
+            **state.material.to_dict(),
+            "use_proxy_relighting": state.use_proxy_relighting,
+            "use_scene_lighting": state.use_scene_lighting,
             "light_intensity": state.lighting.environment_intensity,
             "light_temperature": _value_to_ui(state.lighting.environment_temperature_k, "temperature"),
             "light_sun_enabled": state.lighting.sun_enabled, "light_sun_intensity": _value_to_ui(state.lighting.sun_intensity, "sun_intensity"),
@@ -1177,7 +1205,11 @@ class VehicleController:
         local_lighting, local_sun = self._effective_local_lighting(quaternion)
         if environment_map is None or not self.environment_map_enabled():
             layer, colors = shade_vehicle(
-                self.asset, self.material(), local_lighting, mode=str(self.handles["mode"].value)
+                self.asset, self.material(), local_lighting,
+                mode=str(self.handles["mode"].value),
+                use_proxy_relighting=bool(self.handles["use_proxy_relighting"].value),
+                device=self.app.compute_device.value,
+                tensor_cache=self._pbr_tensor_cache,
             )
         else:
             world_normals = normalize(self.asset.proxy.normals @ rotation.T)
@@ -1200,6 +1232,9 @@ class VehicleController:
                 environment_map=environment_map,
                 world_normals=world_normals,
                 view_directions=view_directions,
+                use_proxy_relighting=bool(self.handles["use_proxy_relighting"].value),
+                device=self.app.compute_device.value,
+                tensor_cache=self._pbr_tensor_cache,
             )
         centers = np.ascontiguousarray(layer.centers * transform.scale, dtype=np.float32)
         covariances = np.ascontiguousarray(layer.covariances * transform.scale ** 2, dtype=np.float32)

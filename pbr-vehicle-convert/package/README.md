@@ -1,6 +1,8 @@
 # PBR Vehicle SDK
 
-## PBR Asset Contract (1.5.0)
+## PBR Asset Contract (1.6.0)
+
+PBR relight/bake defaults to `RenderConfig(device="auto")`: it uses the first CUDA GPU visible to the process and falls back to NumPy CPU when CUDA or PyTorch is unavailable. Rendering and bake CLIs also accept `--device auto|cpu|cuda|cuda:N`.
 
 Formal assets use `pbr-vehicle-single-ply-v1`. Each vehicle delivers one visible PBR Gaussian PLY and one canonical configuration:
 

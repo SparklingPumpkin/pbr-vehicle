@@ -4,25 +4,32 @@ from __future__ import annotations
 import argparse, json, time
 from collections import defaultdict
 from pathlib import Path
+from contextlib import nullcontext
 import cv2
 import numpy as np
 import torch
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
+try:
+    from .device import resolve_device
+except ImportError:
+    from device import resolve_device
 
 def main() -> None:
-    ap=argparse.ArgumentParser(); ap.add_argument("--detections",type=Path,required=True); ap.add_argument("--output-dir",type=Path,required=True); ap.add_argument("--checkpoint",type=Path,required=True); ap.add_argument("--config",default="configs/sam2.1/sam2.1_hiera_t.yaml"); ap.add_argument("--device",default="cuda:0"); ap.add_argument("--top-vehicles",type=int,default=3); ap.add_argument("--min-mask-area-ratio",type=float,default=.01); args=ap.parse_args(); started=time.perf_counter(); args.output_dir.mkdir(parents=True,exist_ok=True)
+    ap=argparse.ArgumentParser(); ap.add_argument("--detections",type=Path,required=True); ap.add_argument("--output-dir",type=Path,required=True); ap.add_argument("--checkpoint",type=Path,required=True); ap.add_argument("--config",default="configs/sam2.1/sam2.1_hiera_t.yaml"); ap.add_argument("--device",default="auto"); ap.add_argument("--top-vehicles",type=int,default=3); ap.add_argument("--min-mask-area-ratio",type=float,default=.01); args=ap.parse_args(); started=time.perf_counter(); args.output_dir.mkdir(parents=True,exist_ok=True)
+    compute_device=resolve_device(args.device); print(f"SAM2 compute device: {compute_device.description}",flush=True)
     source=json.loads(args.detections.read_text()); detections=source["detections"]
     by_image=defaultdict(list)
     for record in detections: by_image[record["image"]].append(record)
-    predictor=SAM2ImagePredictor(build_sam2(args.config,str(args.checkpoint),device=args.device)); best={}; evaluated=0
+    predictor=SAM2ImagePredictor(build_sam2(args.config,str(args.checkpoint),device=compute_device.torch)); best={}; evaluated=0
     for image_path, records in by_image.items():
         image=cv2.imread(image_path,cv2.IMREAD_COLOR)
         if image is None: continue
         predictor.set_image(cv2.cvtColor(image,cv2.COLOR_BGR2RGB))
         for record in records:
             box=np.asarray(record["bbox_xyxy"],np.float32)
-            with torch.inference_mode(), torch.autocast("cuda",dtype=torch.bfloat16):
+            autocast=torch.autocast("cuda",dtype=torch.bfloat16) if compute_device.uses_cuda else nullcontext()
+            with torch.inference_mode(), autocast:
                 masks,scores,_=predictor.predict(box=box[None],multimask_output=True)
             index=int(np.argmax(scores)); mask=masks[index].astype(bool); evaluated+=1
             candidate=dict(record); candidate.update({"sam2_score":float(scores[index]),"mask_area_ratio":float(mask.mean())})

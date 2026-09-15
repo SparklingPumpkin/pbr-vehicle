@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -29,9 +30,10 @@ def _conversion_config(path: str | None) -> ConversionConfig:
     return ConversionConfig(**value.get("conversion", value))
 
 
-def _render_config(path: str | None) -> RenderConfig:
+def _render_config(path: str | None, device: str | None = None) -> RenderConfig:
     value = _json(path)
-    return RenderConfig.from_dict(value.get("render", value))
+    config = RenderConfig.from_dict(value.get("render", value))
+    return replace(config, device=device) if device is not None else config
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -70,6 +72,7 @@ def _parser() -> argparse.ArgumentParser:
     render_parser.add_argument("asset")
     render_parser.add_argument("output_png")
     render_parser.add_argument("--config")
+    render_parser.add_argument("--device", default=None, help="auto, cpu, cuda, or cuda:N")
 
     render_scene_parser = subparsers.add_parser(
         "render-scene", help="Render a vehicle in an ordinary Gaussian scene using the four integration switches."
@@ -78,11 +81,13 @@ def _parser() -> argparse.ArgumentParser:
     render_scene_parser.add_argument("asset")
     render_scene_parser.add_argument("output_png")
     render_scene_parser.add_argument("--config")
+    render_scene_parser.add_argument("--device", default=None, help="auto, cpu, cuda, or cuda:N")
 
     bake_parser = subparsers.add_parser("bake", help="Bake one configured view to an ordinary 3DGS PLY.")
     bake_parser.add_argument("asset")
     bake_parser.add_argument("output_ply")
     bake_parser.add_argument("--config")
+    bake_parser.add_argument("--device", default=None, help="auto, cpu, cuda, or cuda:N")
 
     bake_scene_parser = subparsers.add_parser(
         "bake-scene", help="Bake any combination of lighting, PBR, shadow, and projection to an ordinary scene PLY."
@@ -91,6 +96,7 @@ def _parser() -> argparse.ArgumentParser:
     bake_scene_parser.add_argument("asset")
     bake_scene_parser.add_argument("output_ply")
     bake_scene_parser.add_argument("--config")
+    bake_scene_parser.add_argument("--device", default=None, help="auto, cpu, cuda, or cuda:N")
 
     analyze_parser = subparsers.add_parser(
         "analyze-scene", help="Reserved interface for automatic sun and vehicle PBR estimation."
@@ -123,16 +129,16 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"scene_ply": scene.source_path.name, "gaussian_count": scene.gaussian_count}, indent=2))
     elif args.command == "render":
         asset = load_asset(args.asset)
-        render(asset, args.output_png, _render_config(args.config))
+        render(asset, args.output_png, _render_config(args.config, args.device))
         print(json.dumps({"output_png": str(Path(args.output_png).resolve())}, indent=2))
     elif args.command == "render-scene":
         scene = load_scene_ply(args.scene_ply)
         asset = load_asset(args.asset)
-        render_scene(scene, asset, args.output_png, _render_config(args.config))
+        render_scene(scene, asset, args.output_png, _render_config(args.config, args.device))
         print(json.dumps({"output_png": str(Path(args.output_png).resolve())}, indent=2))
     elif args.command == "bake":
         asset = load_asset(args.asset)
-        bake(asset, args.output_ply, _render_config(args.config))
+        bake(asset, args.output_ply, _render_config(args.config, args.device))
         print(json.dumps({
             "output_ply": str(Path(args.output_ply).resolve()),
             "bake_manifest": str(Path(args.output_ply).resolve().with_suffix(Path(args.output_ply).suffix + ".bake.json")),
@@ -140,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "bake-scene":
         scene = load_scene_ply(args.scene_ply)
         asset = load_asset(args.asset)
-        result = bake_scene(scene, asset, args.output_ply, _render_config(args.config))
+        result = bake_scene(scene, asset, args.output_ply, _render_config(args.config, args.device))
         print(json.dumps({
             "output_ply": str(result.output_ply.resolve()),
             "scene_gaussian_count": result.scene_gaussian_count,

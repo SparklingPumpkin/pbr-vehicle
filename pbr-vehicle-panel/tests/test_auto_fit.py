@@ -81,13 +81,26 @@ def test_result_reads_only_the_three_fitted_controls(tmp_path):
     assert result["improvement_percent"] == pytest.approx(4.25)
 
 
-def test_rejected_candidate_never_returns_panel_values(tmp_path):
+def test_legacy_rejected_status_is_treated_as_unsupported_output(tmp_path):
     final_config = tmp_path / "final.json"
     metrics = tmp_path / "metrics.json"
     final_config.write_text(json.dumps(_accepted_payload()), encoding="utf-8")
     metrics.write_text(json.dumps({"status": "rejected_no_improvement"}), encoding="utf-8")
-    with pytest.raises(VehicleAutoFitError, match="保留当前参数"):
+    with pytest.raises(VehicleAutoFitError, match="状态无效或不受支持"):
         read_auto_fit_result(final_config, metrics)
+
+
+def test_grid_best_with_negative_improvement_still_returns_panel_values(tmp_path):
+    final_config = tmp_path / "final.json"
+    metrics = tmp_path / "metrics.json"
+    final_config.write_text(json.dumps(_accepted_payload()), encoding="utf-8")
+    metrics.write_text(
+        json.dumps({"status": "candidate_only", "metric": {"improvement_percent": -1.5}}),
+        encoding="utf-8",
+    )
+    result = read_auto_fit_result(final_config, metrics)
+    assert result["sun_intensity"] == pytest.approx(1.5)
+    assert result["improvement_percent"] == pytest.approx(-1.5)
 
 
 def test_run_keeps_auto_artifacts_in_temporary_directory(tmp_path):

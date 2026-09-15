@@ -9,6 +9,7 @@ import numpy as np
 
 from .asset import PBRAsset
 from .config import RenderConfig
+from .device import resolve_compute_device
 from .ply import SH_C0, dc_rgb, normalize, positions, write_ply
 
 
@@ -102,6 +103,11 @@ class RelightResult:
 
 def relight(asset: PBRAsset, config: RenderConfig | None = None) -> RelightResult:
     settings = config or RenderConfig()
+    compute_device = resolve_compute_device(settings.device)
+    if compute_device.uses_cuda:
+        from .torch_shading import relight_cuda
+        raw_rgb, proxy_rgb, raw_ratio = relight_cuda(asset, settings, compute_device.value)
+        return RelightResult(raw_rgb, proxy_rgb, raw_ratio)
     original_rgb = dc_rgb(asset.raw)
     if not settings.integration.pbr_properties:
         raw_rgb = np.clip(original_rgb * _lighting_color_gain(settings) * settings.exposure, 0.0, 1.0).astype(np.float32)

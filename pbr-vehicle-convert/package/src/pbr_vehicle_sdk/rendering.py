@@ -10,6 +10,7 @@ from PIL import Image
 
 from .asset import PBRAsset
 from .config import RenderConfig
+from .device import resolve_compute_device
 from .ply import activated_opacity, dc_rgb, gaussian_covariances, normalize, positions
 from .scene import GaussianScene, compose_scene_properties
 from .shading import relight
@@ -42,7 +43,9 @@ def _render_properties(properties, output_png: str | Path, settings: RenderConfi
     except ImportError as error:
         raise RuntimeError("Image rendering requires `pip install pbr-vehicle-sdk[render]`") from error
 
-    device = torch.device(settings.device)
+    selection = resolve_compute_device(settings.device)
+    device = torch.device(selection.value)
+    print(f"PBR render device: {selection.description}", flush=True)
     view, intrinsic = _camera_matrices(settings)
     with torch.inference_mode():
         rgb, _, _ = rasterization(

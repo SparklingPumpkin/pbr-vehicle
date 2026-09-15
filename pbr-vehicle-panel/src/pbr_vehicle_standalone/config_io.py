@@ -86,6 +86,7 @@ def state_from_config(payload: dict[str, Any], fallback: VehicleState) -> tuple[
             display_mode=str(raw.get("display_mode", raw.get("mode", "Relight Original"))),
             transform=TransformState(**{key: value for key, value in (transform_raw or {}).items() if key in TransformState.__dataclass_fields__}),
             material=MaterialState(**{key: value for key, value in material_raw.items() if key in MaterialState.__dataclass_fields__}),
+            use_proxy_relighting=bool(raw.get("use_proxy_relighting", True)),
             use_scene_lighting=bool(raw.get("use_scene_lighting", lighting_raw.get("use_scene_lighting", True))),
             lighting=LightingState.from_dict(lighting_raw),
             environment_map_enabled=bool(raw.get("environment_map_enabled", False)),

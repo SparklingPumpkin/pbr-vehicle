@@ -1,19 +1,36 @@
 {
   "schema_version": 1,
   "package": "pbr-vehicle-panel",
-  "package_version": "1.7.1",
+  "package_version": "1.9.1",
   "scope_id": "viser-pbr-panel",
   "mainline_version_id": "VSP-v2",
   "promoted_from_candidate_id": "VSP-v1-a",
   "change_type": "delivery_contract",
-  "version_snapshot": "docs/project-control/versions/VSP-v2.md",
-  "validation": "work/insert-rendering/viser-pbr-panel/VSP-v1-a/run-20260901T024035Z-panel-contract-e2e/validation.json",
-  "report": "work/insert-rendering/viser-pbr-panel/VSP-v1-a/run-20260901T024035Z-panel-contract-e2e/report.md",
+  "version_snapshot": "version.md",
+  "validation": "DELIVERY_REPORT.md",
+  "report": "DELIVERY_REPORT.md",
   "source_contract": {
-    "drivestudio": "upstream:51w-drivestudio/tools/insert_vehicle_r3gw_viewer.py",
     "standalone": "src/pbr_vehicle_standalone/viewer.py"
   },
   "gaussian_limit": null,
+  "compute_device": {
+    "default": "auto",
+    "cuda": "first process-visible GPU (cuda:0)",
+    "respects_cuda_visible_devices": true,
+    "cpu_fallback": true,
+    "cuda_hot_paths": [
+      "proxy PBR shading",
+      "direct PBR shading",
+      "environment cubemap sampling",
+      "mapping transfer"
+    ]
+  },
+  "proxy_relighting": {
+    "default_enabled": true,
+    "enabled": "shade the PBR proxy and transfer its lighting ratio to the visible Gaussian layer",
+    "disabled": "render the PBR Gaussian layer directly with its albedo, normals and material",
+    "config_field": "vehicle.use_proxy_relighting"
+  },
   "environment_map_preview": {
     "default_enabled": false,
     "capture": "six scene-only 90-degree Viser renders at the vehicle center",
@@ -24,7 +41,7 @@
   },
   "sun_estimator_contract": {
     "package": "pbr-vehicle-sun",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "mainline": "SSE-v8",
     "entry_point": "pbr-vehicle-sun-scene",
     "result": "scene_result.json",
@@ -32,10 +49,12 @@
   },
   "vehicle_auto_fit_contract": {
     "package": "pbr-vehicle-auto",
-    "version": "1.2.1",
+    "version": "1.4.1",
     "mainline": "ALM-v5",
     "entry_point": "pbr-vehicle-auto-fit",
     "accepted_status": "candidate_only",
+    "selection_policy": "always_apply_grid_best; raw DC is diagnostic only",
+    "lighting_search_bounds": "absolute Viser slider coordinates [-0.3, 0.3] for sun_intensity and ambient_fill",
     "panel_outputs": [
       "sun_intensity",
       "ambient_fill",

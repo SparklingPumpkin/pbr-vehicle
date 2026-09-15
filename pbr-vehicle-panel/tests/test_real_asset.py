@@ -4,15 +4,35 @@ from pathlib import Path
 
 import pytest
 import numpy as np
+from plyfile import PlyData, PlyElement
 
 from pbr_vehicle_standalone import asset_io
-from pbr_vehicle_standalone.asset_io import load_vehicle_asset
+from pbr_vehicle_standalone.asset_io import load_scene, load_vehicle_asset
 from pbr_vehicle_standalone.shading import shade_vehicle
 from pbr_vehicle_standalone.types import GaussianLayer, LightingState, MaterialState
 
 
 ASSET_ENV = "PBR_VEHICLE_TEST_ASSET"
 ASSET = Path(os.environ[ASSET_ENV]) if os.environ.get(ASSET_ENV) else None
+
+
+def _write_gaussian_ply(path: Path) -> None:
+    fields = [
+        ("x", "f4"), ("y", "f4"), ("z", "f4"), ("opacity", "f4"),
+        ("f_dc_0", "f4"), ("f_dc_1", "f4"), ("f_dc_2", "f4"),
+        ("scale_0", "f4"), ("scale_1", "f4"), ("scale_2", "f4"),
+        ("rot_0", "f4"), ("rot_1", "f4"), ("rot_2", "f4"), ("rot_3", "f4"),
+        ("normal_0", "f4"), ("normal_1", "f4"), ("normal_2", "f4"),
+    ]
+    vertices = np.zeros(3, dtype=fields)
+    vertices["x"] = [0.0, 1.0, 0.0]
+    vertices["y"] = [0.0, 0.0, 1.0]
+    vertices["z"] = [0.0, 0.1, 0.2]
+    vertices["opacity"] = 2.0
+    vertices["scale_0"] = vertices["scale_1"] = vertices["scale_2"] = -2.0
+    vertices["rot_0"] = 1.0
+    vertices["normal_2"] = 1.0
+    PlyData([PlyElement.describe(vertices, "vertex")], text=False).write(path)
 
 
 def test_current_delivery_asset_contract():
@@ -22,6 +42,34 @@ def test_current_delivery_asset_contract():
     assert asset.original_to_proxy.shape == (len(asset.original.centers),)
     assert asset.original_to_proxy.min() >= 0
     assert asset.original_to_proxy.max() < len(asset.proxy.centers)
+    assert asset.projection["runtime"] == "receiver_space_mask_v1"
+
+
+def test_real_ply_scene_and_single_asset_load_without_workspace_dependencies(tmp_path):
+    scene_path = tmp_path / "scene.ply"
+    _write_gaussian_ply(scene_path)
+    scene = load_scene(scene_path)
+    assert scene.total_splats == 3
+    assert scene.centers.shape == (3, 3)
+    assert np.isfinite(scene.covariances).all()
+
+    root = tmp_path / "vehicle"
+    (root / "configs").mkdir(parents=True)
+    vehicle_path = root / "pbr_vehicle.ply"
+    _write_gaussian_ply(vehicle_path)
+    config_path = root / "configs" / "config_vehicle.json"
+    config_path.write_text(json.dumps({
+        "asset_contract": "pbr-vehicle-single-ply-v1",
+        "asset_id": "vehicle",
+        "files": {"pbr": "pbr_vehicle.ply", "config": "configs/config_vehicle.json"},
+        "material": {"albedo_rgb": [0.82, 0.82, 0.82], "roughness": 0.32, "metallic": 0.02},
+        "projection": {"runtime": "receiver_space_mask_v1", "enabled": True},
+    }), encoding="utf-8")
+
+    asset = load_vehicle_asset(root)
+    assert asset.asset_id == "vehicle"
+    assert asset.original is asset.proxy
+    assert len(asset.original.centers) == 3
     assert asset.projection["runtime"] == "receiver_space_mask_v1"
 
 

@@ -2,10 +2,17 @@
 
 ## 当前版本
 
-- 当前包版本：`1.5.0`，以本目录 `package/pyproject.toml` 中声明的版本为准。
+- 当前包版本：`1.6.0`，以本目录 `package/pyproject.toml` 中声明的版本为准。
 - 当前转换器面向 `pbr-vehicle-single-ply-v1` 单 PLY 资产合同。
 
 ## 功能演进
+
+### 1.6.0
+
+- `RenderConfig.device` 默认值改为 `auto`：优先使用进程可见的本地 CUDA GPU，无 CUDA/PyTorch 时回退 NumPy CPU。
+- `relight` 与 `bake` 的 GGX、环境 SH、mapping 回传新增 Torch CUDA 后端；`render` 与 `render-scene` 的 gsplat rasterizer 使用同一设备解析结果。
+- `render`、`render-scene`、`bake`、`bake-scene` 新增可选 `--device` 覆盖，支持 `auto/cpu/cuda/cuda:N`，不绑定 GPU 型号或物理编号。
+- 运行依赖约束 NumPy 为 `>=1.24,<2`，避免 Torch 2.1/2.2 与 NumPy 2 的 ABI 不兼容组合。
 
 ### 1.5.0
 

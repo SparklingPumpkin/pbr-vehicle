@@ -22,15 +22,16 @@ Assets/
         config_*.json
 ```
 
-当前目录中的预置资产为 `10010`：
+当前默认演示资产为 `normal_unit`。它逐字节保留自 `point_cloud_normal_unit.ply`，输入已经包含单位法线，因此不重新估计或改写其 Gaussian 数据：
 
 ```text
-pbr_assets/10010/
-  pbr_10010.ply
+pbr_assets/normal_unit/
+  pbr_normal_unit.ply
   configs/
-    config_10010.json
-    config_*.json
+    config_normal_unit.json
 ```
+
+`10010` 如存在，仅保留作 Auto 历史验证与回归基线，不是交付包的默认演示车。
 
 其中 `configs/config_<asset-id>.json` 是 canonical 资产配置。`configs/` 还可以保存 Panel、Auto 或特定场景生成的其他 `config_*.json`，但每个资产目录只能有一份符合命名规则的 canonical 配置。
 
@@ -95,10 +96,10 @@ canonical 配置固定为：
 {
   "schema_version": 10,
   "asset_contract": "pbr-vehicle-single-ply-v1",
-  "asset_id": "10010",
+  "asset_id": "normal_unit",
   "files": {
-    "pbr": "pbr_10010.ply",
-    "config": "configs/config_10010.json"
+    "pbr": "pbr_normal_unit.ply",
+    "config": "configs/config_normal_unit.json"
   },
   "material": {
     "albedo_rgb": [0.82, 0.82, 0.82],
@@ -231,7 +232,7 @@ pbr-vehicle complete-asset \
 校验已有资产：
 
 ```bash
-pbr-vehicle inspect-complete Assets/pbr_assets/10010
+pbr-vehicle inspect-complete Assets/pbr_assets/normal_unit
 ```
 
 校验内容包括：

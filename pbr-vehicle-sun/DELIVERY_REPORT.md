@@ -1,4 +1,6 @@
-# PBR Vehicle Sun 1.2.0 Delivery Report
+# PBR Vehicle Sun 1.3.0 Delivery Report
+
+Version 1.3.0 makes `auto` the public device default. The scene pipeline resolves one logical local device and passes the correct format to Ultralytics (`0`), Torch/SAM2/InfiniDepth (`cuda:0`) and Detectron2/SSISv2 (`cuda:0`). It respects `CUDA_VISIBLE_DEVICES`, does not encode a GPU model or physical index, and sends `cpu` to every stage when CUDA is unavailable.
 
 本交付包冻结 `SSE-v8`：上游严格采用 `SSE-v6-b` 的 SSISv2 官方关联阴影 mask 协议，下游继承 `SSE-v7` 的 P95 相机可见轮廓及通用 1–5 车置信度门控/联合拟合。
 
@@ -10,4 +12,6 @@ Argoverse 000–049 的冻结审计结果为 26/50 场景发布太阳角、24/50
 
 交付 wheel 仅包含通用代码。外部仓库、权重、解释器、数据和输出路径均由调用参数提供，不捆绑场景资产。wheel SHA256 记录于本目录 `dist/SHA256SUMS`。
 
-交付验收：完整测试 `9 passed`；Python 3.8 源码编译通过；Python 3.12 隔离安装通过；默认与高级 console script 映射通过；wheel 机器路径和实验产物扫描通过。
+交付验收：完整测试 `10 passed`；设备解析在本机确认选择 NVIDIA A100-SXM4-80GB；wheel 机器路径和实验产物扫描通过。
+
+交付物：`dist/pbr_vehicle_sun-1.3.0-py3-none-any.whl`（74,875 bytes）。SHA-256：`061edf4958567ae2d4b7722d9330b8603b147e9e1aba6b89deb1f752cc4ab2b9`；同样记录在 `dist/SHA256SUMS`。运行依赖约束 NumPy 为 `>=1.24,<2`，避免 Torch 2.1/2.2 与 NumPy 2 的已知 ABI 不兼容组合。

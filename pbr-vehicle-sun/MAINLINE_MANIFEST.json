@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "package": "pbr-vehicle-sun",
-  "package_version": "1.2.0",
+  "package_version": "1.3.0",
   "scope_id": "scene-sun-estimation",
   "mainline_version_id": "SSE-v8",
   "protocol_basis": "SSE-v6-b",
@@ -16,6 +16,7 @@
     "replacement": "round 1 uses global ranks 1-3; only a completed no-angle result triggers round 2 with cached detection/ranking and disjoint ranks 4-6"
   },
   "defaults": {
+    "device": "auto: first process-visible CUDA GPU, otherwise CPU",
     "geometry_source": "feedforward_infinidepth",
     "top_physical_vehicles": 3,
     "allowed_physical_vehicles": "1..5",
