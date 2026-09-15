@@ -10,6 +10,7 @@
 **/dist/
 pbr-vehicle-auto/validation/
 runs/
+temp/
 
 # Local editor and operating-system files
 .DS_Store
