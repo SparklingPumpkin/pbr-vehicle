@@ -4,6 +4,7 @@ import argparse
 import time
 from pathlib import Path
 
+from . import __version__
 from .viewer import StandaloneViewer
 
 
@@ -59,6 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> None:
     args = build_parser().parse_args(argv)
+    print(f"PBR Vehicle Panel {__version__}", flush=True)
     app = StandaloneViewer(args)
     print(
         f"Standalone PBR vehicle viewer (native resolution): "

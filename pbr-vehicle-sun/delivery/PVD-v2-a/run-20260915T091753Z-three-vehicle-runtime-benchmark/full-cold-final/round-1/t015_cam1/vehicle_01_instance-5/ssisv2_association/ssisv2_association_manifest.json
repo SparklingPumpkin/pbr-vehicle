@@ -1,0 +1,57 @@
+{
+  "method": "official SSISv2 instance shadow association",
+  "binding_contract": "select SSIS association member maximizing IoU with preselected YOLO/SAM2 vehicle; use the opposite-class paired member as shadow",
+  "source_image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+  "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+  "weights": "/mnt/data/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+  "confidence_threshold": 0.1,
+  "minimum_object_iou": 0.05,
+  "official_object_class": 0,
+  "instances": 4,
+  "candidates": [
+    {
+      "association_id": 2,
+      "object_index": 2,
+      "shadow_index": 3,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.866601288318634,
+      "shadow_score": 0.8191300630569458,
+      "object_vehicle_iou": 0.9650060549768382,
+      "object_vehicle_intersection_pixels": 656621,
+      "shadow_pixels": 123021
+    },
+    {
+      "association_id": 1,
+      "object_index": 0,
+      "shadow_index": 1,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.7858604192733765,
+      "shadow_score": 0.7428605556488037,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 1634
+    }
+  ],
+  "selected": {
+    "association_id": 2,
+    "object_index": 2,
+    "shadow_index": 3,
+    "object_class": 0,
+    "shadow_class": 1,
+    "object_score": 0.866601288318634,
+    "shadow_score": 0.8191300630569458,
+    "object_vehicle_iou": 0.9650060549768382,
+    "object_vehicle_intersection_pixels": 656621,
+    "shadow_pixels": 123021
+  },
+  "accepted": true,
+  "files": {
+    "target_vehicle": "01_sam2_target_vehicle.png",
+    "all_pairs": "02_all_ssisv2_pairs.jpg",
+    "associated_object": "03_associated_object_mask.png",
+    "associated_shadow": "04_associated_shadow_mask.png",
+    "review": "05_target_association_review.jpg"
+  }
+}

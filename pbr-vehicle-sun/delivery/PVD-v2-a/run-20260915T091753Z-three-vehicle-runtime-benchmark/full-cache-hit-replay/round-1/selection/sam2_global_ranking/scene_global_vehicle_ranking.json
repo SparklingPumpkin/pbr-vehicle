@@ -1,0 +1,500 @@
+{
+  "contract": "all eligible YOLO observations were segmented by SAM2; group by physical instance; each instance represented by its maximum mask-area observation; rank instances globally; no same-frame requirement and no small-vehicle substitution",
+  "model": "SAM2.1 Hiera Tiny",
+  "checkpoint": "/mnt/data/fjn/projects/tools/sam2/checkpoints/sam2.1_hiera_tiny.pt",
+  "batching": {
+    "image_batch_size": 16,
+    "all_boxes_per_image_in_one_decoder_call": true,
+    "candidate_prefilter": false
+  },
+  "detections_evaluated": 292,
+  "unreadable_images": [],
+  "physical_instances_segmented": 17,
+  "min_mask_area_ratio": 0.01,
+  "vehicles_requested": 6,
+  "vehicles_selected": 6,
+  "selected": [
+    {
+      "instance_id": "5",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 15,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+      "bbox_xyxy": [
+        346.74273681640625,
+        713.271484375,
+        1663.6400146484375,
+        1494.81884765625
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.3567371368408203,
+      "yolo_area_ratio": 0.3242242928433341,
+      "oracle_iou": 0.7278036600935399,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.2068951612903226,
+      "vehicle_rank": 1,
+      "mask": "vehicle_01_instance-5_t015_cam1_mask.png",
+      "review": "vehicle_01_instance-5_t015_cam1_review.jpg"
+    },
+    {
+      "instance_id": "38",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 120,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+      "bbox_xyxy": [
+        516.1177368164062,
+        779.5097045898438,
+        1768.2225341796875,
+        1476.40185546875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.7946226000785828,
+      "yolo_area_ratio": 0.274880924067633,
+      "oracle_iou": 0.5958090103413335,
+      "sam2_score": 0.98046875,
+      "mask_area_ratio": 0.1767190650201613,
+      "vehicle_rank": 2,
+      "mask": "vehicle_02_instance-38_t120_cam1_mask.png",
+      "review": "vehicle_02_instance-38_t120_cam1_review.jpg"
+    },
+    {
+      "instance_id": "20",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 76,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+      "bbox_xyxy": [
+        721.027099609375,
+        778.7191772460938,
+        1751.569091796875,
+        1326.2025146484375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.911637544631958,
+      "yolo_area_ratio": 0.17773581439518416,
+      "oracle_iou": 0.33442005086444515,
+      "sam2_score": 0.98828125,
+      "mask_area_ratio": 0.11419102822580646,
+      "vehicle_rank": 3,
+      "mask": "vehicle_03_instance-20_t076_cam1_mask.png",
+      "review": "vehicle_03_instance-20_t076_cam1_review.jpg"
+    },
+    {
+      "instance_id": "32",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 111,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/111_1.jpg",
+      "bbox_xyxy": [
+        903.966064453125,
+        771.131103515625,
+        1894.218505859375,
+        1312.662841796875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9060022830963135,
+      "yolo_area_ratio": 0.16893054622353146,
+      "oracle_iou": 0.3739364632734857,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.11387222782258065,
+      "vehicle_rank": 4,
+      "mask": "vehicle_04_instance-32_t111_cam1_mask.png",
+      "review": "vehicle_04_instance-32_t111_cam1_review.jpg"
+    },
+    {
+      "instance_id": "33",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 123,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/123_1.jpg",
+      "bbox_xyxy": [
+        225.45834350585938,
+        710.5263671875,
+        994.2978515625,
+        1078.183349609375
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.8175035715103149,
+      "yolo_area_ratio": 0.08904650122820795,
+      "oracle_iou": 0.7362404502282238,
+      "sam2_score": 0.9765625,
+      "mask_area_ratio": 0.05448053175403226,
+      "vehicle_rank": 5,
+      "mask": "vehicle_05_instance-33_t123_cam1_mask.png",
+      "review": "vehicle_05_instance-33_t123_cam1_review.jpg"
+    },
+    {
+      "instance_id": "19",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 92,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/092_1.jpg",
+      "bbox_xyxy": [
+        12.076823234558105,
+        789.6788330078125,
+        894.5850830078125,
+        1114.1793212890625
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9305835962295532,
+      "yolo_area_ratio": 0.09021369745736431,
+      "oracle_iou": 0.7359790988241961,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.0538218245967742,
+      "vehicle_rank": 6,
+      "mask": "vehicle_06_instance-19_t092_cam1_mask.png",
+      "review": "vehicle_06_instance-19_t092_cam1_review.jpg"
+    }
+  ],
+  "full_instance_ranking": [
+    {
+      "instance_id": "5",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 15,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+      "bbox_xyxy": [
+        346.74273681640625,
+        713.271484375,
+        1663.6400146484375,
+        1494.81884765625
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.3567371368408203,
+      "yolo_area_ratio": 0.3242242928433341,
+      "oracle_iou": 0.7278036600935399,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.2068951612903226
+    },
+    {
+      "instance_id": "38",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 120,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+      "bbox_xyxy": [
+        516.1177368164062,
+        779.5097045898438,
+        1768.2225341796875,
+        1476.40185546875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.7946226000785828,
+      "yolo_area_ratio": 0.274880924067633,
+      "oracle_iou": 0.5958090103413335,
+      "sam2_score": 0.98046875,
+      "mask_area_ratio": 0.1767190650201613
+    },
+    {
+      "instance_id": "20",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 76,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+      "bbox_xyxy": [
+        721.027099609375,
+        778.7191772460938,
+        1751.569091796875,
+        1326.2025146484375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.911637544631958,
+      "yolo_area_ratio": 0.17773581439518416,
+      "oracle_iou": 0.33442005086444515,
+      "sam2_score": 0.98828125,
+      "mask_area_ratio": 0.11419102822580646
+    },
+    {
+      "instance_id": "32",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 111,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/111_1.jpg",
+      "bbox_xyxy": [
+        903.966064453125,
+        771.131103515625,
+        1894.218505859375,
+        1312.662841796875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9060022830963135,
+      "yolo_area_ratio": 0.16893054622353146,
+      "oracle_iou": 0.3739364632734857,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.11387222782258065
+    },
+    {
+      "instance_id": "33",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 123,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/123_1.jpg",
+      "bbox_xyxy": [
+        225.45834350585938,
+        710.5263671875,
+        994.2978515625,
+        1078.183349609375
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.8175035715103149,
+      "yolo_area_ratio": 0.08904650122820795,
+      "oracle_iou": 0.7362404502282238,
+      "sam2_score": 0.9765625,
+      "mask_area_ratio": 0.05448053175403226
+    },
+    {
+      "instance_id": "19",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 92,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/092_1.jpg",
+      "bbox_xyxy": [
+        12.076823234558105,
+        789.6788330078125,
+        894.5850830078125,
+        1114.1793212890625
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9305835962295532,
+      "yolo_area_ratio": 0.09021369745736431,
+      "oracle_iou": 0.7359790988241961,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.0538218245967742
+    },
+    {
+      "instance_id": "6",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 109,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/109_1.jpg",
+      "bbox_xyxy": [
+        178.89906311035156,
+        746.8104858398438,
+        961.6426391601562,
+        1092.054443359375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9374905228614807,
+      "yolo_area_ratio": 0.08513025766079409,
+      "oracle_iou": 0.6904210699399966,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.05293315272177419
+    },
+    {
+      "instance_id": "8",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 87,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/087_1.jpg",
+      "bbox_xyxy": [
+        72.2903060913086,
+        804.0289916992188,
+        921.2838134765625,
+        1128.7138671875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9414482712745667,
+      "yolo_area_ratio": 0.08683699320682345,
+      "oracle_iou": 0.6710534866248122,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.05266129032258064
+    },
+    {
+      "instance_id": "15",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 119,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/119_1.jpg",
+      "bbox_xyxy": [
+        117.56641387939453,
+        784.5553588867188,
+        958.1563110351562,
+        1116.383544921875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9236761331558228,
+      "yolo_area_ratio": 0.0878690211607469,
+      "oracle_iou": 0.6907810790324742,
+      "sam2_score": 0.98046875,
+      "mask_area_ratio": 0.05162172379032258
+    },
+    {
+      "instance_id": "40",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 128,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/128_1.jpg",
+      "bbox_xyxy": [
+        180.2580108642578,
+        773.4981079101562,
+        958.9322509765625,
+        1091.2059326171875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9274218678474426,
+      "yolo_area_ratio": 0.077933120898904,
+      "oracle_iou": 0.7113246795657162,
+      "sam2_score": 0.98046875,
+      "mask_area_ratio": 0.047132371471774195
+    },
+    {
+      "instance_id": "18",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 104,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/104_1.jpg",
+      "bbox_xyxy": [
+        31.625261306762695,
+        725.5784301757812,
+        751.1530151367188,
+        1056.3602294921875
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.8153534531593323,
+      "yolo_area_ratio": 0.0749769043189154,
+      "oracle_iou": 0.8178964438731207,
+      "sam2_score": 0.97265625,
+      "mask_area_ratio": 0.04537014868951613
+    },
+    {
+      "instance_id": "30",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 114,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/114_1.jpg",
+      "bbox_xyxy": [
+        228.3683319091797,
+        779.7965087890625,
+        982.3551025390625,
+        1076.068115234375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9218105673789978,
+      "yolo_area_ratio": 0.07037073833575755,
+      "oracle_iou": 0.6697074934264534,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.040541204637096775
+    },
+    {
+      "instance_id": "25",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 27,
+      "camera": 2,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/027_2.jpg",
+      "bbox_xyxy": [
+        1641.6927490234375,
+        621.1026611328125,
+        2003.73193359375,
+        738.7646484375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.6182070374488831,
+      "yolo_area_ratio": 0.013419307566378378,
+      "oracle_iou": 0.7333653224591228,
+      "sam2_score": 0.953125,
+      "mask_area_ratio": 0.00986296622983871
+    },
+    {
+      "instance_id": "24",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 26,
+      "camera": 2,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/026_2.jpg",
+      "bbox_xyxy": [
+        1089.65087890625,
+        683.0353393554688,
+        1452.4688720703125,
+        805.7886962890625
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.812245786190033,
+      "yolo_area_ratio": 0.014030092810231333,
+      "oracle_iou": 0.8541834794169225,
+      "sam2_score": 0.96484375,
+      "mask_area_ratio": 0.009592048891129032
+    },
+    {
+      "instance_id": "27",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 29,
+      "camera": 2,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/029_2.jpg",
+      "bbox_xyxy": [
+        1538.70166015625,
+        651.0945434570312,
+        1895.971923828125,
+        788.4495239257812
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.8283290266990662,
+      "yolo_area_ratio": 0.015458937149922995,
+      "oracle_iou": 0.6152445290136456,
+      "sam2_score": 0.85546875,
+      "mask_area_ratio": 0.008045614919354838
+    },
+    {
+      "instance_id": "42",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 155,
+      "camera": 0,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/155_0.jpg",
+      "bbox_xyxy": [
+        1020.0992431640625,
+        994.2313232421875,
+        1351.584228515625,
+        1107.9371337890625
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.4210168421268463,
+      "yolo_area_ratio": 0.011873667131904738,
+      "oracle_iou": 0.854452388402182,
+      "sam2_score": 0.91796875,
+      "mask_area_ratio": 0.004302230342741935
+    },
+    {
+      "instance_id": "21",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 22,
+      "camera": 2,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/022_2.jpg",
+      "bbox_xyxy": [
+        647.7322998046875,
+        713.5098266601562,
+        785.7604370117188,
+        822.8157958984375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.5158409476280212,
+      "yolo_area_ratio": 0.004752803465086007,
+      "oracle_iou": 0.29431741484079865,
+      "sam2_score": 0.93359375,
+      "mask_area_ratio": 0.003044039818548387
+    }
+  ],
+  "contact_sheet": "scene_global_top_vehicle_masks.jpg",
+  "elapsed_s": 14.125993352849036
+}

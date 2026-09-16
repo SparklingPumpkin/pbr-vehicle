@@ -23,14 +23,16 @@
       "label": "项目主线",
       "purpose": "维护车辆PBR转换、面板、自动外观适配与太阳识别的独立可安装交付包",
       "parent_scope_id": null,
-      "current_version_id": "PVD-v2",
-      "next_version_number": 3,
+      "current_version_id": "PVD-v3",
+      "next_version_number": 4,
       "version_ids": [
         "PVD-v1",
-        "PVD-v2"
+        "PVD-v2",
+        "PVD-v3"
       ],
       "candidate_ids": [
-        "PVD-v1-a"
+        "PVD-v1-a",
+        "PVD-v2-a"
       ],
       "created_at": "2026-09-09T03:40:40+00:00"
     }
@@ -67,7 +69,7 @@
       "scope_id": "project",
       "number": 2,
       "slug": "four-package-sun-delivery",
-      "status": "current",
+      "status": "superseded",
       "parent_version_id": "PVD-v1",
       "promoted_from_candidate_id": "PVD-v1-a",
       "change_types": [
@@ -97,7 +99,45 @@
         }
       ],
       "legacy_id": null,
-      "created_at": "2026-09-09T04:28:26+00:00"
+      "created_at": "2026-09-09T04:28:26+00:00",
+      "superseded_at": "2026-09-15T10:16:51+00:00"
+    },
+    "PVD-v3": {
+      "version_id": "PVD-v3",
+      "scope_id": "project",
+      "number": 3,
+      "slug": "sse-v9-runtime-accelerated-delivery",
+      "status": "current",
+      "parent_version_id": "PVD-v2",
+      "promoted_from_candidate_id": "PVD-v2-a",
+      "change_types": [
+        "code_architecture"
+      ],
+      "summary": "Sun 1.4.0/SSE-v9与Viser适配器完成端到端加速、三卡调度和缓存交付。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/verification_summary.json",
+          "claim": "证明测试、wheel隔离安装、通用性扫描和运行时证据均通过",
+          "recorded_at": "2026-09-15T10:16:51+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "26bfa7eadaa3337cafb7c9d64497673cac26f2767999e868629442657fb6e374",
+          "size_when_recorded": 1101,
+          "mtime_ns_when_recorded": 1789467305272510172
+        },
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/report.md",
+          "claim": "汇总SSE-v9加速设计、真实性能、限制和交付证据",
+          "recorded_at": "2026-09-15T10:16:51+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "571e2053290a96ece05135cf1d1f2496e4bbd53d4ecd367958aaf62539a9b8c1",
+          "size_when_recorded": 1817,
+          "mtime_ns_when_recorded": 1789467182315593765
+        }
+      ],
+      "legacy_id": null,
+      "created_at": "2026-09-15T10:16:51+00:00"
     }
   },
   "candidates": {
@@ -131,6 +171,37 @@
       "promoted_to_version_id": "PVD-v2",
       "created_at": "2026-09-09T03:42:40+00:00",
       "updated_at": "2026-09-09T04:28:26+00:00"
+    },
+    "PVD-v2-a": {
+      "candidate_id": "PVD-v2-a",
+      "scope_id": "project",
+      "base_version_id": "PVD-v2",
+      "slug": "sse-v8-runtime-acceleration",
+      "status": "promoted",
+      "hypothesis": "通过消除InfiniDepth重复前向、前移SSISv2门控、并行独立车辆拟合、修正小轮廓KDTree线程开销、批量候选分割与持久缓存，可以保持SSE-v8输出语义并显著缩短Viser端到端时间，目标三车首轮低于120秒。",
+      "change_types": [
+        "code_architecture"
+      ],
+      "directory_id": "dir-0006",
+      "run_ids": [
+        "run-20260915T091753Z-three-vehicle-runtime-benchmark"
+      ],
+      "conclusion": "将SSISv2前置门控、批量SAM2、共享InfiniDepth前向、多GPU准备、并行拟合和内容缓存合并为SSE-v9；双GPU已接近两分钟，三GPU配置预计低于两分钟。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/verification_summary.json",
+          "claim": "证明测试、wheel隔离安装、通用性扫描和运行时证据均通过",
+          "recorded_at": "2026-09-15T10:16:51+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "26bfa7eadaa3337cafb7c9d64497673cac26f2767999e868629442657fb6e374",
+          "size_when_recorded": 1101,
+          "mtime_ns_when_recorded": 1789467305272510172
+        }
+      ],
+      "promoted_to_version_id": "PVD-v3",
+      "created_at": "2026-09-15T09:17:53+00:00",
+      "updated_at": "2026-09-15T10:16:51+00:00"
     }
   },
   "runs": {
@@ -158,6 +229,31 @@
       ],
       "created_at": "2026-09-09T03:44:44+00:00",
       "updated_at": "2026-09-09T04:28:26+00:00"
+    },
+    "run-20260915T091753Z-three-vehicle-runtime-benchmark": {
+      "run_id": "run-20260915T091753Z-three-vehicle-runtime-benchmark",
+      "candidate_id": "PVD-v2-a",
+      "variant": "three-vehicle-runtime-benchmark",
+      "status": "completed",
+      "directory_id": "dir-0007",
+      "config_identity": "SSE-v8 SSISv2/P95 unchanged; three-vehicle first round; optimized scheduling and optional exact cache",
+      "code_identity": "pbr-vehicle-sun source after PVD-v2-a runtime acceleration changes",
+      "data_identity": "Argoverse scene selected from existing SSE-v8 evidence for same-input regression and runtime benchmark",
+      "summary": "SSE-v9双GPU冷启动实测129.3秒，三GPU按实际串行段预计110.0秒；旧1093.5秒，完整缓存约0.66秒；测试和wheel验收通过。",
+      "evidence": [
+        {
+          "reference": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/benchmark_summary.json",
+          "claim": "记录冷启动、缓存、分阶段耗时和协议边界",
+          "recorded_at": "2026-09-15T10:16:51+00:00",
+          "kind": "local_file",
+          "exists_when_recorded": true,
+          "sha256_when_recorded": "e87c58cc2ef723972bfd63860ab77a3e1d123b030b4217e858f68141d79cdfcc",
+          "size_when_recorded": 2543,
+          "mtime_ns_when_recorded": 1789467182315593765
+        }
+      ],
+      "created_at": "2026-09-15T09:18:14+00:00",
+      "updated_at": "2026-09-15T10:16:51+00:00"
     }
   },
   "directories": {
@@ -230,6 +326,34 @@
       "decision_id": "layout-0004",
       "created_at": "2026-09-09T03:44:44+00:00",
       "updated_at": "2026-09-09T03:44:44+00:00"
+    },
+    "dir-0006": {
+      "directory_id": "dir-0006",
+      "path": "pbr-vehicle-sun/delivery/PVD-v2-a",
+      "level": "candidate",
+      "parent_directory_id": "dir-0003",
+      "scope_id": "project",
+      "purpose": "在保持SSE-v8科学与发布合同不变的前提下，将Viser三车场景太阳估计压缩到两分钟目标并同步独立wheel交付",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": false,
+      "decision_id": "layout-0005",
+      "created_at": "2026-09-15T09:17:30+00:00",
+      "updated_at": "2026-09-15T09:17:30+00:00"
+    },
+    "dir-0007": {
+      "directory_id": "dir-0007",
+      "path": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark",
+      "level": "run",
+      "parent_directory_id": "dir-0006",
+      "scope_id": "project",
+      "purpose": "对SSE-v8旧版与加速版进行单场景三车端到端计时、结果等价性和wheel安装验证",
+      "status": "active",
+      "status_reason": "registered from approved layout decision",
+      "manage_children": false,
+      "decision_id": "layout-0006",
+      "created_at": "2026-09-15T09:18:03+00:00",
+      "updated_at": "2026-09-15T09:18:03+00:00"
     }
   },
   "layout_decisions": {
@@ -308,11 +432,49 @@
       "status": "applied",
       "applied_directory_id": "dir-0005",
       "created_at": "2026-09-09T03:44:44+00:00"
+    },
+    "layout-0005": {
+      "decision_id": "layout-0005",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_child",
+      "target_path": "pbr-vehicle-sun/delivery/PVD-v2-a",
+      "target_level": "candidate",
+      "parent_directory_id": "dir-0003",
+      "purpose": "在保持SSE-v8科学与发布合同不变的前提下，将Viser三车场景太阳估计压缩到两分钟目标并同步独立wheel交付",
+      "reason": "运行时调度、缓存与等价数值实现属于交付性能合同变化，需要独立候选审计",
+      "alternatives_considered": [
+        "直接覆盖PVD-v2会失去速度和结果等价性的回归证据"
+      ],
+      "active_sibling_count_at_decision": 1,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0006",
+      "created_at": "2026-09-15T09:17:13+00:00"
+    },
+    "layout-0006": {
+      "decision_id": "layout-0006",
+      "scope_id": "project",
+      "candidate_id": null,
+      "action": "new_child",
+      "target_path": "pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark",
+      "target_level": "run",
+      "parent_directory_id": "dir-0006",
+      "purpose": "对SSE-v8旧版与加速版进行单场景三车端到端计时、结果等价性和wheel安装验证",
+      "reason": "需要持久记录两分钟目标是否达到及每项优化的真实收益",
+      "alternatives_considered": [
+        "只报告微基准无法证明Viser完整流程性能"
+      ],
+      "active_sibling_count_at_decision": 0,
+      "override_reason": null,
+      "status": "applied",
+      "applied_directory_id": "dir-0007",
+      "created_at": "2026-09-15T09:18:03+00:00"
     }
   },
-  "updated_at": "2026-09-09T04:28:26+00:00",
+  "updated_at": "2026-09-15T10:16:51+00:00",
   "ledger": {
-    "event_count": 14,
-    "head_hash": "8981614b30c386c2f0868823f67310aeccb47aac834873570bd579828f1b8fbd"
+    "event_count": 23,
+    "head_hash": "854da38ac8a06863e60890583a4722126450f586bc0a7b42a96d34eaa62676a8"
   }
 }

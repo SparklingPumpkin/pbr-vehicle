@@ -13,7 +13,6 @@ import json
 import math
 import os
 import shlex
-import shutil
 import subprocess
 import tempfile
 import time
@@ -21,6 +20,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import numpy as np
+
+from .optional_command import resolve_optional_command
 
 
 class SunEstimationError(RuntimeError):
@@ -98,6 +99,8 @@ _OPTIONAL_KEYS = (
     "moge2_pretrained", "sky_checkpoint", "infinidepth_sample_points", "device",
     "top_vehicles", "min_mask_area_ratio", "min_vehicle_confidence",
     "min_vehicle_support", "cameras", "existing_detection", "existing_ranking",
+    "cache_dir", "yolo_batch", "sam2_image_batch_size", "fit_workers",
+    "candidate_workers", "preparation_workers", "worker_devices", "geometry_mode",
 )
 
 
@@ -347,10 +350,17 @@ def run_sun_estimator(
     )
     if not command:
         raise SunEstimationError("未配置太阳估计命令")
-    executable = shutil.which(command[0]) or (command[0] if Path(command[0]).exists() else None)
-    if executable is None:
-        raise SunEstimationError(f"找不到太阳估计命令: {command[0]}")
-    command[0] = executable
+    command, checked = resolve_optional_command(
+        command,
+        executable_name="pbr-vehicle-sun-scene",
+        module_name="pbr_vehicle_sun",
+        source_package="pbr-vehicle-sun",
+        source_script="run_sse_scene_two_round.py",
+    )
+    if command[0] == "pbr-vehicle-sun-scene":
+        raise SunEstimationError(
+            f"找不到太阳估计命令: {command[0]}；已检查: {', '.join(checked)}"
+        )
     _emit_progress(progress_callback, 0.01, "创建太阳估计任务")
     try:
         returncode, process_output = _run_monitored_process(command, float(timeout), progress_callback, output)

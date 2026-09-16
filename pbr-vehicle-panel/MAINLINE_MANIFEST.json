@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "pbr-vehicle-panel",
-  "package_version": "1.9.1",
+  "package_version": "1.9.5",
   "scope_id": "viser-pbr-panel",
   "mainline_version_id": "VSP-v2",
   "promoted_from_candidate_id": "VSP-v1-a",
@@ -39,13 +39,23 @@
     "fallback": "legacy environment SH preview",
     "visualization": "textured equirectangular sphere with independent sample position or vehicle-follow display offset"
   },
+  "projection_rendering": {
+    "mask_contract": "receiver_space_mask_v1",
+    "display_primitive": "bounded_planar_gaussians",
+    "render_channel": "shared_with_scene_gaussians",
+    "max_splats_per_layer": 50000,
+    "receiver_render_bias_m": {"extension": 0.030, "contact": 0.032},
+    "asset_anchor_unchanged": true
+  },
   "sun_estimator_contract": {
     "package": "pbr-vehicle-sun",
-    "version": "1.3.0",
-    "mainline": "SSE-v8",
+    "version": "1.4.0",
+    "mainline": "SSE-v9",
     "entry_point": "pbr-vehicle-sun-scene",
     "result": "scene_result.json",
-    "artifacts": "retained system temporary directory"
+    "artifacts": "retained system temporary directory",
+    "progress_ui": ["progress_bar", "status", "stage", "result"],
+    "command_resolution": ["explicit_path", "valid_current_environment_entry", "installed_module", "adjacent_delivery_source", "PATH_fallback"]
   },
   "vehicle_auto_fit_contract": {
     "package": "pbr-vehicle-auto",
@@ -60,12 +70,16 @@
       "ambient_fill",
       "environment_cct_kelvin"
     ],
-    "artifacts": "retained system temporary directory"
+    "artifacts": "retained system temporary directory",
+    "progress_ui": ["progress_bar", "status", "stage", "result"],
+    "progress_source": "output/progress.json",
+    "command_resolution": ["explicit_path", "valid_current_environment_entry", "installed_module", "adjacent_delivery_source", "PATH_fallback"]
   },
   "standalone_sync": {
-    "dynamic_scene_context": "adjacent config.yaml data_root and scene_idx",
+    "dynamic_scene_context": "adjacent config.yaml data_root and numeric-or-string scene_idx",
     "sun_publication": "two-round published_round only; updates shared scene and every active vehicle angle",
     "checkpoint_compatibility": "NumPy 2 pickle names on NumPy 1.x with lock-protected atomic PLY cache",
-    "workspace_source_dependency": false
+    "workspace_source_dependency": false,
+    "vehicle_reset": "restore the configuration state selected when the vehicle was added"
   }
 }

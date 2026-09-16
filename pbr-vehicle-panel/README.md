@@ -2,7 +2,7 @@
 
 这是一个可独立安装的 Gaussian PBR 车辆交互面板。它直接加载调用方提供的场景 Gaussian PLY（或从兼容 PTH 提取 Background）和完整车辆 PBR 资产文件夹，并通过 Viser 完成车辆变换、材质、逐车/共享光照和两层投影调节。运行时不导入或读取任何训练仓库源码。
 
-当前交付实现为 `VSP-v2`，机器可读身份见 [MAINLINE_MANIFEST.json](MAINLINE_MANIFEST.json)。版本 `1.9.1` 对接 `pbr-vehicle-auto 1.4.1` 的固定绝对搜索范围；默认通过 `--device auto` 使用本机可见 CUDA GPU，并继续对接 `pbr-vehicle-sun 1.3.0`。无 CUDA 时保留 CPU 回退，完整 Gaussian 和原生分辨率合同不变。
+当前交付实现为 `VSP-v2`，机器可读身份见 [MAINLINE_MANIFEST.json](MAINLINE_MANIFEST.json)。版本 `1.9.5` 支持数字与字符串场景标识，并延续 `1.9.4` 的同通道 Gaussian 地面投影；继续对接 `pbr-vehicle-auto 1.4.1` 与 `pbr-vehicle-sun 1.4.0 / SSE-v9`。
 
 ## 资产约定
 
@@ -60,11 +60,13 @@ python -m pbr_vehicle_standalone \
 
 同一区域的“Environment-map 预览”可显示贴有当前环境图的球体。独立模式下，环境球 XYZ 同时是采样和显示位置，移动后重新捕获；“跟随车辆”模式下，采样中心固定为车辆中心，显示偏移 XYZ 只把球移到便于观察的位置，不会改变贴图内容。捕获期间会隐藏所有车辆、两层投影和已有环境球，避免自反射。
 
-Scene 区域新增“太阳估计”。安装相邻 `pbr-vehicle-sun` wheel、准备其外部模型环境，并在“太阳估计配置”填写可移植 JSON 后，点击按钮会异步执行场景级 SSE-v8。中间文件保留在系统临时目录；成功后自动启用太阳并回填共享光照的方位角和高度角。示例配置见 [examples/sun-estimator-config.example.json](examples/sun-estimator-config.example.json)。
+Scene 区域新增“太阳估计”。安装相邻 `pbr-vehicle-sun` wheel、准备其外部模型环境，并在“太阳估计配置”填写可移植 JSON 后，点击按钮会异步执行场景级 SSE-v9。面板持续显示进度条、运行状态、当前阶段和最终结果；中间文件保留在系统临时目录。成功后自动启用太阳并回填共享光照的方位角和高度角。示例配置见 [examples/sun-estimator-config.example.json](examples/sun-estimator-config.example.json)。
+
+可选命令不再只依赖 shell `PATH`。Panel 会依次解析显式命令、当前 Python 环境的有效 console script、已安装模块，以及源码交付布局中相邻的 `pbr-vehicle-sun` / `pbr-vehicle-auto` 入口；失效但残留的 console script 不会优先于可用源码。太阳估计仍需要调用方通过 JSON 提供模型、权重和数据根。
 
 加载 PTH 时，Panel 会读取同目录 `config.yaml` 的 `data_root` 与 `scene_idx`，将太阳估计绑定到当前场景的 RGB、标定和道路 mask；换场景后不会沿用旧数据。两轮估计会显示阶段进度，只采用 `two_round_result.json` 指定的发布轮次。成功后同时更新共享场景和所有现有车辆的太阳角，但保持每辆车原有的共享/独立光照模式。
 
-每辆车顶部新增“Auto 识别车辆参数”。安装相邻 `pbr-vehicle-auto` wheel 后，按钮会在后台用完整普通 Gaussian 场景执行 ALM-v5；PTH 会先转换成不抽样的缓存 PLY。Auto 1.4.1 在 CUDA 可用时把整轮候选计算留在 GPU，并将太阳光强度、亮度固定在 Viser 滑条绝对区间 `[-0.3, 0.3]` 搜索，不跟随点击前参数移动。搜索成功后始终应用网格最优候选并回填太阳光强度、亮度和车辆色温。失败、超时或无效输出仍不覆盖面板。可移植配置示例见 [examples/auto-fit-config.example.json](examples/auto-fit-config.example.json)。
+每辆车顶部新增“Auto 识别车辆参数”。安装相邻 `pbr-vehicle-auto` wheel 后，按钮会在后台用完整普通 Gaussian 场景执行 ALM-v5；PTH 会先转换成不抽样的缓存 PLY。面板轮询 fitter 的进度文件并持续显示进度条、运行状态、当前阶段和最终结果。Auto 1.4.1 在 CUDA 可用时把整轮候选计算留在 GPU，并将太阳光强度、亮度固定在 Viser 滑条绝对区间 `[-0.3, 0.3]` 搜索，不跟随点击前参数移动。搜索成功后始终应用网格最优候选并回填太阳光强度、亮度和车辆色温。失败、超时或无效输出仍不覆盖面板。Config 中可用 `Reset vehicle` 恢复首次加入时加载的配置状态。可移植配置示例见 [examples/auto-fit-config.example.json](examples/auto-fit-config.example.json)。
 
 已安装时也可运行 `pbr-vehicle-panel`；`pbr-vehicle-viewer` 保留为兼容别名。
 
@@ -84,7 +86,7 @@ Scene 区域新增“太阳估计”。安装相邻 `pbr-vehicle-sun` wheel、�
 - 车辆 Albedo 饱和度是 P0 参数；`Relight Original` 中直接作用于可见 PBR Gaussian 颜色，重光照比率按同一点计算，不依赖 mapping。
 - `高级 / Material / 使用代理重光照` 默认开启：开启时保持代理光照比例回传方法；关闭时直接显示 PBR Gaussian 的朴素 PBR 着色。该选项逐车保存，旧配置默认开启。
 - contact core 固定在车辆底部；cast extension 根据太阳方向重新生成，两层直接 alpha 叠加。
-- 投影以 glTF `alphaMode=BLEND` 平面发送给 Viser，不依赖修改 Viser 前端安装文件。
+- contact/cast mask 在运行时转换为有界 planar Gaussian 层，与场景和车辆进入同一个 Gaussian renderer 和深度排序；不依赖修改 Viser 前端安装文件。每层最多 50,000 个投影 Gaussian。
 - 服务端 PBR/GGX、mapping 和 cubemap 查询可由 Torch CUDA 加速；Viser Gaussian 光栅化仍在浏览器客户端执行。roughness 使用 cubemap mip 近似预过滤，不宣称与原生 GGX importance-sampled prefilter 或 DriveStudio rasterizer 像素一致。
 
 ## 测试

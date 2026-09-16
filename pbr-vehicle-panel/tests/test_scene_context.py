@@ -31,6 +31,36 @@ def test_pth_scene_context_resolves_relative_dataset_root(tmp_path: Path, monkey
     }
 
 
+def test_pth_scene_context_accepts_string_scene_identifier(tmp_path: Path):
+    dataset = tmp_path / "dataset/ncore/notr_ext"
+    dataset.mkdir(parents=True)
+    run = tmp_path / "output/scene_notr"
+    run.mkdir(parents=True)
+    checkpoint = run / "checkpoint_final.pth"
+    checkpoint.touch()
+    (run / "config.yaml").write_text(
+        f"data:\n  data_root: {dataset.parent}\n  scene_idx: notr_ext\n",
+        encoding="utf-8",
+    )
+
+    assert resolve_scene_context(checkpoint)["data_root"] == str(dataset)
+
+
+def test_pth_scene_context_accepts_data_root_already_at_string_scene(tmp_path: Path):
+    dataset = tmp_path / "dataset/ncore/notr_ext"
+    dataset.mkdir(parents=True)
+    run = tmp_path / "output/scene_notr"
+    run.mkdir(parents=True)
+    checkpoint = run / "checkpoint_final.pth"
+    checkpoint.touch()
+    (run / "config.yaml").write_text(
+        f"data:\n  data_root: {dataset}\n  scene_idx: notr_ext\n",
+        encoding="utf-8",
+    )
+
+    assert resolve_scene_context(checkpoint)["data_root"] == str(dataset)
+
+
 def test_estimated_sun_angles_update_shared_and_all_vehicle_controls():
     def controller(removed=False, shared=False):
         item = SimpleNamespace(

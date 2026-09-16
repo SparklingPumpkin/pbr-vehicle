@@ -1,0 +1,33 @@
+{
+  "stage": "exhaustive_sam2_vehicle_ranking",
+  "dataset": "argoverse_002 frozen SSE-v8 detection manifest",
+  "input_detections": 291,
+  "input_images": 148,
+  "physical_instances": 17,
+  "baseline_elapsed_s": 69.09055679594167,
+  "batched_elapsed_s": 15.329237834084779,
+  "batched_16_elapsed_s": 14.611111484933645,
+  "speedup": 4.507109716982655,
+  "equivalence": {
+    "top3_instance_ids": [
+      "5",
+      "38",
+      "32"
+    ],
+    "top3_observations": [
+      "t015_cam1",
+      "t120_cam1",
+      "t111_cam1"
+    ],
+    "same_as_baseline": true,
+    "all_eligible_observations_evaluated": true,
+    "candidate_prefilter": false
+  },
+  "implementation": {
+    "sam2": "SAM2.1 Hiera Tiny",
+    "image_batch_size": 4,
+    "viser_image_batch_size": 16,
+    "all_boxes_per_image_in_one_decoder_call": true,
+    "selection_contract_changed": false
+  }
+}

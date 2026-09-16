@@ -1,4 +1,30 @@
-# PBR Vehicle Panel 1.9.1 Delivery Report
+# PBR Vehicle Panel 1.9.5 Delivery Report
+
+Version 1.9.5 extends scene-context resolution from numeric-only identifiers to numeric or string identifiers. Numeric values retain three-digit formatting; strings such as NCore `notr_ext` are preserved. The resolver accepts either a dataset parent root or a root already pointing at the scene directory. This fixes startup failure when a compatible PTH has `scene_idx: notr_ext` in its adjacent config.yaml.
+
+Real NCore validation resolved `scene_28_7_notr_9cams_0824_color_w005/checkpoint_final.pth` to `/mnt/data/dataset/ncore/notr_ext`, which contains images and the required calibration/mask directories. The wheel artifact and checksum are recorded below after build validation.
+
+## 1.9.4
+
+Version 1.9.4 moves the two receiver-space projection layers from transparent glTF planes to bounded planar Gaussian layers. The old planes were visible with the scene hidden but could be covered by Viser's full-scene Gaussian composition regardless of the user-facing anchor offset. Contact and cast now share the scene Gaussian renderer and depth ordering while preserving the RGBA mask brightness, opacity, metric extent, vehicle transform and physical anchor.
+
+Real `normal_unit` validation at sun azimuth/elevation 126°/45° produced 32,691 contact and 40,236 extension Gaussians, below the 50,000-per-layer bound. With scene 017 visible, vehicle Z=0 and anchor offset=0, both contact and the cast extending behind the vehicle were visible in the browser. The render-only receiver bias is 0.032m for contact and 0.030m for extension; it does not modify the saved asset anchor. Non-finite transient sun input is rejected before convex-hull construction.
+
+Validation: `59 passed` with the real `normal_unit` asset enabled. Artifact: `dist/pbr_vehicle_panel-1.9.4-py3-none-any.whl` (57,495 bytes). SHA-256: `a73408dce3430122e41a407845f52bbcb343889cdfa80ec3d844891a5bb16491`. A clean venv imported version 1.9.4 from `site-packages`, reproduced the real projection counts, confirmed the legacy glTF helper is absent, and passed `pip check`.
+
+## 1.9.3
+
+Version 1.9.3 fixes optional inference command discovery for both vehicle Auto fitting and scene sun estimation. Resolution no longer depends on the shell `PATH` alone: explicit paths, valid console scripts next to the current Python interpreter, installed modules, adjacent source deliveries, and an external PATH fallback are checked in order. A stale console script whose Python module has been removed is skipped in favor of a usable adjacent source entry. Failure messages include every checked location.
+
+Validation: `57 passed` with the real `normal_unit` asset enabled. Both automatically resolved source commands execute `--help` successfully from `/tmp`. Artifact: `dist/pbr_vehicle_panel-1.9.3-py3-none-any.whl` (57,152 bytes). SHA-256: `bdf977cdca532cd5cfa82cf9ef442383e831cf51c6f0993228363530a33d8dbd`.
+
+## 1.9.2
+
+Version 1.9.2 aligns asynchronous inference feedback with the DriveStudio mainline. Scene sun estimation and per-vehicle Auto fitting both expose a progress bar, status, current stage and detailed result. The Auto adapter polls `output/progress.json` while the subprocess runs and publishes explicit success, failure and timeout states. The Scene panel and startup log now expose the package version so stale wheels or old server processes can be identified. The standalone Config panel also adds `Reset vehicle`, restoring the state selected when that vehicle was first added.
+
+Validation: `51 passed, 2 skipped`. A source-tree smoke test started Viser on an isolated port, printed version `1.9.2`, selected the process-visible NVIDIA A100 CUDA device and returned HTTP 200. Artifact: `dist/pbr_vehicle_panel-1.9.2-py3-none-any.whl` (56,014 bytes). SHA-256: `369ccdc71f7864b430e28db88bf0aa4e768f259ec1da185e35c14fe88a53a6f3`.
+
+## 1.9.1
 
 Version 1.9.1 integrates `pbr-vehicle-auto 1.4.1`. Sun intensity and brightness now use the fixed absolute `[-0.3, 0.3]` interval in Viser slider coordinates. Repeated Auto clicks no longer recenter the search domain on the previously applied result.
 

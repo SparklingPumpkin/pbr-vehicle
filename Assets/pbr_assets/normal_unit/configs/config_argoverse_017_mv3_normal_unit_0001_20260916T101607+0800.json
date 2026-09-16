@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "config_kind": "pbr-vehicle-standalone-viewer",
+  "saved_at": "2026-09-16T10:16:07.135937+08:00",
+  "scene": {
+    "name": "argoverse_017_mv3",
+    "path": "/mnt/data/dataset/output/argoverse/argoverse_017_mv3/checkpoint_final.pth",
+    "data_root": "/mnt/data/dataset/argoverse/processed/training/017"
+  },
+  "scene_lighting": {
+    "environment_intensity": 1.0,
+    "environment_rgb": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "environment_temperature_k": 6500.0,
+    "sun_enabled": true,
+    "sun_intensity": 1.0,
+    "sun_azimuth_deg": 45.0,
+    "sun_elevation_deg": 35.0,
+    "visibility": 1.0,
+    "sun_color_rgb": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "pbr_asset": {
+    "schema_version": 10,
+    "asset_contract": "pbr-vehicle-single-ply-v1",
+    "asset_id": "normal_unit",
+    "files": {
+      "pbr": "pbr_normal_unit.ply",
+      "config": "configs/config_normal_unit.json"
+    },
+    "material": {
+      "albedo_rgb": [
+        0.82,
+        0.82,
+        0.82
+      ],
+      "roughness": 0.32,
+      "metallic": 0.02,
+      "reflectance": 0.04,
+      "clearcoat": 0.35,
+      "clearcoat_roughness": 0.12,
+      "ambient_fill": 0.35,
+      "specular_gain": 1.0,
+      "environment_reflection": 0.8,
+      "exposure": 1.0,
+      "relight_strength": 1.0
+    },
+    "light": {
+      "sun_enabled": true,
+      "sun_azimuth_degrees": 126.0,
+      "sun_elevation_degrees": 45.0,
+      "intensity": 1.0,
+      "color_rgb": [
+        1.0,
+        0.98,
+        0.92
+      ],
+      "environment_color_rgb": [
+        0.55,
+        0.62,
+        0.72
+      ]
+    },
+    "surface": {
+      "geometry": "visible_original_gaussians",
+      "normal_fields": [
+        "normal_0",
+        "normal_1",
+        "normal_2"
+      ],
+      "normal_source": "provided_by_input",
+      "normal_orientation": "as_provided",
+      "normal_version": 1
+    },
+    "relighting": {
+      "control_layer": "logical",
+      "geometry_source": "pbr_gaussian",
+      "material_source": "config.material",
+      "transfer": "same_point_multiplicative_ratio",
+      "mapping_required": false
+    },
+    "projection": {
+      "enabled": true,
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "shape_model": "procedural-mask-contact-silhouette-v4",
+      "composition": "receiver_alpha_blend_to_grayscale_v1",
+      "contact": {
+        "shape": "rounded_rectangle",
+        "alignment": "vehicle_local_xy",
+        "length_scale": 0.92,
+        "width_scale": 0.88,
+        "offset_xy_m": [
+          0.0,
+          0.0
+        ],
+        "corner_radius_m": 0.22,
+        "edge_softness_m": 0.08,
+        "opacity": 0.11,
+        "brightness": 0.18
+      },
+      "extension": {
+        "shape": "dynamic_vehicle_outline",
+        "source": "parallel_light_projected_pbr_gaussian_outline",
+        "opacity": 0.28,
+        "opacity_distance_decay": 0.55,
+        "opacity_distance_exponent": 1.25,
+        "brightness": 0.32,
+        "brightness_distance_to_white": 0.65,
+        "brightness_distance_exponent": 1.35,
+        "edge_softness_m": 0.1,
+        "edge_softness_distance_growth_m": 0.24,
+        "edge_softness_distance_exponent": 1.15,
+        "distance_scale_m": 1.25
+      },
+      "anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": 0.0
+      }
+    },
+    "projection_runtime": {
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "recompute_on": [
+        "sun_azimuth_degrees",
+        "sun_elevation_degrees",
+        "vehicle pose",
+        "projection parameters"
+      ],
+      "algorithm": "render an analytic vehicle-local rounded-rectangle contact mask and a filled, smoothed parallel-light swept hull spanning the current PBR Gaussian footprint and its ground-projected footprint"
+    },
+    "projection_stats": {
+      "model": "procedural-mask-contact-silhouette-v4",
+      "runtime": "receiver_space_mask_v1",
+      "geometry": "analytic-rounded-rectangle-plus-parallel-light-swept-pbr-gaussian-outline",
+      "ground_z": 0.14507144689559937,
+      "vehicle_z_anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": 0.0,
+        "bottom_surface_z": 0.14507144689559937,
+        "geometry_source": "pbr_gaussian_original_covariance"
+      }
+    },
+    "sha256": {
+      "pbr": "e858361dbc33133acdfbebef7e5c6c31120aa306454dd3cbb38d995abb08d00a"
+    }
+  },
+  "vehicle": {
+    "vehicle_id": "vehicle_001",
+    "asset_folder": "/mnt/data/fjn/projects/fjn/pbr-vehicle/Assets/pbr_assets/normal_unit",
+    "visible": true,
+    "display_mode": "Relight Original",
+    "transform": {
+      "position": [
+        6.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": {
+        "roll": 0.0,
+        "pitch": 0.0,
+        "yaw": 0.0
+      },
+      "scale": 1.0
+    },
+    "material": {
+      "use_asset_material": true,
+      "roughness": 0.32,
+      "reflectance": 0.04,
+      "metallic": 0.02,
+      "exposure": 1.0,
+      "ambient_fill": 0.35,
+      "relight_strength": 1.0,
+      "saturation": 1.0
+    },
+    "use_proxy_relighting": true,
+    "use_scene_lighting": false,
+    "lighting": {
+      "environment_intensity": 1.0,
+      "environment_rgb": [
+        0.7852523326873779,
+        0.8546351194381714,
+        1.0198290348052979
+      ],
+      "environment_temperature_k": 10225.0,
+      "sun_enabled": true,
+      "sun_intensity": 1.0,
+      "sun_azimuth_deg": 126.0,
+      "sun_elevation_deg": 45.0,
+      "visibility": 1.0,
+      "sun_color_rgb": [
+        1.0,
+        0.98,
+        0.92
+      ]
+    },
+    "environment_map_enabled": false,
+    "environment_map_resolution": 128,
+    "environment_preview_visible": false,
+    "environment_preview_follow_vehicle": true,
+    "environment_preview_position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "environment_preview_offset": [
+      0.0,
+      -4.0,
+      2.0
+    ],
+    "projection_visible": true,
+    "projection_opacity": 1.0,
+    "projection": {
+      "enabled": true,
+      "dynamic": true,
+      "runtime": "receiver_space_mask_v1",
+      "shape_model": "procedural-mask-contact-silhouette-v4",
+      "composition": "receiver_alpha_blend_to_grayscale_v1",
+      "contact": {
+        "shape": "rounded_rectangle",
+        "alignment": "vehicle_local_xy",
+        "length_scale": 0.92,
+        "width_scale": 0.88,
+        "offset_xy_m": [
+          0.0,
+          0.0
+        ],
+        "corner_radius_m": 0.22,
+        "edge_softness_m": 0.08,
+        "opacity": 1.0,
+        "brightness": 0.1
+      },
+      "extension": {
+        "shape": "dynamic_vehicle_outline",
+        "source": "parallel_light_projected_pbr_gaussian_outline",
+        "opacity": 1.0,
+        "opacity_distance_decay": 0.55,
+        "opacity_distance_exponent": 1.25,
+        "brightness": 0.1,
+        "brightness_distance_to_white": 0.65,
+        "brightness_distance_exponent": 1.35,
+        "edge_softness_m": 0.04,
+        "edge_softness_distance_growth_m": 0.24,
+        "edge_softness_distance_exponent": 1.15,
+        "distance_scale_m": 1.25
+      },
+      "anchor": {
+        "mode": "gaussian_bottom_surface",
+        "bottom_surface_percentile": 1.0,
+        "surface_sigma": 1.0,
+        "z_offset_m": 0.0
+      }
+    }
+  }
+}

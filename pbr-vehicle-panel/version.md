@@ -1,6 +1,32 @@
 # pbr-vehicle-panel 版本说明
 
-## 当前版本：1.9.1
+## 当前版本：1.9.5
+
+- 场景上下文支持字符串 `scene_idx`，例如 NCore 的 `notr_ext`；数字场景继续按三位补零。
+- `data_root` 可指向数据集父目录或已经解析到的具体场景目录，避免重复拼接场景名。
+- NCore 的 config.yaml 可自动绑定完整场景根（包含 images、intrinsics、extrinsics、road_masks），无需把 images 子目录误作 data root。
+
+## 1.9.4
+
+- contact/cast 的连续 RGBA mask 改为有界 planar Gaussian 层，与完整场景共享 Gaussian 渲染通道和深度排序。
+- 修复 glTF 透明投影在隐藏场景时可见、显示完整场景时被 Gaussian 合成层覆盖的问题；调整 Anchor offset 不再承担跨通道补偿职责。
+- 每层投影上限 50,000 Gaussian；真实 `normal_unit` 在 126°/45° 太阳下生成 contact 32,691、extension 40,236 个点。
+- 投影渲染层使用独立约 3cm 偏移，不修改资产物理 Anchor；瞬时非有限太阳方向会安全隐藏投影，不再进入凸包计算。
+
+## 1.9.3
+
+- Auto 与太阳估计共享稳健的可选命令解析：显式路径、当前 Python 的有效 console script、已安装模块、相邻源码交付依次回退。
+- 不再仅依赖 shell `PATH`，并跳过“入口脚本仍存在但 Python 模块已卸载”的僵尸 console script。
+- 找不到命令时错误会列出所有已检查位置，便于部署诊断。
+
+## 1.9.2
+
+- 与 DriveStudio 主线对齐太阳估计和车辆 Auto 的运行反馈：两者均显示进度条、运行状态、当前阶段和推理结果。
+- 车辆 Auto 适配器持续读取 fitter 的 `output/progress.json`，不再只在子进程结束后给出一次通知；成功、失败和超时都有明确终态。
+- Scene 面板和启动日志显示交付包版本，便于识别旧 wheel 或未重启的旧服务。
+- Config 面板补齐 `Reset vehicle`，恢复车辆首次加入时选中的配置状态。
+
+## 1.9.1
 
 - 对接 `pbr-vehicle-auto 1.4.1`，将太阳光强度和亮度搜索范围改为 Viser 滑条绝对区间 `[-0.3, 0.3]`。
 - 连续点击 Auto 不再以上一次回填结果为新搜索中心；按钮提示明确展示绝对范围。
@@ -9,7 +35,7 @@
 
 - 新增 `--device auto`，默认使用当前进程可见的第一个 CUDA GPU；遵循 `CUDA_VISIBLE_DEVICES`，不绑定 A100 型号或物理卡号，无 CUDA/PyTorch 时回退 NumPy CPU。
 - PBR 代理着色、朴素 PBR 着色、环境贴图采样和原始层 mapping 回传均提供 Torch CUDA 路径；车辆静态 Tensor 按车辆缓存，只在 Viser buffer 边界回传 NumPy。
-- Auto 子进程继承面板解析后的设备；对接 `pbr-vehicle-auto 1.4.0`。太阳估计继续由 `pbr-vehicle-sun 1.3.0` 自动选择本地 GPU。
+- Auto 子进程继承面板解析后的设备；对接 `pbr-vehicle-auto 1.4.0`。太阳估计对接 `pbr-vehicle-sun 1.4.0 / SSE-v9`，可透传多 GPU、批处理、并行拟合与缓存配置。
 - 保持完整 Gaussian 默认值和 `use_proxy_relighting` 行为不变。
 
 ## 1.8.2

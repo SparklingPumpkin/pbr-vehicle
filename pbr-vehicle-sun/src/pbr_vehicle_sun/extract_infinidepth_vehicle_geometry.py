@@ -15,6 +15,11 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+
+try:
+    from .dataset_adapter import resolve_view_image
+except ImportError:
+    from dataset_adapter import resolve_view_image
 from plyfile import PlyData
 
 
@@ -132,7 +137,8 @@ def main() -> None:
         intrinsics=intrinsic,
     )
 
-    source = cv2.imread(str(args.data_root / "images" / f"{args.timestep:03d}_{args.camera}.jpg"))
+    source_path = resolve_view_image(args.data_root, args.timestep, args.camera)
+    source = cv2.imread(str(source_path)) if source_path else None
     if source is not None:
         overlay = source.copy()
         overlay[mask] = (0.55 * overlay[mask] + 0.45 * np.array((255, 255, 0))).astype(np.uint8)

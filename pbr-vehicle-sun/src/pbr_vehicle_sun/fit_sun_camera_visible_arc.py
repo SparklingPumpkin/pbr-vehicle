@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import csv
 import json
 import sys
@@ -76,8 +77,8 @@ def structure_metrics(predicted_arcs: list[np.ndarray],
                 "observed_bump_count": 0}
     pp = np.vstack([x["points"] for x in pred]); pt = np.vstack([x["tangent"] for x in pred]); pc = np.concatenate([x["curvature"] for x in pred])
     op = np.vstack([x["points"] for x in obs]); ot = np.vstack([x["tangent"] for x in obs]); oc = np.concatenate([x["curvature"] for x in obs])
-    p_to_o = cKDTree(op).query(pp, k=1, workers=-1)[1]
-    o_to_p = cKDTree(pp).query(op, k=1, workers=-1)[1]
+    p_to_o = cKDTree(op).query(pp, k=1, workers=1)[1]
+    o_to_p = cKDTree(pp).query(op, k=1, workers=1)[1]
     tangent_error = np.r_[np.arccos(np.clip(np.abs(np.sum(pt * ot[p_to_o], axis=1)), 0, 1)),
                            np.arccos(np.clip(np.abs(np.sum(ot * pt[o_to_p], axis=1)), 0, 1))]
     pc_desc, oc_desc = np.log1p(.15 * pc), np.log1p(.15 * oc)
@@ -86,8 +87,8 @@ def structure_metrics(predicted_arcs: list[np.ndarray],
     pb = np.vstack([x["bump_points"] for x in pred if len(x["bump_points"])]) if any(len(x["bump_points"]) for x in pred) else np.empty((0, 2))
     ob = np.vstack([x["bump_points"] for x in obs if len(x["bump_points"])]) if any(len(x["bump_points"]) for x in obs) else np.empty((0, 2))
     if len(pb) and len(ob):
-        dp = cKDTree(ob).query(pb, k=1, workers=-1)[0]
-        do = cKDTree(pb).query(ob, k=1, workers=-1)[0]
+        dp = cKDTree(ob).query(pb, k=1, workers=1)[0]
+        do = cKDTree(pb).query(ob, k=1, workers=1)[0]
         bump_support = float(.5 * (np.mean(np.exp(-(dp / .18) ** 2)) + np.mean(np.exp(-(do / .18) ** 2))))
     else:
         bump_support = 1.0 if not len(pb) and not len(ob) else 0.0
@@ -426,7 +427,7 @@ def component_tangent_edges(binary: np.ndarray, frame: dict,
     for component in components:
         arc, audit = camera_tangent_near_arc(component, frame["camera_xy"])
         if floor_tree is not None and len(arc):
-            distances = floor_tree.query(arc, k=1, workers=-1)[0]
+            distances = floor_tree.query(arc, k=1, workers=1)[0]
             filtered = longest_true_run(arc, distances > contact_exclusion_m)
             audit.update({"contact_exclusion_m": float(contact_exclusion_m),
                           "points_before_contact_exclusion": int(len(arc)),
@@ -553,6 +554,11 @@ def main() -> None:
     parser.add_argument("--coarse-elev-max", type=int, default=70)
     parser.add_argument("--local-radius-deg", type=int, default=5)
     parser.add_argument("--local-basins", type=int, default=3)
+    parser.add_argument("--candidate-workers", type=int, default=8,
+                        help="threads evaluating independent angle candidates; results retain grid order")
+    parser.add_argument("--refinement-seed", nargs=2, type=float, action="append",
+                        metavar=("AZIMUTH_DEG", "ELEVATION_DEG"),
+                        help="reuse externally combined exact coarse-grid seeds and skip coarse rasterization")
     parser.add_argument("--seed", type=int, default=20260907)
     parser.add_argument("--visibility-mode", choices=("ray_arc", "angular_near_edge", "component_tangent_arcs", "camera_cone_middle"), default="ray_arc")
     parser.add_argument("--angular-bins", type=int, default=512)
@@ -571,14 +577,19 @@ def main() -> None:
     parser.add_argument("--distance-percentile", type=float, default=.90,
                         help="symmetric robust contour tail quantile, e.g. .90, .95 or .97")
     parser.add_argument("--top-candidates", type=int, default=25,
-                        help="number of ranked candidates to visualize")
+                        help="number of ranked candidates to visualize; 0 writes only the best-fit evidence")
     parser.add_argument("--top-page-size", type=int, default=25,
                         help="candidates per contact sheet; must be 25")
     args = parser.parse_args()
+    # Candidate-level scheduling owns parallelism. Prevent OpenCV from
+    # creating another machine-sized pool inside every worker thread.
+    cv2.setNumThreads(1)
     if not .50 <= args.distance_percentile <= 1.0:
         raise ValueError("--distance-percentile must be in [0.50, 1.0]")
-    if args.top_candidates < 1 or args.top_page_size != 25:
-        raise ValueError("--top-candidates must be positive and --top-page-size must be 25")
+    if args.top_candidates < 0 or args.top_page_size != 25:
+        raise ValueError("--top-candidates must be non-negative and --top-page-size must be 25")
+    if args.candidate_workers < 1:
+        raise ValueError("--candidate-workers must be positive")
     counts = {len(args.vehicle_geometry), len(args.shadow_geometry), len(args.shadow_mask)}
     if len(counts) != 1:
         raise ValueError("vehicle geometry, shadow geometry, and shadow mask lists must have equal lengths")
@@ -600,7 +611,8 @@ def main() -> None:
                             args.contact_exclusion_m)
         frames.append(frame)
 
-    def evaluate_one(frame: dict, azimuth: float, elevation: float) -> dict | None:
+    def evaluate_one(frame: dict, azimuth: float, elevation: float,
+                     keep_geometry: bool = False) -> dict | None:
         horizontal = np.array((np.cos(np.deg2rad(azimuth)), np.sin(np.deg2rad(azimuth))))
         cotangent = 1.0 / np.tan(np.deg2rad(elevation))
         projected = frame["vxy"] - frame["h"][:, None] * cotangent * horizontal[None]
@@ -642,21 +654,48 @@ def main() -> None:
         intersection = np.count_nonzero(raw_mask & frame["obs_mask"])
         union = np.count_nonzero(raw_mask | frame["obs_mask"])
         result = dict(metrics)
-        result.update({
-            "azimuth_deg": float(azimuth), "elevation_deg": float(elevation),
-            "raw_mask": raw_mask, "predicted_mask": predicted_mask,
-            "full_boundary": full_boundary, "visible_arc": visible_arc, "visible_arcs": visible_arcs,
-            "arc_audit": arc_audit,
-            "iou_diagnostic": float(intersection / union) if union else 0.0,
-        })
+        result.update({"azimuth_deg": float(azimuth), "elevation_deg": float(elevation),
+                       "iou_diagnostic": float(intersection / union) if union else 0.0})
+        # Search candidates used to retain two full raster masks plus contour
+        # arrays each.  At the default 900px raster this consumed gigabytes
+        # across three vehicle fits.  Geometry is not part of ranking, so
+        # retain it only when regenerating the best/visualized candidates.
+        if keep_geometry:
+            result.update({"raw_mask": raw_mask, "predicted_mask": predicted_mask,
+                           "full_boundary": full_boundary, "visible_arc": visible_arc,
+                           "visible_arcs": visible_arcs, "arc_audit": arc_audit})
         return result
 
-    def evaluate(azimuth: float, elevation: float) -> dict | None:
-        per_frame = [evaluate_one(frame, azimuth, elevation) for frame in frames]
+    evaluation_cache: dict[tuple[float, float], dict | None] = {}
+
+    def evaluate(azimuth: float, elevation: float, keep_geometry: bool = False) -> dict | None:
+        key = (float(azimuth) % 360.0, float(elevation))
+        if not keep_geometry and key in evaluation_cache:
+            return evaluation_cache[key]
+        per_frame = [evaluate_one(frame, key[0], key[1], keep_geometry) for frame in frames]
         if any(result is None for result in per_frame):
-            return None
-        return {"score": float(np.mean([result["score"] for result in per_frame])),
-                "azimuth_deg": float(azimuth), "elevation_deg": float(elevation), "frames": per_frame}
+            output = None
+        else:
+            output = {"score": float(np.mean([result["score"] for result in per_frame])),
+                      "azimuth_deg": key[0], "elevation_deg": key[1], "frames": per_frame}
+        if not keep_geometry:
+            evaluation_cache[key] = output
+        return output
+
+    def evaluate_grid(pairs: list[tuple[float, float]]) -> list[dict | None]:
+        """Evaluate unique candidates concurrently while preserving grid order."""
+        ordered_unique = list(dict.fromkeys((float(azimuth) % 360.0, float(elevation))
+                                             for azimuth, elevation in pairs))
+        missing = [pair for pair in ordered_unique if pair not in evaluation_cache]
+        if args.candidate_workers == 1:
+            for azimuth, elevation in missing:
+                evaluate(azimuth, elevation)
+        elif missing:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.candidate_workers,
+                                                       thread_name_prefix="sse-angle") as executor:
+                list(executor.map(lambda pair: evaluate(*pair), missing))
+        return [evaluation_cache[(float(azimuth) % 360.0, float(elevation))]
+                for azimuth, elevation in pairs]
 
     if (args.fixed_azimuth is None) != (args.fixed_elevation is None):
         raise ValueError("--fixed-azimuth and --fixed-elevation must be provided together")
@@ -667,22 +706,41 @@ def main() -> None:
             raise VehicleEvidenceError("fixed angle did not yield usable contours for every frame")
         coarse = [fixed]
         best = fixed
-    else:
-        for elevation in range(args.coarse_elev_min, args.coarse_elev_max + 1, 5):
-            for azimuth in range(0, 360, args.coarse_az_step):
-                result = evaluate(azimuth, elevation)
-                if result is not None:
-                    coarse.append(result)
-        seeds = sorted(coarse, key=lambda row: row["score"], reverse=True)[:args.local_basins]
+    elif args.refinement_seed:
+        seeds = [{"azimuth_deg": azimuth % 360.0, "elevation_deg": elevation,
+                  "score": float("nan")}
+                 for azimuth, elevation in args.refinement_seed]
+        refinement_pairs = []
         for seed in seeds:
             lower = max(args.coarse_elev_min, int(seed["elevation_deg"]) - args.local_radius_deg)
             upper = min(args.coarse_elev_max, int(seed["elevation_deg"]) + args.local_radius_deg)
             for elevation in range(lower, upper + 1):
                 for delta in range(-args.local_radius_deg, args.local_radius_deg + 1):
-                    result = evaluate((int(seed["azimuth_deg"]) + delta) % 360, elevation)
-                    if result is not None:
-                        refined.append(result)
+                    refinement_pairs.append(((int(seed["azimuth_deg"]) + delta) % 360, elevation))
+        refined.extend(result for result in evaluate_grid(refinement_pairs) if result is not None)
+        if not refined:
+            raise VehicleEvidenceError("externally seeded refinement did not yield a usable candidate")
+        best = max(refined, key=lambda row: row["score"])
+    else:
+        coarse_pairs = [(azimuth, elevation)
+                        for elevation in range(args.coarse_elev_min, args.coarse_elev_max + 1, 5)
+                        for azimuth in range(0, 360, args.coarse_az_step)]
+        coarse.extend(result for result in evaluate_grid(coarse_pairs) if result is not None)
+        seeds = sorted(coarse, key=lambda row: row["score"], reverse=True)[:args.local_basins]
+        refinement_pairs = []
+        for seed in seeds:
+            lower = max(args.coarse_elev_min, int(seed["elevation_deg"]) - args.local_radius_deg)
+            upper = min(args.coarse_elev_max, int(seed["elevation_deg"]) + args.local_radius_deg)
+            for elevation in range(lower, upper + 1):
+                for delta in range(-args.local_radius_deg, args.local_radius_deg + 1):
+                    refinement_pairs.append(((int(seed["azimuth_deg"]) + delta) % 360, elevation))
+        refined.extend(result for result in evaluate_grid(refinement_pairs) if result is not None)
         best = max(refined or coarse, key=lambda row: row["score"])
+
+    # Recreate only the selected geometry. All score values are evaluated by
+    # the exact same function/parameters as the scalar search above.
+    best = evaluate(best["azimuth_deg"], best["elevation_deg"], keep_geometry=True)
+    assert best is not None
 
     metric_names = ("score", "distance_only_score", "distance_percentile", "pred_to_observed_tail_m",
                     "pred_to_observed_median_m", "observed_to_predicted_tail_m",
@@ -753,7 +811,12 @@ def main() -> None:
         cv2.putText(image, title, (8, 28), cv2.FONT_HERSHEY_SIMPLEX, .48, (0, 0, 0), 2, cv2.LINE_AA)
         return image
 
-    chosen = sorted(refined or coarse, key=lambda row: row["score"], reverse=True)[:args.top_candidates]
+    chosen_light = sorted(refined or coarse, key=lambda row: row["score"], reverse=True)[:args.top_candidates]
+    chosen = []
+    for row in chosen_light:
+        full = evaluate(row["azimuth_deg"], row["elevation_deg"], keep_geometry=True)
+        if full is not None:
+            chosen.append(full)
     for index, frame in enumerate(frames):
         cv2.imwrite(str(args.output_dir / f"frame{index}_best_camera_visible_arc.png"),
                     panel(frame, best["frames"][index], f"frame {index} | shared az {best['azimuth_deg']:.1f} el {best['elevation_deg']:.1f}"))
@@ -816,6 +879,8 @@ def main() -> None:
                    for v, s, m in zip(args.vehicle_geometry, args.shadow_geometry, args.shadow_mask)],
         "search": {"coarse_az_step": args.coarse_az_step, "coarse_elevation": [args.coarse_elev_min, args.coarse_elev_max, 5],
                    "local_radius_deg": args.local_radius_deg, "local_basins": args.local_basins,
+                   "candidate_workers": args.candidate_workers,
+                   "external_refinement_seeds": args.refinement_seed,
                    "fixed_angle": None if args.fixed_azimuth is None else [args.fixed_azimuth % 360.0, args.fixed_elevation],
                    "full_projection_canvas": True,
                    "frame_canvas_bounds": [{"lo": frame["lo"].tolist(), "hi": frame["hi"].tolist(),

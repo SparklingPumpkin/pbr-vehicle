@@ -1,0 +1,81 @@
+{
+  "method": "official SSISv2 instance shadow association",
+  "binding_contract": "select SSIS association member maximizing IoU with preselected YOLO/SAM2 vehicle; use the opposite-class paired member as shadow",
+  "source_image": "/mnt/data/dataset/argoverse/processed/training/002/images/111_1.jpg",
+  "vehicle_mask": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/SSE-v8-a/run-20260910T103511Z-argoverse-first-seven-parallel-sun-estimation/scene-002/selection/sam2_global_ranking/vehicle_03_instance-32_t111_cam1_mask.png",
+  "weights": "/mnt/data/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+  "confidence_threshold": 0.1,
+  "minimum_object_iou": 0.05,
+  "official_object_class": 0,
+  "instances": 8,
+  "candidates": [
+    {
+      "association_id": 2,
+      "object_index": 2,
+      "shadow_index": 3,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.7807533740997314,
+      "shadow_score": 0.6653321981430054,
+      "object_vehicle_iou": 0.9707186332369523,
+      "object_vehicle_intersection_pixels": 367616,
+      "shadow_pixels": 138630
+    },
+    {
+      "association_id": 3,
+      "object_index": 4,
+      "shadow_index": 5,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.6503836512565613,
+      "shadow_score": 0.5660579204559326,
+      "object_vehicle_iou": 0.0022290350997487395,
+      "object_vehicle_intersection_pixels": 959,
+      "shadow_pixels": 5358
+    },
+    {
+      "association_id": 1,
+      "object_index": 0,
+      "shadow_index": 1,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.8261333107948303,
+      "shadow_score": 0.7164224982261658,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 31787
+    },
+    {
+      "association_id": 4,
+      "object_index": 7,
+      "shadow_index": 6,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.563895583152771,
+      "shadow_score": 0.5760543346405029,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 1218
+    }
+  ],
+  "selected": {
+    "association_id": 2,
+    "object_index": 2,
+    "shadow_index": 3,
+    "object_class": 0,
+    "shadow_class": 1,
+    "object_score": 0.7807533740997314,
+    "shadow_score": 0.6653321981430054,
+    "object_vehicle_iou": 0.9707186332369523,
+    "object_vehicle_intersection_pixels": 367616,
+    "shadow_pixels": 138630
+  },
+  "accepted": true,
+  "files": {
+    "target_vehicle": "01_sam2_target_vehicle.png",
+    "all_pairs": "02_all_ssisv2_pairs.jpg",
+    "associated_object": "03_associated_object_mask.png",
+    "associated_shadow": "04_associated_shadow_mask.png",
+    "review": "05_target_association_review.jpg"
+  }
+}

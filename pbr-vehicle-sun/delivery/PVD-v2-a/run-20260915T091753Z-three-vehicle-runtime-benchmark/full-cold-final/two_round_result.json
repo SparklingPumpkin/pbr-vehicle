@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "mainline": "SSE-v8",
+  "status": "ok",
+  "published_angle": true,
+  "published_round": 1,
+  "azimuth_deg": 166.0,
+  "elevation_deg": 70.0,
+  "angle_source": "joint_fit",
+  "accepted_vehicle_ranks": [
+    1,
+    3
+  ],
+  "rounds_executed": 1,
+  "replacement_triggered": false,
+  "round_contract": {
+    "round_1_ranks": [
+      1,
+      3
+    ],
+    "round_2_ranks": [
+      4,
+      6
+    ],
+    "round_2_trigger": "round_1 completed with no_valid_sun_information",
+    "round_2_reuses": [
+      "all_vehicle_detections.json",
+      "scene_global_vehicle_ranking.json"
+    ],
+    "process_failure_behavior": "stop without replacement and return process_failed"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "rank_range": [
+        1,
+        3
+      ],
+      "process_status": "completed",
+      "attempts": [
+        {
+          "attempt": 1,
+          "returncode": 0,
+          "elapsed_s": 129.25431659794413,
+          "log_path": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/attempt-1.log"
+        }
+      ],
+      "resumed": false,
+      "result_path": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/scene_result.json",
+      "publication_status": "ok",
+      "published_angle": true,
+      "azimuth_deg": 166.0,
+      "elevation_deg": 70.0,
+      "angle_source": "joint_fit",
+      "selected_vehicle_ranks": [
+        1,
+        2,
+        3
+      ],
+      "prepared_vehicle_ranks": [
+        1,
+        2,
+        3
+      ],
+      "accepted_vehicle_ranks": [
+        1,
+        3
+      ],
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_sse_scene_global_top3.py",
+        "--scene",
+        "argoverse_002",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--yolo-weights",
+        "/mnt/fjn/yolo11n.pt",
+        "--sam2-root",
+        "/mnt/fjn/projects/tools/sam2",
+        "--sam2-checkpoint",
+        "/mnt/fjn/projects/tools/sam2/checkpoints/sam2.1_hiera_tiny.pt",
+        "--sam2-python",
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "--sam2-image-batch-size",
+        "4",
+        "--ssis-root",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS",
+        "--ssis-weights",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+        "--ssis-python",
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "--infinidepth-root",
+        "/mnt/data/why/InfiniDepth",
+        "--infinidepth-python",
+        "/mnt/fjn/.conda/envs/flashdepth-py311-torch24/bin/python",
+        "--device",
+        "cuda:2",
+        "--worker-devices",
+        "cuda:0",
+        "cuda:2",
+        "--preparation-workers",
+        "2",
+        "--yolo-batch",
+        "16",
+        "--fit-workers",
+        "3",
+        "--candidate-workers",
+        "8",
+        "--geometry-mode",
+        "direct_dense",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1",
+        "--top-vehicles",
+        "3",
+        "--selection-pool-size",
+        "6",
+        "--vehicle-rank-offset",
+        "0"
+      ]
+    }
+  ],
+  "total_elapsed_s": 129.2556691300124,
+  "cache": {
+    "hit": false,
+    "key": "6d084b0fc1797d892577b2355611a1655b43c674a722d1c85fad40bce89df445"
+  }
+}

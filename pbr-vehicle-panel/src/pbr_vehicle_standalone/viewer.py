@@ -12,6 +12,7 @@ import numpy as np
 import viser
 import viser.transforms as vt
 
+from . import __version__ as PACKAGE_VERSION
 from .asset_io import load_scene, load_vehicle_asset, materialize_pth_scene, resolve_scene_context
 from .auto_fit import run_vehicle_auto_fit
 from .config_io import next_config_path, read_config, save_viewer_config, state_from_config
@@ -19,7 +20,7 @@ from .device import resolve_compute_device
 from .environment_map import EnvironmentMap, cube_face_rotations, textured_environment_sphere
 from .math3d import color_temperature_to_rgb, euler_to_wxyz, normalize, quaternion_to_rotation, sun_direction
 from .projection import build_projection_masks
-from .rendering import pack_gaussian_buffer, rgba_plane_glb
+from .rendering import pack_gaussian_buffer, projection_rgba_to_gaussians
 from .shading import shade_vehicle
 from .sun_estimation import run_sun_estimator
 from .types import LightingState, MaterialState, TransformState, VehicleAsset, VehicleState
@@ -104,6 +105,9 @@ class StandaloneViewer:
 
     def _build_gui(self) -> None:
         with self.server.gui.add_folder("Scene", expand_by_default=True):
+            self.handles["package_version"] = self.server.gui.add_text(
+                "交付包版本", initial_value=PACKAGE_VERSION, disabled=True,
+            )
             self.handles["scene_path"] = self.server.gui.add_text("Scene PLY/PTH path", initial_value=str(self.args.scene or ""))
             self.handles["scene_visible"] = self.server.gui.add_checkbox("Show scene", initial_value=True)
             load_button = self.server.gui.add_button("Load / replace scene")
@@ -214,7 +218,9 @@ class StandaloneViewer:
             weighted = payload.get("weighted_angle", {}) if isinstance(payload, dict) else {}
             if isinstance(weighted, dict) and "sun_intensity" in weighted:
                 values["sun_intensity"] = _value_to_ui(weighted["sun_intensity"], "sun_intensity")
-            self.apply_estimated_sun_angles(values["sun_azimuth"], values["sun_elevation"])
+            updated_vehicles = self.apply_estimated_sun_angles(
+                values["sun_azimuth"], values["sun_elevation"]
+            )
             if "sun_intensity" in values:
                 self.handles["sun_intensity"].value = values["sun_intensity"]
                 self._shared_lighting_changed("sun_estimate")
@@ -223,13 +229,15 @@ class StandaloneViewer:
             result_text = (
                 f"太阳方位角：{values['sun_azimuth']:.1f}°\n"
                 f"太阳高度角：{values['sun_elevation']:.1f}°{round_text}\n"
+                f"已更新：场景与 {updated_vehicles} 辆车\n"
                 f"结果目录：{result['output_dir']}"
             )
             self._set_sun_inference_progress(1.0, "成功", "角度已通过发布门并回填面板", result_text)
             self._notify(
                 event,
                 "太阳估计完成",
-                f"方位角 {values['sun_azimuth']:.1f}°，高度角 {values['sun_elevation']:.1f}°；结果保留在 {result['output_dir']}",
+                f"方位角 {values['sun_azimuth']:.1f}°，高度角 {values['sun_elevation']:.1f}°；"
+                f"已更新场景和 {updated_vehicles} 辆车；结果保留在 {result['output_dir']}",
             )
         except Exception as exc:
             traceback.print_exc()
@@ -513,6 +521,9 @@ class VehicleController:
         self.asset = asset
         self.vehicle_id = state.vehicle_id
         self.state = state
+        # Keep the exact state selected when this vehicle was added so Reset
+        # has the same user-facing role as the DriveStudio mainline control.
+        self.initial_state = copy.deepcopy(state)
         self.config_path = config_path
         self.handles: dict[str, Any] = {}
         self.gui_root = None
@@ -549,6 +560,16 @@ class VehicleController:
             self.handles["auto_fit"] = self.server.gui.add_button(
                 "Auto 识别车辆参数",
                 hint="太阳光强度和亮度固定在绝对 UI 区间 -0.3 到 0.3 内搜索。",
+            )
+            self.handles["auto_fit_progress"] = self.server.gui.add_progress_bar(0.0)
+            self.handles["auto_fit_status"] = self.server.gui.add_text(
+                "Auto 识别状态", initial_value="等待启动", disabled=True,
+            )
+            self.handles["auto_fit_stage"] = self.server.gui.add_text(
+                "当前阶段", initial_value="尚未执行", disabled=True,
+            )
+            self.handles["auto_fit_result"] = self.server.gui.add_text(
+                "推理结果", initial_value="尚无结果", multiline=True, disabled=True,
             )
             config_folder = self.server.gui.add_folder("Config", expand_by_default=False)
             advanced_folder = self.server.gui.add_folder("高级", expand_by_default=False)
@@ -669,16 +690,20 @@ class VehicleController:
                 self.handles["config_path"] = self.server.gui.add_text("Config path", initial_value=self.config_path)
                 save_button = self.server.gui.add_button("Save vehicle + lighting config")
                 load_button = self.server.gui.add_button("Load config")
+                reset_button = self.server.gui.add_button("Reset vehicle")
                 delete_button = self.server.gui.add_button("Delete vehicle")
                 self.handles["visible"] = self.server.gui.add_checkbox("Visible", initial_value=True)
                 self.handles["mode"] = self.server.gui.add_dropdown("Display", options=DISPLAY_MODES, initial_value="Relight Original")
 
         mirrored_controls = self._mirrored_controls()
         mirrored_keys = set(mirrored_controls) | set(mirrored_controls.values())
+        action_or_output_keys = {
+            "config_path", "auto_fit", "auto_fit_progress", "auto_fit_status",
+            "auto_fit_stage", "auto_fit_result", "environment_map_refresh",
+        }
         for key, handle in self.handles.items():
             if (
-                key not in {"config_path", "auto_fit"}
-                and key != "environment_map_refresh"
+                key not in action_or_output_keys
                 and key not in mirrored_keys
             ):
                 handle.on_update(lambda _, source=key: self._control_changed(source))
@@ -693,6 +718,7 @@ class VehicleController:
         self._sync_mirrored_controls()
         save_button.on_click(lambda event: self._save_event(event))
         load_button.on_click(lambda event: self._load_event(event))
+        reset_button.on_click(lambda event: self._reset_event(event))
         delete_button.on_click(lambda _: self.app.remove_vehicle(self))
         center_button.on_click(self._center_orbit_on_vehicle)
         self.handles["auto_fit"].on_click(self._auto_fit_event)
@@ -1007,9 +1033,19 @@ class VehicleController:
             self.app._notify(event, "Auto 识别进行中", f"{self.vehicle_id} 正在计算")
             return
         self.handles["auto_fit"].disabled = True
+        self._set_auto_fit_progress(0.0, "运行中", "准备场景与车辆输入", "等待预测结果")
         self.app._notify(event, "Auto 识别已启动", "正在匹配太阳光强度、亮度和车辆色温")
         self._auto_fit_thread = threading.Thread(target=self._run_auto_fit, args=(event,), daemon=True)
         self._auto_fit_thread.start()
+
+    def _set_auto_fit_progress(self, progress, status, stage, result=None) -> None:
+        if self._removed:
+            return
+        self.handles["auto_fit_progress"].value = 100.0 * float(np.clip(progress, 0.0, 1.0))
+        self.handles["auto_fit_status"].value = str(status)
+        self.handles["auto_fit_stage"].value = str(stage)
+        if result is not None:
+            self.handles["auto_fit_result"].value = str(result)
 
     def _run_auto_fit(self, event) -> None:
         try:
@@ -1020,6 +1056,9 @@ class VehicleController:
                 config_path=str(self.app.handles["auto_fit_config"].value).strip() or None,
                 timeout=float(getattr(self.app.args, "auto_fit_timeout", 600.0)),
                 device=getattr(getattr(self.app, "compute_device", None), "value", "auto"),
+                progress_callback=lambda progress, stage: self._set_auto_fit_progress(
+                    progress, "运行中", stage
+                ),
             )
             temperature = float(result["environment_temperature_k"])
             self._suspend_updates = True
@@ -1041,6 +1080,18 @@ class VehicleController:
             self._sync_mirrored_controls()
             self._sync_lighting_enabled()
             self.update()
+            self._set_auto_fit_progress(
+                1.0,
+                "成功",
+                "网格最优参数已回填面板",
+                (
+                    f"太阳光强度：{result['sun_intensity']:.4f}\n"
+                    f"环境亮度：{result['ambient_fill']:.4f}\n"
+                    f"车辆环境色温：{temperature:.0f} K\n"
+                    f"相对原始 DC 指标变化：{result['improvement_percent']:.2f}%\n"
+                    f"结果目录：{result['output_dir']}"
+                ),
+            )
             self.app._notify(
                 event,
                 "Auto 识别完成",
@@ -1048,6 +1099,12 @@ class VehicleController:
             )
         except Exception as exc:
             traceback.print_exc()
+            self._set_auto_fit_progress(
+                1.0,
+                "失败",
+                "识别终止，车辆参数未修改",
+                f"{type(exc).__name__}: {exc}",
+            )
             self.app._notify(event, "Auto 识别未应用", f"{type(exc).__name__}: {exc}")
         finally:
             if not self._removed:
@@ -1253,7 +1310,13 @@ class VehicleController:
         self._update_projection(quaternion, position, transform.scale, local_lighting, local_sun)
 
     def _update_projection(self, quaternion, position, scale, lighting, local_sun) -> None:
-        enabled = bool(self.handles["projection_visible"].value) and lighting.sun_enabled and local_sun[2] >= math.sin(math.radians(1.0))
+        finite_sun = np.isfinite(local_sun).all()
+        enabled = (
+            bool(self.handles["projection_visible"].value)
+            and lighting.sun_enabled
+            and finite_sun
+            and local_sun[2] >= math.sin(math.radians(1.0))
+        )
         if not enabled:
             for handle in (self.contact_handle, self.extension_handle):
                 if handle is not None:
@@ -1261,29 +1324,37 @@ class VehicleController:
             return
         result = build_projection_masks(self.asset.proxy, local_sun, self.projection())
         opacity_scale = float(self.handles["projection_opacity"].value) * lighting.visibility
-        rotation = quaternion_to_rotation(quaternion[None, :])[0]
-        items = (("extension", 0.001), ("contact", 0.002))
+        items = (("extension", 0.030), ("contact", 0.032))
         with self.server.atomic():
             for name, z_bias in items:
                 item = result[name]
                 rgba = item["rgba"].copy()
                 rgba[..., 3] = np.clip(rgba[..., 3].astype(np.float32) * opacity_scale, 0, 255).astype(np.uint8)
-                size = np.asarray(item["size_xy"], dtype=np.float32) * scale
-                center = np.asarray([item["center_xy"][0], item["center_xy"][1], result["ground_z"] + z_bias], dtype=np.float32) * scale
-                world_position = position + rotation @ center
-                glb = rgba_plane_glb(rgba, float(size[0]), float(size[1]))
+                centers, covariances, colors, opacities = projection_rgba_to_gaussians(
+                    rgba,
+                    item["center_xy"],
+                    item["size_xy"],
+                    result["ground_z"] + z_bias,
+                )
+                centers *= scale
+                covariances *= scale * scale
                 attribute = f"{name}_handle"
                 handle = getattr(self, attribute)
                 if handle is None:
-                    handle = self.server.scene.add_glb(
-                        f"/vehicles/{self.vehicle_id}/projection/{name}", glb_data=glb,
-                        wxyz=quaternion, position=world_position, cast_shadow=False, receive_shadow=False,
+                    handle = self.server.scene.add_gaussian_splats(
+                        f"/vehicles/{self.vehicle_id}/projection/{name}",
+                        centers=centers,
+                        covariances=covariances,
+                        rgbs=colors,
+                        opacities=opacities,
+                        wxyz=quaternion,
+                        position=position,
                     )
                     setattr(self, attribute, handle)
                 else:
-                    handle.glb_data = glb
+                    handle.buffer = pack_gaussian_buffer(centers, covariances, colors, opacities)
                     handle.wxyz = quaternion
-                    handle.position = world_position
+                    handle.position = position
                     handle.visible = True
 
     def _save_event(self, event) -> None:
@@ -1310,6 +1381,15 @@ class VehicleController:
         except Exception as exc:
             traceback.print_exc()
             self.app._notify(event, "Config load failed", f"{type(exc).__name__}: {exc}")
+
+    def _reset_event(self, event) -> None:
+        """Restore the state that was selected when this vehicle was added."""
+        try:
+            self.apply_state(copy.deepcopy(self.initial_state))
+            self.app._notify(event, "Vehicle reset", "已恢复车辆首次加入时加载的配置状态")
+        except Exception as exc:
+            traceback.print_exc()
+            self.app._notify(event, "Vehicle reset failed", f"{type(exc).__name__}: {exc}")
 
     def remove(self) -> None:
         self._removed = True

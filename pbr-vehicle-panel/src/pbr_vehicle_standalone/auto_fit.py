@@ -6,15 +6,62 @@ import json
 import math
 import os
 import shlex
-import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Iterable
+
+from .optional_command import resolve_optional_command
 
 
 class VehicleAutoFitError(RuntimeError):
     """The optional auto fitter failed or returned an unsupported result."""
+
+
+def _emit_progress(callback, progress: float, stage: str) -> None:
+    if callback is not None:
+        callback(max(0.0, min(1.0, float(progress))), str(stage))
+
+
+def _progress_snapshot(output_dir: Path) -> tuple[float, str]:
+    progress_path = output_dir / "progress.json"
+    if progress_path.is_file():
+        try:
+            payload = json.loads(progress_path.read_text(encoding="utf-8"))
+            return (
+                float(payload.get("progress", 0.0)),
+                str(payload.get("stage", "读取 Auto 识别进度")),
+            )
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            pass
+    if (output_dir / "metrics.json").is_file():
+        return 1.0, "车辆参数识别完成"
+    return 0.05, "加载场景与车辆资产"
+
+
+def _run_monitored_process(
+    command: list[str], timeout: float, progress_callback, output_dir: Path
+) -> tuple[int, str]:
+    started = time.monotonic()
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            command,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=os.environ.copy(),
+        )
+        while process.poll() is None:
+            if time.monotonic() - started > float(timeout):
+                process.kill()
+                process.wait()
+                raise subprocess.TimeoutExpired(command, timeout)
+            _emit_progress(progress_callback, *_progress_snapshot(output_dir))
+            time.sleep(0.5)
+        _emit_progress(progress_callback, *_progress_snapshot(output_dir))
+        log.seek(0)
+        return process.returncode, log.read()
 
 
 def _read_config(path: str | Path | None) -> dict[str, Any]:
@@ -134,6 +181,7 @@ def run_vehicle_auto_fit(
     command_override: str | Iterable[str] | None = None,
     timeout: float | None = None,
     device: str = "auto",
+    progress_callback=None,
 ) -> dict[str, Any]:
     """Fit three appearance controls and retain all artifacts in /tmp."""
     config = _read_config(config_path)
@@ -159,23 +207,31 @@ def run_vehicle_auto_fit(
         device=device,
         command_override=command_override,
     )
-    executable = shutil.which(command[0]) or (command[0] if Path(command[0]).exists() else None)
-    if executable is None:
-        raise VehicleAutoFitError(f"找不到车辆自动适配命令: {command[0]}")
-    command[0] = executable
+    command, checked = resolve_optional_command(
+        command,
+        executable_name="pbr-vehicle-auto-fit",
+        module_name="pbr_vehicle_auto",
+        source_package="pbr-vehicle-auto",
+        source_script="fitter.py",
+    )
+    if command[0] == "pbr-vehicle-auto-fit":
+        raise VehicleAutoFitError(
+            f"找不到车辆自动适配命令: {command[0]}；已检查: {', '.join(checked)}"
+        )
     limit = float(timeout if timeout is not None else config.get("timeout", 600.0))
+    _emit_progress(progress_callback, 0.01, "创建车辆参数识别任务")
     try:
-        completed = subprocess.run(
-            command, check=False, capture_output=True, text=True,
-            timeout=limit, env=os.environ.copy(),
+        returncode, process_output = _run_monitored_process(
+            command, limit, progress_callback, output,
         )
     except subprocess.TimeoutExpired as exc:
         raise VehicleAutoFitError(f"车辆自动适配超时（{limit:g} 秒），中间结果保留在 {root}") from exc
-    if completed.returncode != 0:
-        detail = (completed.stderr or completed.stdout or "").strip()[-2000:]
+    if returncode != 0:
+        detail = process_output.strip()[-2000:]
         raise VehicleAutoFitError(
-            f"车辆自动适配失败（退出码 {completed.returncode}），中间结果 {root}: {detail}"
+            f"车辆自动适配失败（退出码 {returncode}），中间结果 {root}: {detail}"
         )
     result = read_auto_fit_result(final_config, output / "metrics.json")
-    result.update({"output_dir": str(root), "command": command, "stdout": completed.stdout[-4000:]})
+    _emit_progress(progress_callback, 1.0, "车辆参数识别完成")
+    result.update({"output_dir": str(root), "command": command, "stdout": process_output[-4000:]})
     return result

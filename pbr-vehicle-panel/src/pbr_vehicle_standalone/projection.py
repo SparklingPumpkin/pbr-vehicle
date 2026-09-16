@@ -48,7 +48,9 @@ def _signed_distance(xy: np.ndarray, center: np.ndarray, half_extents: np.ndarra
 
 
 def _outline(points: np.ndarray) -> np.ndarray:
-    unique = np.unique(np.asarray(points, dtype=np.float32), axis=0)
+    values = np.asarray(points, dtype=np.float32)
+    values = values[np.isfinite(values).all(axis=1)]
+    unique = np.unique(values, axis=0)
     if len(unique) < 3:
         return unique
     try:
@@ -93,6 +95,8 @@ def build_projection_masks(proxy: GaussianLayer, local_sun_direction: np.ndarray
     projection = copy.deepcopy(config)
     validate_projection(projection)
     direction = normalize(np.asarray(local_sun_direction, dtype=np.float32).reshape(1, 3))[0]
+    if not np.isfinite(direction).all():
+        raise ValueError("Projection requires a finite sun direction")
     if direction[2] < math.sin(math.radians(1.0)):
         raise ValueError("Projection requires sun elevation of at least 1 degree")
     points = proxy.centers

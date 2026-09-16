@@ -1,17 +1,15 @@
-# PBR Vehicle Sun 1.3.0 Delivery Report
+# PBR Vehicle Sun 1.4.0 Delivery Report
 
-Version 1.3.0 makes `auto` the public device default. The scene pipeline resolves one logical local device and passes the correct format to Ultralytics (`0`), Torch/SAM2/InfiniDepth (`cuda:0`) and Detectron2/SSISv2 (`cuda:0`). It respects `CUDA_VISIBLE_DEVICES`, does not encode a GPU model or physical index, and sends `cpu` to every stage when CUDA is unavailable.
+Version 1.4.0 promotes the accelerated `SSE-v9` runtime. It preserves the SSISv2 official association, P95 camera-visible contour objective, search grid and confidence gates from SSE-v8 while parallelizing independent work.
 
-本交付包冻结 `SSE-v8`：上游严格采用 `SSE-v6-b` 的 SSISv2 官方关联阴影 mask 协议，下游继承 `SSE-v7` 的 P95 相机可见轮廓及通用 1–5 车置信度门控/联合拟合。
+车辆选择仍穷举全部帧、相机和合格 YOLO11 观测。SAM2.1 批量编码图像，并一次解码同图全部 box；未执行候选预筛。Argoverse 002 上 SAM2 排名由 69.09 秒降至 14.28 秒，Top-6 选择和输出 mask 与同输入逐张版本一致。
 
-默认场景入口已纳入两轮换车合同：首轮使用全局排名 1–3；仅在首轮正常完成但无有效角时，复用 YOLO 检测和 SAM2 排名，更换为排名 4–6。第二轮仍无有效角才返回 `no_valid_sun_information`。进程、文件或资源失败保持独立失败类型，不触发换车。
+SSISv2 在 InfiniDepth 前并行执行，拒绝车辆不再计算三维几何。通过车辆按源视图分组，在 `--worker-devices` 上并行；一次 InfiniDepth 前向同时导出深度和逐像素源视图可见 Gaussian，跳过重复 dense-depth 前向、2M 点随机采样及约 128 MB PLY 写入/重读。与旧 PLY 路径的双向最近点中位差为 2.2/2.7 mm，固定角分数由 -0.15761 变为 -0.15608；因此该几何采样变更以 SSE-v9 单独标识，并保留 `legacy_ply`。
 
-活动执行链中已移除旧阴影检测器、阴影减车辆、连通域清洗、形态学修改及其概率图证据门。SSISv2 object member 与 YOLO/SAM2 目标车辆通过 IoU 绑定，关联 shadow member 直接进入同帧 InfiniDepth 几何提升。
+拟合侧同时并行最多三辆车，每车默认 8 个候选角线程；小轮廓 KDTree 禁止创建全机线程池，搜索阶段只保存标量，最终证据按需重算。三车 scene-002 同输入拟合由约 99 秒降至 24.61 秒，角度和门控结果逐值一致。联合粗网格仅在数学等价时复用单车分数；存在随机降采样风险时自动回退完整联合粗搜。
 
-Argoverse 000–049 的冻结审计结果为 26/50 场景发布太阳角、24/50 场景返回无有效太阳信息、0 个进程失败。007–049 中有 9 个场景由第二轮排名 4–6 的替换车辆挽救。
+完整首次运行实测和缓存命中计时记录在 `delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/`。缓存键覆盖完整参数、路径资产元数据和包内 Python 源码；二进制结果硬链接恢复，文本 manifest 使用独立副本并重写输出路径。
 
-交付 wheel 仅包含通用代码。外部仓库、权重、解释器、数据和输出路径均由调用参数提供，不捆绑场景资产。wheel SHA256 记录于本目录 `dist/SHA256SUMS`。
+默认场景入口仍执行两轮换车合同：首轮排名 1–3，仅在正常完成但无有效角时复用检测/排名并改用排名 4–6。进程失败不触发换车。活动链不含已弃用阴影检测器，也不对 SSISv2 官方 shadow mask 做差集、连通域或形态学后处理。
 
-交付验收：完整测试 `10 passed`；设备解析在本机确认选择 NVIDIA A100-SXM4-80GB；wheel 机器路径和实验产物扫描通过。
-
-交付物：`dist/pbr_vehicle_sun-1.3.0-py3-none-any.whl`（74,875 bytes）。SHA-256：`061edf4958567ae2d4b7722d9330b8603b147e9e1aba6b89deb1f752cc4ab2b9`；同样记录在 `dist/SHA256SUMS`。运行依赖约束 NumPy 为 `>=1.24,<2`，避免 Torch 2.1/2.2 与 NumPy 2 的已知 ABI 不兼容组合。
+交付物：`dist/pbr_vehicle_sun-1.4.0-py3-none-any.whl`（88,519 bytes，SHA-256 `92126fabbdfe60f3f4740036fe8c3736e9c197a42cc47038fb4d1838f3e2c220`）。wheel 不包含权重、模型仓库、场景资产、缓存或机器路径；完整验收见 `delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/verification_summary.json`。

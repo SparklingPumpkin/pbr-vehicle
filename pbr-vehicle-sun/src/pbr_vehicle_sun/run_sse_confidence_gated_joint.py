@@ -17,8 +17,11 @@ line processing, and numerical search remain in fit_sun_camera_visible_arc.py.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
+import csv
 import json
 import math
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -94,19 +97,62 @@ def publication_status(rows: list[dict]) -> dict:
 
 
 def fit_command(geometry: list[Path], shadow: list[Path], masks: list[Path], output: Path,
-                args: argparse.Namespace) -> list[str]:
+                args: argparse.Namespace, top_candidates: int | None = None,
+                refinement_seeds: list[tuple[float, float]] | None = None) -> list[str]:
     command = [sys.executable, str(FIT), "--vehicle-geometry", *map(str, geometry),
                "--shadow-geometry", *map(str, shadow), "--shadow-mask", *map(str, masks),
                "--output-dir", str(output), "--raster-size", str(args.raster_size),
                "--max-vehicle-points", str(args.max_vehicle_points), "--coarse-az-step", str(args.coarse_az_step),
                "--coarse-elev-min", str(args.coarse_elev_min), "--coarse-elev-max", str(args.coarse_elev_max),
                "--local-radius-deg", str(args.local_radius_deg), "--local-basins", str(args.local_basins),
+               "--candidate-workers", str(args.candidate_workers),
                "--visibility-mode", args.visibility_mode, "--distance-percentile", str(args.distance_percentile),
-               "--top-candidates", str(args.top_candidates), "--top-page-size", "25", "--direct-shadow-mask",
+               "--top-candidates", str(args.top_candidates if top_candidates is None else top_candidates),
+               "--top-page-size", "25", "--direct-shadow-mask",
                "--no-observed-floor-subtraction", "--no-predicted-floor-subtraction", "--exclude-image-edge-components"]
     if args.structure_aware:
         command.append("--structure-aware")
+    for azimuth, elevation in refinement_seeds or []:
+        command.extend(["--refinement-seed", str(azimuth), str(elevation)])
     return command
+
+
+def fit_subprocess_environment() -> dict[str, str]:
+    """Bound native pools because concurrency is deliberately per vehicle."""
+    environment = os.environ.copy()
+    for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                 "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+        environment[name] = "1"
+    return environment
+
+
+def combined_coarse_seeds(score_files: list[Path], count: int) -> list[tuple[float, float]]:
+    """Return exact joint coarse-grid seeds by averaging saved per-frame scores."""
+    grids: list[dict[tuple[float, float], float]] = []
+    for path in score_files:
+        with path.open(newline="") as handle:
+            rows = csv.DictReader(handle)
+            grids.append({(float(row["azimuth_deg"]), float(row["elevation_deg"])):
+                          float(row["score"]) for row in rows})
+    common = set.intersection(*(set(grid) for grid in grids))
+    # Preserve the first CSV's elevation-major/azimuth-minor insertion order,
+    # matching Python's stable sort in the original joint coarse search when
+    # two candidates have exactly equal mean scores.
+    ordered = [key for key in grids[0] if key in common]
+    ranked = sorted(ordered, key=lambda key: np.mean([grid[key] for grid in grids]), reverse=True)
+    return ranked[:count]
+
+
+def geometry_uses_subsampling(vehicle_path: Path, shadow_path: Path,
+                              max_points: int) -> bool:
+    """Mirror fitter's height gate to determine whether its seed affects scores."""
+    with np.load(vehicle_path) as vehicle, np.load(shadow_path) as shadow:
+        plane = shadow["plane_z_ax_by_c"].astype(float)
+        normal = np.array((-plane[0], -plane[1], 1.0), dtype=float)
+        normal /= np.linalg.norm(normal)
+        anchor = np.array((0.0, 0.0, plane[2]), dtype=float)
+        height = (vehicle["positions_world"].astype(float) - anchor) @ normal
+        return int(np.count_nonzero((height >= .02) & (height <= 5.0))) > max_points
 
 
 def main() -> None:
@@ -131,6 +177,12 @@ def main() -> None:
     ap.add_argument("--local-radius-deg", type=int, default=5)
     ap.add_argument("--local-basins", type=int, default=3)
     ap.add_argument("--top-candidates", type=int, default=25)
+    ap.add_argument("--per-vehicle-top-candidates", type=int, default=0,
+                    help="candidate sheets for gate fits; 0 writes best-fit evidence only")
+    ap.add_argument("--fit-workers", type=int, default=0,
+                    help="concurrent independent fits; 0 selects min(vehicle count, 3)")
+    ap.add_argument("--candidate-workers", type=int, default=8,
+                    help="angle candidates evaluated concurrently inside each fit")
     args = ap.parse_args()
     groups = (args.vehicle_geometry, args.shadow_geometry, args.shadow_mask)
     validate_vehicle_count(len(args.vehicle_geometry))
@@ -138,25 +190,33 @@ def main() -> None:
         raise ValueError("vehicle geometry, shadow geometry, and shadow mask counts must match")
     if not 0.5 <= args.distance_percentile <= 1.0:
         raise ValueError("distance percentile must be in [0.50, 1.0]")
+    if args.top_candidates < 0 or args.per_vehicle_top_candidates < 0:
+        raise ValueError("candidate visualization counts must be non-negative")
+    if args.fit_workers < 0:
+        raise ValueError("--fit-workers must be non-negative")
+    if args.candidate_workers < 1:
+        raise ValueError("--candidate-workers must be positive")
     for path in (*args.vehicle_geometry, *args.shadow_geometry, *args.shadow_mask):
         if not path.is_file():
             raise FileNotFoundError(path)
 
     out = args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    rows: list[dict] = []
     commands: list[list[str]] = []
-    for index, (vehicle, shadow, mask) in enumerate(zip(*groups), start=1):
+
+    def fit_independent(item: tuple[int, Path, Path, Path]) -> dict:
+        index, vehicle, shadow, mask = item
         vehicle_out = out / f"vehicle_{index:02d}" / "fit"
         vehicle_out.mkdir(parents=True, exist_ok=True)
-        command = fit_command([vehicle], [shadow], [mask], vehicle_out, args)
-        commands.append(command)
-        try:
-            subprocess.run(command, check=True)
-        except subprocess.CalledProcessError as error:
-            if error.returncode != VEHICLE_EVIDENCE_EXIT_CODE:
-                raise
-            rows.append({
+        command = fit_command([vehicle], [shadow], [mask], vehicle_out, args,
+                              top_candidates=args.per_vehicle_top_candidates)
+        completed = subprocess.run(command, check=False, capture_output=True, text=True,
+                                   env=fit_subprocess_environment())
+        if completed.returncode:
+            if completed.returncode != VEHICLE_EVIDENCE_EXIT_CODE:
+                raise subprocess.CalledProcessError(completed.returncode, command,
+                                                    completed.stdout, completed.stderr)
+            return {
                 "vehicle_index": index,
                 "status": "rejected",
                 "gate_reasons": ["unusable_camera_visible_geometry"],
@@ -172,9 +232,8 @@ def main() -> None:
                 },
                 "confidence_terms": {"reason": "per_vehicle_fit_failed"},
                 "failed_command": command,
-                "returncode": error.returncode,
-            })
-            continue
+                "returncode": completed.returncode,
+            }
         fit_path = vehicle_out / "fit_result.json"
         result = json.loads(fit_path.read_text())
         confidence, terms = confidence_from_fit(result)
@@ -183,7 +242,7 @@ def main() -> None:
         support = float(terms.get("support_0p35m", 0.0))
         reasons = gate_confidence(confidence, support, args.min_confidence, args.min_support)
         accepted = not reasons and math.isfinite(confidence)
-        rows.append({
+        return {
             "vehicle_index": index,
             "status": "accepted" if accepted else "rejected",
             "gate_reasons": reasons,
@@ -194,7 +253,22 @@ def main() -> None:
             "fit_result": str(fit_path),
             "inputs": {"vehicle_geometry": str(vehicle.resolve()), "shadow_geometry": str(shadow.resolve()), "shadow_mask": str(mask.resolve())},
             "confidence_terms": terms,
-        })
+        }
+
+    work = [(index, vehicle, shadow, mask)
+            for index, (vehicle, shadow, mask) in enumerate(zip(*groups), start=1)]
+    fit_workers = min(len(work), 3) if args.fit_workers == 0 else min(len(work), args.fit_workers)
+    commands.extend([
+        fit_command([vehicle], [shadow], [mask], out / f"vehicle_{index:02d}" / "fit", args,
+                    top_candidates=args.per_vehicle_top_candidates)
+        for index, vehicle, shadow, mask in work
+    ])
+    if fit_workers == 1:
+        rows = [fit_independent(item) for item in work]
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=fit_workers,
+                                                   thread_name_prefix="sse-vehicle-fit") as executor:
+            rows = list(executor.map(fit_independent, work))
 
     publication = publication_status(rows)
     accepted = [row for row in rows if row["status"] == "accepted"]
@@ -208,6 +282,11 @@ def main() -> None:
             "distance_percentile": args.distance_percentile,
             "structure_aware": args.structure_aware,
             "visibility_mode": args.visibility_mode,
+            "fit_workers": fit_workers,
+            "candidate_workers_per_fit": args.candidate_workers,
+            "parallelism_contract": "vehicle processes and angle threads are bounded; native/OpenCV pools use one thread",
+            "per_vehicle_top_candidates": args.per_vehicle_top_candidates,
+            "joint_top_candidates": args.top_candidates,
             "shadow_mask_contract": "official SSISv2 associated shadow mask; no vehicle subtraction, connected-component cleanup, or morphology",
         },
         "vehicles": rows,
@@ -221,15 +300,35 @@ def main() -> None:
             joint_geometry = [args.vehicle_geometry[i] for i in accepted_indices]
             joint_shadow = [args.shadow_geometry[i] for i in accepted_indices]
             joint_masks = [args.shadow_mask[i] for i in accepted_indices]
-            command = fit_command(joint_geometry, joint_shadow, joint_masks, joint_out, args)
+            score_files = [out / f"vehicle_{index + 1:02d}" / "fit" / "coarse_scores.csv"
+                           for index in accepted_indices]
+            # Independent fits all use the base seed, while the historical
+            # joint fitter uses base+joint-frame-index. Scores are identical
+            # unless a non-first joint frame is actually subsampled. Fail
+            # back to the original full shared coarse scan in that case.
+            can_reuse_coarse = all(
+                joint_index == 0 or not geometry_uses_subsampling(vehicle, shadow, args.max_vehicle_points)
+                for joint_index, (vehicle, shadow) in enumerate(zip(joint_geometry, joint_shadow))
+            )
+            seeds = (combined_coarse_seeds(score_files, args.local_basins)
+                     if can_reuse_coarse else [])
+            if can_reuse_coarse and not seeds:
+                # Defensive only: valid accepted independent fits normally
+                # always share coarse candidates. Never launch an unseeded
+                # refinement or silently publish no result.
+                can_reuse_coarse = False
+            command = fit_command(joint_geometry, joint_shadow, joint_masks, joint_out, args,
+                                  refinement_seeds=seeds or None)
             commands.append(command)
             try:
-                subprocess.run(command, check=True)
+                subprocess.run(command, check=True, env=fit_subprocess_environment())
                 joint_path = joint_out / "fit_result.json"
                 joint = json.loads(joint_path.read_text())
                 result["joint_fit"] = {"fit_result": str(joint_path), "azimuth_deg": joint["best"]["azimuth_deg"],
                                         "elevation_deg": joint["best"]["elevation_deg"], "joint_score": joint["best"]["joint_score"],
-                                        "vehicle_indices": [row["vehicle_index"] for row in accepted]}
+                                        "vehicle_indices": [row["vehicle_index"] for row in accepted],
+                                        "coarse_grid_reused_from_independent_fits": can_reuse_coarse,
+                                        "refinement_seeds": seeds}
             except subprocess.CalledProcessError as error:
                 if error.returncode != VEHICLE_EVIDENCE_EXIT_CODE:
                     raise
@@ -248,8 +347,9 @@ def main() -> None:
         "weighted and shared-angle joint outputs. If none pass, `status` is `no_valid_sun_information`.\n\n"
         "Each shadow input is the official SSISv2 shadow member associated with that vehicle and is consumed "
         "directly without source-mask postprocessing.\n\n"
-        "The `vehicle_XX/fit` and `joint_fit` directories contain the complete candidate visualizations generated "
-        "by the same objective used for selection.\n")
+        "Every `vehicle_XX/fit` directory contains best-fit evidence. Independent candidate sheets are optional; "
+        "the shared `joint_fit` retains the requested candidate sheet. All visualizations are regenerated with "
+        "the exact objective used for selection.\n")
     print(json.dumps(result, indent=2))
 
 

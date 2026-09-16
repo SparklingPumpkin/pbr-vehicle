@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Run the delivered SSE-v8 scene estimator with one disjoint replacement round."""
+"""Run the delivered SSE-v9 scene estimator with one disjoint replacement round."""
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -216,15 +219,141 @@ def execute_round(command: list[str], round_dir: Path, retries: int) -> dict:
 RoundExecutor = Callable[..., dict]
 
 
+def _path_fingerprint(path: Path) -> dict:
+    """Cheap invalidation fingerprint for cache inputs and model assets."""
+    path = path.expanduser().resolve()
+    if not path.exists():
+        return {"path": str(path), "exists": False}
+    if path.is_file():
+        stat = path.stat()
+        return {"path": str(path), "size": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+    # Repository and dataset roots can contain millions of files. Their own
+    # metadata is intentionally cheap; explicit checkpoint/image arguments
+    # still receive file-level size/mtime invalidation above.
+    stat = path.stat()
+    return {"path": str(path), "directory_mtime_ns": stat.st_mtime_ns}
+
+
+def _dataset_fingerprint(path: Path) -> dict:
+    """Fingerprint scene inputs by metadata without reading every image payload."""
+    root = path.expanduser().resolve()
+    if not root.is_dir():
+        return _path_fingerprint(root)
+    files = []
+    for child in sorted(item for item in root.rglob("*") if item.is_file()):
+        stat = child.stat()
+        files.append((str(child.relative_to(root)), stat.st_size, stat.st_mtime_ns))
+    encoded = json.dumps(files, separators=(",", ":")).encode()
+    return {
+        "path": str(root),
+        "file_count": len(files),
+        "metadata_sha256": hashlib.sha256(encoded).hexdigest(),
+    }
+
+
+def cache_key(arguments: list[str]) -> str:
+    """Fingerprint the complete invocation and all path-valued arguments."""
+    source = Path(__file__).resolve().parent
+    payload: dict = {
+        "arguments": arguments,
+        "paths": [],
+        "package_source": [_path_fingerprint(path) for path in sorted(source.glob("*.py"))],
+    }
+    data_root = option_value(arguments, "--data-root")
+    if data_root is not None:
+        payload["dataset"] = _dataset_fingerprint(Path(data_root))
+    seen = set()
+    for token in arguments:
+        candidate = Path(token).expanduser()
+        if not candidate.exists():
+            continue
+        resolved = str(candidate.resolve())
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        payload["paths"].append(_path_fingerprint(candidate))
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _copy_tree_hardlink(source: Path, destination: Path) -> None:
+    """Materialize a cache tree cheaply while retaining standalone outputs."""
+    destination.mkdir(parents=True, exist_ok=True)
+    def link_or_copy(src: str, dst: str) -> str:
+        # Manifests are rewritten when a cache tree is restored. Keep them
+        # private copies; hard-linking them would mutate the cache entry.
+        if Path(src).suffix.lower() in {".json", ".md", ".csv", ".txt"}:
+            return shutil.copy2(src, dst)
+        try:
+            os.link(src, dst)
+            return dst
+        except OSError:
+            return shutil.copy2(src, dst)
+    shutil.copytree(source, destination, dirs_exist_ok=True, copy_function=link_or_copy)
+
+
+def _rewrite_cached_paths(root: Path, old_root: Path, new_root: Path) -> None:
+    old, new = str(old_root.resolve()), str(new_root.resolve())
+    for pattern in ("*.json", "*.md", "*.csv"):
+        for path in root.rglob(pattern):
+            try:
+                value = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            if old in value:
+                path.write_text(value.replace(old, new), encoding="utf-8")
+
+
+def restore_cached_run(cache_entry: Path, output_dir: Path) -> dict | None:
+    result_path = cache_entry / "two_round_result.json"
+    marker = cache_entry / "cache_manifest.json"
+    if not result_path.is_file() or not marker.is_file():
+        return None
+    manifest = json.loads(marker.read_text(encoding="utf-8"))
+    _copy_tree_hardlink(cache_entry, output_dir)
+    _rewrite_cached_paths(output_dir, cache_entry, output_dir)
+    result = json.loads((output_dir / "two_round_result.json").read_text(encoding="utf-8"))
+    result["cache"] = {"hit": True, "entry": str(cache_entry.resolve())}
+    (output_dir / "two_round_result.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
+def store_cached_run(output_dir: Path, cache_entry: Path, key: str) -> None:
+    if cache_entry.exists():
+        return
+    cache_entry.parent.mkdir(parents=True, exist_ok=True)
+    temporary = cache_entry.with_name(cache_entry.name + f".tmp-{os.getpid()}")
+    if temporary.exists():
+        shutil.rmtree(temporary)
+    _copy_tree_hardlink(output_dir, temporary)
+    _rewrite_cached_paths(temporary, output_dir, cache_entry)
+    (temporary / "cache_manifest.json").write_text(json.dumps({
+        "schema_version": 1,
+        "cache_key": key,
+        "source_contract": "complete SSE-v9 audited run; invalidated by invocation and input/model path metadata",
+    }, indent=2) + "\n")
+    try:
+        temporary.rename(cache_entry)
+    except FileExistsError:
+        shutil.rmtree(temporary)
+
+
 def run_two_round(
     output_dir: Path,
     forwarded_arguments: list[str],
     retries: int,
     executor: RoundExecutor = execute_round,
+    cache_dir: Path | None = None,
 ) -> dict:
     output_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     arguments = normalize_forwarded_arguments(forwarded_arguments)
+    key = cache_key(arguments)
+    if cache_dir is not None and executor is execute_round:
+        cache_entry = cache_dir.expanduser().resolve() / "complete-runs" / key
+        cached = restore_cached_run(cache_entry, output_dir)
+        if cached is not None:
+            return cached
     started = time.perf_counter()
     rounds = []
     for round_number in (1, 2):
@@ -245,7 +374,7 @@ def run_two_round(
         status = "no_valid_sun_information"
     result = {
         "schema_version": 1,
-        "mainline": "SSE-v8",
+        "mainline": "SSE-v9",
         "status": status,
         "published_angle": status == "ok",
         "published_round": final_round["round"] if status == "ok" else None,
@@ -264,10 +393,13 @@ def run_two_round(
         },
         "rounds": rounds,
         "total_elapsed_s": time.perf_counter() - started,
+        "cache": {"hit": False, "key": key},
     }
     temporary = output_dir / "two_round_result.json.tmp"
     temporary.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     temporary.replace(output_dir / "two_round_result.json")
+    if cache_dir is not None and executor is execute_round:
+        store_cached_run(output_dir, cache_entry, key)
     return result
 
 
@@ -276,18 +408,21 @@ def main() -> None:
         description=__doc__,
         epilog=(
             "All other scene/model arguments are forwarded to the single-round "
-            "SSE-v8 estimator. Selection ranks and cache arguments are managed here."
+            "SSE-v9 estimator. Selection ranks and cache arguments are managed here."
         ),
     )
     parser.add_argument("--output-dir", type=Path, required=True,
                         help="parent directory containing round-1, optional round-2, and two_round_result.json")
     parser.add_argument("--process-retries", type=int, default=1,
                         help="additional retries for each failed process round")
+    parser.add_argument("--cache-dir", type=Path,
+                        help="optional persistent cache for complete audited SSE-v9 runs")
     owned, forwarded = parser.parse_known_args()
     if owned.process_retries < 0:
         parser.error("--process-retries must be non-negative")
     try:
-        result = run_two_round(owned.output_dir, forwarded, owned.process_retries)
+        result = run_two_round(owned.output_dir, forwarded, owned.process_retries,
+                               cache_dir=owned.cache_dir)
     except ValueError as error:
         parser.error(str(error))
     print(json.dumps(result, indent=2))

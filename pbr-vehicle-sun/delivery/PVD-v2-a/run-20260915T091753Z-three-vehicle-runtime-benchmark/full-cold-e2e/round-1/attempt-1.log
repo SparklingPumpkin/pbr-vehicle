@@ -1,0 +1,2576 @@
+SSE compute device: cuda:2 (explicit CUDA)
+YOLO compute device: cuda:2 (explicit CUDA)
+{
+  "frame_count": 156,
+  "image_count": 468,
+  "raw_yolo_detections": 1116,
+  "matched_eligible_detections": 292,
+  "physical_instances_considered": 17,
+  "elapsed_s": 32.75984609196894
+}
+SAM2 compute device: cuda:2 (explicit CUDA)
+{
+  "detections_evaluated": 292,
+  "physical_instances_segmented": 17,
+  "vehicles_selected": 6,
+  "selected": [
+    {
+      "instance_id": "5",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 15,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+      "bbox_xyxy": [
+        346.74273681640625,
+        713.271484375,
+        1663.6400146484375,
+        1494.81884765625
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.3567371368408203,
+      "yolo_area_ratio": 0.3242242928433341,
+      "oracle_iou": 0.7278036600935399,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.2068951612903226,
+      "vehicle_rank": 1,
+      "mask": "vehicle_01_instance-5_t015_cam1_mask.png",
+      "review": "vehicle_01_instance-5_t015_cam1_review.jpg"
+    },
+    {
+      "instance_id": "38",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 120,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+      "bbox_xyxy": [
+        516.1177368164062,
+        779.5097045898438,
+        1768.2225341796875,
+        1476.40185546875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.7946226000785828,
+      "yolo_area_ratio": 0.274880924067633,
+      "oracle_iou": 0.5958090103413335,
+      "sam2_score": 0.98046875,
+      "mask_area_ratio": 0.1767190650201613,
+      "vehicle_rank": 2,
+      "mask": "vehicle_02_instance-38_t120_cam1_mask.png",
+      "review": "vehicle_02_instance-38_t120_cam1_review.jpg"
+    },
+    {
+      "instance_id": "20",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 76,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+      "bbox_xyxy": [
+        721.027099609375,
+        778.7191772460938,
+        1751.569091796875,
+        1326.2025146484375
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.911637544631958,
+      "yolo_area_ratio": 0.17773581439518416,
+      "oracle_iou": 0.33442005086444515,
+      "sam2_score": 0.98828125,
+      "mask_area_ratio": 0.11419102822580646,
+      "vehicle_rank": 3,
+      "mask": "vehicle_03_instance-20_t076_cam1_mask.png",
+      "review": "vehicle_03_instance-20_t076_cam1_review.jpg"
+    },
+    {
+      "instance_id": "32",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 111,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/111_1.jpg",
+      "bbox_xyxy": [
+        903.966064453125,
+        771.131103515625,
+        1894.218505859375,
+        1312.662841796875
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9060022830963135,
+      "yolo_area_ratio": 0.16893054622353146,
+      "oracle_iou": 0.3739364632734857,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.11387222782258065,
+      "vehicle_rank": 4,
+      "mask": "vehicle_04_instance-32_t111_cam1_mask.png",
+      "review": "vehicle_04_instance-32_t111_cam1_review.jpg"
+    },
+    {
+      "instance_id": "33",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 123,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/123_1.jpg",
+      "bbox_xyxy": [
+        225.45834350585938,
+        710.5263671875,
+        994.2978515625,
+        1078.183349609375
+      ],
+      "yolo_class_id": 7,
+      "yolo_class_name": "truck",
+      "yolo_confidence": 0.8175035715103149,
+      "yolo_area_ratio": 0.08904650122820795,
+      "oracle_iou": 0.7362404502282238,
+      "sam2_score": 0.9765625,
+      "mask_area_ratio": 0.05448053175403226,
+      "vehicle_rank": 5,
+      "mask": "vehicle_05_instance-33_t123_cam1_mask.png",
+      "review": "vehicle_05_instance-33_t123_cam1_review.jpg"
+    },
+    {
+      "instance_id": "19",
+      "oracle_class_name": "REGULAR_VEHICLE",
+      "timestep": 92,
+      "camera": 1,
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/092_1.jpg",
+      "bbox_xyxy": [
+        12.076823234558105,
+        789.6788330078125,
+        894.5850830078125,
+        1114.1793212890625
+      ],
+      "yolo_class_id": 2,
+      "yolo_class_name": "car",
+      "yolo_confidence": 0.9305835962295532,
+      "yolo_area_ratio": 0.09021369745736431,
+      "oracle_iou": 0.7359790988241961,
+      "sam2_score": 0.984375,
+      "mask_area_ratio": 0.0538218245967742,
+      "vehicle_rank": 6,
+      "mask": "vehicle_06_instance-19_t092_cam1_mask.png",
+      "review": "vehicle_06_instance-19_t092_cam1_review.jpg"
+    }
+  ],
+  "elapsed_s": 17.830181742087007
+}
+SSISv2 compute device: cuda:0 (explicit CUDA)
+SSISv2 compute device: cuda:2 (explicit CUDA)
+/mnt/data/fjn/projects/repos/shadowdetect/SSIS/adet/modeling/MEInst/MaskEncoding.py:10: FutureWarning: Decorating classes is deprecated and will be disabled in future versions. You should only decorate functions or methods. To preserve the current behavior of class decoration, you can directly decorate the `__init__` method and nothing else.
+  class PCAMaskEncoding(nn.Module):
+/mnt/data/fjn/projects/repos/shadowdetect/SSIS/adet/modeling/MEInst/MaskEncoding.py:10: FutureWarning: Decorating classes is deprecated and will be disabled in future versions. You should only decorate functions or methods. To preserve the current behavior of class decoration, you can directly decorate the `__init__` method and nothing else.
+  class PCAMaskEncoding(nn.Module):
+Config '/mnt/data/fjn/projects/repos/shadowdetect/SSIS/configs/SSIS/MS_R_101_BiFPN_SSISv2_demo.yaml' has no VERSION. Assuming it to be compatible with latest v2.
+Config '/mnt/data/fjn/projects/repos/shadowdetect/SSIS/configs/SSIS/MS_R_101_BiFPN_SSISv2_demo.yaml' has no VERSION. Assuming it to be compatible with latest v2.
+/root/miniconda3/envs/drivestudio/lib/python3.9/site-packages/torch/functional.py:554: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4322.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+/root/miniconda3/envs/drivestudio/lib/python3.9/site-packages/torch/functional.py:554: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4322.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+/src/51sim-ai/drivestudio/third_party/detectron2/detectron2/structures/boxes.py:148: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:253.)
+  tensor = torch.as_tensor(tensor, dtype=torch.float32, device=torch.device("cpu"))
+/src/51sim-ai/drivestudio/third_party/detectron2/detectron2/structures/boxes.py:148: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:253.)
+  tensor = torch.as_tensor(tensor, dtype=torch.float32, device=torch.device("cpu"))
+{
+  "method": "official SSISv2 instance shadow association",
+  "binding_contract": "select SSIS association member maximizing IoU with preselected YOLO/SAM2 vehicle; use the opposite-class paired member as shadow",
+  "source_image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+  "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+  "weights": "/mnt/data/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+  "confidence_threshold": 0.1,
+  "minimum_object_iou": 0.05,
+  "official_object_class": 0,
+  "instances": 4,
+  "candidates": [
+    {
+      "association_id": 2,
+      "object_index": 2,
+      "shadow_index": 3,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.866601288318634,
+      "shadow_score": 0.8191300630569458,
+      "object_vehicle_iou": 0.9650060549768382,
+      "object_vehicle_intersection_pixels": 656621,
+      "shadow_pixels": 123021
+    },
+    {
+      "association_id": 1,
+      "object_index": 0,
+      "shadow_index": 1,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.7858604192733765,
+      "shadow_score": 0.7428605556488037,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 1634
+    }
+  ],
+  "selected": {
+    "association_id": 2,
+    "object_index": 2,
+    "shadow_index": 3,
+    "object_class": 0,
+    "shadow_class": 1,
+    "object_score": 0.866601288318634,
+    "shadow_score": 0.8191300630569458,
+    "object_vehicle_iou": 0.9650060549768382,
+    "object_vehicle_intersection_pixels": 656621,
+    "shadow_pixels": 123021
+  },
+  "accepted": true,
+  "files": {
+    "target_vehicle": "01_sam2_target_vehicle.png",
+    "all_pairs": "02_all_ssisv2_pairs.jpg",
+    "associated_object": "03_associated_object_mask.png",
+    "associated_shadow": "04_associated_shadow_mask.png",
+    "review": "05_target_association_review.jpg"
+  }
+}
+{
+  "method": "official SSISv2 instance shadow association",
+  "binding_contract": "select SSIS association member maximizing IoU with preselected YOLO/SAM2 vehicle; use the opposite-class paired member as shadow",
+  "source_image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+  "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+  "weights": "/mnt/data/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+  "confidence_threshold": 0.1,
+  "minimum_object_iou": 0.05,
+  "official_object_class": 0,
+  "instances": 4,
+  "candidates": [
+    {
+      "association_id": 1,
+      "object_index": 0,
+      "shadow_index": 1,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.8227923512458801,
+      "shadow_score": 0.7252049446105957,
+      "object_vehicle_iou": 0.9424432480435144,
+      "object_vehicle_intersection_pixels": 560340,
+      "shadow_pixels": 124054
+    },
+    {
+      "association_id": 2,
+      "object_index": 2,
+      "shadow_index": 3,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.7488324046134949,
+      "shadow_score": 0.6171869039535522,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 20078
+    }
+  ],
+  "selected": {
+    "association_id": 1,
+    "object_index": 0,
+    "shadow_index": 1,
+    "object_class": 0,
+    "shadow_class": 1,
+    "object_score": 0.8227923512458801,
+    "shadow_score": 0.7252049446105957,
+    "object_vehicle_iou": 0.9424432480435144,
+    "object_vehicle_intersection_pixels": 560340,
+    "shadow_pixels": 124054
+  },
+  "accepted": true,
+  "files": {
+    "target_vehicle": "01_sam2_target_vehicle.png",
+    "all_pairs": "02_all_ssisv2_pairs.jpg",
+    "associated_object": "03_associated_object_mask.png",
+    "associated_shadow": "04_associated_shadow_mask.png",
+    "review": "05_target_association_review.jpg"
+  }
+}
+SSISv2 compute device: cuda:0 (explicit CUDA)
+/mnt/data/fjn/projects/repos/shadowdetect/SSIS/adet/modeling/MEInst/MaskEncoding.py:10: FutureWarning: Decorating classes is deprecated and will be disabled in future versions. You should only decorate functions or methods. To preserve the current behavior of class decoration, you can directly decorate the `__init__` method and nothing else.
+  class PCAMaskEncoding(nn.Module):
+Config '/mnt/data/fjn/projects/repos/shadowdetect/SSIS/configs/SSIS/MS_R_101_BiFPN_SSISv2_demo.yaml' has no VERSION. Assuming it to be compatible with latest v2.
+/root/miniconda3/envs/drivestudio/lib/python3.9/site-packages/torch/functional.py:554: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4322.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+/src/51sim-ai/drivestudio/third_party/detectron2/detectron2/structures/boxes.py:148: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:253.)
+  tensor = torch.as_tensor(tensor, dtype=torch.float32, device=torch.device("cpu"))
+{
+  "method": "official SSISv2 instance shadow association",
+  "binding_contract": "select SSIS association member maximizing IoU with preselected YOLO/SAM2 vehicle; use the opposite-class paired member as shadow",
+  "source_image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+  "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+  "weights": "/mnt/data/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+  "confidence_threshold": 0.1,
+  "minimum_object_iou": 0.05,
+  "official_object_class": 0,
+  "instances": 8,
+  "candidates": [
+    {
+      "association_id": 1,
+      "object_index": 0,
+      "shadow_index": 1,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.8232139348983765,
+      "shadow_score": 0.7350560426712036,
+      "object_vehicle_iou": 0.9747408435895016,
+      "object_vehicle_intersection_pixels": 361546,
+      "shadow_pixels": 75023
+    },
+    {
+      "association_id": 4,
+      "object_index": 6,
+      "shadow_index": 7,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.0035349305253475904,
+      "shadow_score": 0.0033324738033115864,
+      "object_vehicle_iou": 0.0032310694519978246,
+      "object_vehicle_intersection_pixels": 1414,
+      "shadow_pixels": 412752
+    },
+    {
+      "association_id": 3,
+      "object_index": 4,
+      "shadow_index": 5,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.7834063768386841,
+      "shadow_score": 0.6133682727813721,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 1745
+    },
+    {
+      "association_id": 2,
+      "object_index": 2,
+      "shadow_index": 3,
+      "object_class": 0,
+      "shadow_class": 1,
+      "object_score": 0.6280297040939331,
+      "shadow_score": 0.5611357092857361,
+      "object_vehicle_iou": 0.0,
+      "object_vehicle_intersection_pixels": 0,
+      "shadow_pixels": 1088
+    }
+  ],
+  "selected": {
+    "association_id": 1,
+    "object_index": 0,
+    "shadow_index": 1,
+    "object_class": 0,
+    "shadow_class": 1,
+    "object_score": 0.8232139348983765,
+    "shadow_score": 0.7350560426712036,
+    "object_vehicle_iou": 0.9747408435895016,
+    "object_vehicle_intersection_pixels": 361546,
+    "shadow_pixels": 75023
+  },
+  "accepted": true,
+  "files": {
+    "target_vehicle": "01_sam2_target_vehicle.png",
+    "all_pairs": "02_all_ssisv2_pairs.jpg",
+    "associated_object": "03_associated_object_mask.png",
+    "associated_shadow": "04_associated_shadow_mask.png",
+    "review": "05_target_association_review.jpg"
+  }
+}
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:211: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_fwd")
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:344: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_bwd")
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:211: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_fwd")
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:344: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_bwd")
+/mnt/data/why/InfiniDepth/InfiniDepth/utils/io_utils.py:130: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  org_img = torch.from_numpy(image).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+/mnt/data/why/InfiniDepth/InfiniDepth/utils/io_utils.py:130: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  org_img = torch.from_numpy(image).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+[INFO] using MLP layer as FFN
+[INFO] using MLP layer as FFN
+[INFO] using base=100 for rope new
+[INFO] using min_period=None for rope new
+[INFO] using max_period=None for rope new
+[INFO] using normalize_coords=separate for rope new
+[INFO] using shift_coords=None for rope new
+[INFO] using rescale_coords=2 for rope new
+[INFO] using jitter_coords=None for rope new
+[INFO] using dtype=fp32 for rope new
+[INFO] using mlp layer as FFN
+[INFO] using base=100 for rope new
+[INFO] using min_period=None for rope new
+[INFO] using max_period=None for rope new
+[INFO] using normalize_coords=separate for rope new
+[INFO] using shift_coords=None for rope new
+[INFO] using rescale_coords=2 for rope new
+[INFO] using jitter_coords=None for rope new
+[INFO] using dtype=fp32 for rope new
+[INFO] using mlp layer as FFN
+/mnt/data/why/InfiniDepth/InfiniDepth/model/model.py:93: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(model_path, map_location="cpu")
+/mnt/data/why/InfiniDepth/InfiniDepth/model/model.py:93: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(model_path, map_location="cpu")
+/mnt/data/why/InfiniDepth/InfiniDepth/gs/predictor.py:72: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(checkpoint_path, map_location="cpu")
+/mnt/data/why/InfiniDepth/InfiniDepth/gs/predictor.py:72: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(checkpoint_path, map_location="cpu")
+{
+  "model": "InfiniDepth",
+  "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+  "device": "cuda:2",
+  "uses_lidar": false,
+  "single_shared_depth_forward": true,
+  "mode": "direct_vehicle_masks",
+  "sample_points_requested": 0,
+  "gaussians_generated": 786432,
+  "vehicle_geometries": [
+    {
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+      "timestep": 120,
+      "camera": 1,
+      "dense_gaussians": 786432,
+      "mask_visible_selected": 139001,
+      "min_opacity": 0.02,
+      "selection_contract": "same-frame vehicle mask resized by nearest neighbor to the dense InfiniDepth source grid; one surface Gaussian per pixel; opacity gate; no 3D-uniform resampling, PLY serialization, or PLY reprojection",
+      "geometry_relation_to_legacy_ply": "same InfiniDepth dense depth, DINO features, Gaussian predictor, camera intrinsics, and world transform; dense source-pixel sampling replaces legacy 3D-uniform resampling, so a regression gate is required",
+      "output": "visible_infinidepth_vehicle_gaussians.npz"
+    }
+  ],
+  "depth_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/depth/depth_manifest.json",
+  "ply": null,
+  "elapsed_s": 16.678288098890334
+}
+{
+  "model": "InfiniDepth",
+  "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+  "device": "cuda:0",
+  "uses_lidar": false,
+  "single_shared_depth_forward": true,
+  "mode": "direct_vehicle_masks",
+  "sample_points_requested": 0,
+  "gaussians_generated": 786432,
+  "vehicle_geometries": [
+    {
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+      "timestep": 15,
+      "camera": 1,
+      "dense_gaussians": 786432,
+      "mask_visible_selected": 162689,
+      "min_opacity": 0.02,
+      "selection_contract": "same-frame vehicle mask resized by nearest neighbor to the dense InfiniDepth source grid; one surface Gaussian per pixel; opacity gate; no 3D-uniform resampling, PLY serialization, or PLY reprojection",
+      "geometry_relation_to_legacy_ply": "same InfiniDepth dense depth, DINO features, Gaussian predictor, camera intrinsics, and world transform; dense source-pixel sampling replaces legacy 3D-uniform resampling, so a regression gate is required",
+      "output": "visible_infinidepth_vehicle_gaussians.npz"
+    }
+  ],
+  "depth_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/depth/depth_manifest.json",
+  "ply": null,
+  "elapsed_s": 17.22137715597637
+}
+{
+  "timestep": 120,
+  "camera": 1,
+  "depth_semantics": "same-frame InfiniDepth metric camera-z; one depth value per retained source-view shadow pixel",
+  "source_shadow_contract": "official SSISv2 associated shadow mask, unchanged before geometric lifting",
+  "shadow_pixels": 124054,
+  "lifted_shadow_points": 124054,
+  "near_ground_shadow_points": 123770,
+  "near_ground_fraction": 0.9977106743837361,
+  "road_pixels_with_valid_depth": 668034,
+  "road_plane_fit_points": 300000,
+  "road_residual_gate_m": 0.2,
+  "plane_z_ax_by_c": [
+    0.008238448038830207,
+    -0.08511045574929321,
+    -1.5543850604034397
+  ],
+  "shadow_residual_abs_quantiles_m": {
+    "0.5": 0.005740738261201583,
+    "0.9": 0.015828337102126454,
+    "0.99": 0.13351764157134885
+  },
+  "output_npz": "infinidepth_shadow_geometry.npz",
+  "review": "01_source_shadow_depth_lift_review.jpg"
+}
+{
+  "timestep": 15,
+  "camera": 1,
+  "depth_semantics": "same-frame InfiniDepth metric camera-z; one depth value per retained source-view shadow pixel",
+  "source_shadow_contract": "official SSISv2 associated shadow mask, unchanged before geometric lifting",
+  "shadow_pixels": 123021,
+  "lifted_shadow_points": 123021,
+  "near_ground_shadow_points": 122961,
+  "near_ground_fraction": 0.9995122783914941,
+  "road_pixels_with_valid_depth": 689470,
+  "road_plane_fit_points": 300000,
+  "road_residual_gate_m": 0.2,
+  "plane_z_ax_by_c": [
+    0.01645034550703055,
+    -0.06573227098803597,
+    -0.31802341715050303
+  ],
+  "shadow_residual_abs_quantiles_m": {
+    "0.5": 0.00910466298867027,
+    "0.9": 0.022190123844606696,
+    "0.99": 0.03428107072120717
+  },
+  "output_npz": "infinidepth_shadow_geometry.npz",
+  "review": "01_source_shadow_depth_lift_review.jpg"
+}
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:211: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_fwd")
+/mnt/fjn/.conda/envs/flashdepth-py311-torch24/lib/python3.11/site-packages/xformers/ops/fmha/flash.py:344: FutureWarning: `torch.library.impl_abstract` was renamed to `torch.library.register_fake`. Please use that instead; we will remove `torch.library.impl_abstract` in a future version of PyTorch.
+  @torch.library.impl_abstract("xformers_flash::flash_bwd")
+/mnt/data/why/InfiniDepth/InfiniDepth/utils/io_utils.py:130: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  org_img = torch.from_numpy(image).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+[INFO] using MLP layer as FFN
+[INFO] using base=100 for rope new
+[INFO] using min_period=None for rope new
+[INFO] using max_period=None for rope new
+[INFO] using normalize_coords=separate for rope new
+[INFO] using shift_coords=None for rope new
+[INFO] using rescale_coords=2 for rope new
+[INFO] using jitter_coords=None for rope new
+[INFO] using dtype=fp32 for rope new
+[INFO] using mlp layer as FFN
+/mnt/data/why/InfiniDepth/InfiniDepth/model/model.py:93: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(model_path, map_location="cpu")
+/mnt/data/why/InfiniDepth/InfiniDepth/gs/predictor.py:72: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(checkpoint_path, map_location="cpu")
+{
+  "model": "InfiniDepth",
+  "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+  "device": "cuda:0",
+  "uses_lidar": false,
+  "single_shared_depth_forward": true,
+  "mode": "direct_vehicle_masks",
+  "sample_points_requested": 0,
+  "gaussians_generated": 786432,
+  "vehicle_geometries": [
+    {
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+      "timestep": 76,
+      "camera": 1,
+      "dense_gaussians": 786432,
+      "mask_visible_selected": 89833,
+      "min_opacity": 0.02,
+      "selection_contract": "same-frame vehicle mask resized by nearest neighbor to the dense InfiniDepth source grid; one surface Gaussian per pixel; opacity gate; no 3D-uniform resampling, PLY serialization, or PLY reprojection",
+      "geometry_relation_to_legacy_ply": "same InfiniDepth dense depth, DINO features, Gaussian predictor, camera intrinsics, and world transform; dense source-pixel sampling replaces legacy 3D-uniform resampling, so a regression gate is required",
+      "output": "visible_infinidepth_vehicle_gaussians.npz"
+    }
+  ],
+  "depth_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/depth/depth_manifest.json",
+  "ply": null,
+  "elapsed_s": 19.569088032003492
+}
+{
+  "timestep": 76,
+  "camera": 1,
+  "depth_semantics": "same-frame InfiniDepth metric camera-z; one depth value per retained source-view shadow pixel",
+  "source_shadow_contract": "official SSISv2 associated shadow mask, unchanged before geometric lifting",
+  "shadow_pixels": 75023,
+  "lifted_shadow_points": 75023,
+  "near_ground_shadow_points": 74993,
+  "near_ground_fraction": 0.9996001226290604,
+  "road_pixels_with_valid_depth": 901503,
+  "road_plane_fit_points": 300000,
+  "road_residual_gate_m": 0.2,
+  "plane_z_ax_by_c": [
+    0.012837771445900587,
+    -0.07086944163844255,
+    -1.6721660211591292
+  ],
+  "shadow_residual_abs_quantiles_m": {
+    "0.5": 0.011473306917444193,
+    "0.9": 0.01988897564902432,
+    "0.99": 0.07631026852264003
+  },
+  "output_npz": "infinidepth_shadow_geometry.npz",
+  "review": "01_source_shadow_depth_lift_review.jpg"
+}
+{
+  "best": {
+    "azimuth_deg": 166.0,
+    "elevation_deg": 70.0,
+    "joint_score": -0.13044595502871104,
+    "frames": [
+      {
+        "score": -0.17091885490137257,
+        "distance_percentile": 0.95,
+        "pred_to_observed_tail_m": 0.3176833108602535,
+        "observed_to_predicted_tail_m": 0.09708416203245562,
+        "pred_to_observed_p90_m": 0.3176833108602535,
+        "pred_to_observed_median_m": 0.06436067796666389,
+        "observed_to_predicted_p90_m": 0.09708416203245562,
+        "pred_boundary_support_0p35m": 0.9651567944250871,
+        "observed_boundary_points_used": 222,
+        "structure_valid": false,
+        "structure_penalty_m": 0.0,
+        "tangent_p80_rad": 0.0,
+        "curvature_log_p80": 0.0,
+        "bump_support": 0.0,
+        "predicted_bump_count": 0,
+        "observed_bump_count": 0,
+        "distance_only_score": -0.17091885490137257,
+        "azimuth_deg": 166.0,
+        "elevation_deg": 70.0,
+        "iou_diagnostic": 0.3812237338841798,
+        "arc_audit": {
+          "valid": true,
+          "operator": "maximal_camera_cone_middle_arc",
+          "input_components": 2,
+          "contract_components": 1,
+          "retained_components": 1,
+          "component_gate": {
+            "max_components": 2,
+            "min_relative_area": 0.5,
+            "components": [
+              {
+                "rank": 1,
+                "area_pixels": 11896.5,
+                "relative_to_largest": 1.0,
+                "contour_points": 573,
+                "retained": true
+              },
+              {
+                "rank": 2,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.0001681166729710419,
+                "contour_points": 4,
+                "retained": false
+              }
+            ]
+          },
+          "selected_points": 287,
+          "components": [
+            {
+              "valid": true,
+              "operator": "maximal_camera_cone_middle_arc",
+              "input_points": 573,
+              "selected_points": 287,
+              "left_angle_deg": 23.76541024251448,
+              "right_angle_deg": 67.06738160741985,
+              "maximal_cone_span_deg": 43.30197136490536,
+              "left_hit_count": 1,
+              "right_hit_count": 1,
+              "left_hits_xy": [
+                [
+                  23.470166730266925,
+                  2.2869156233594072
+                ]
+              ],
+              "right_hits_xy": [
+                [
+                  20.111054723943973,
+                  3.6771062674393353
+                ]
+              ],
+              "selected_left_hit_xy": [
+                23.470166730266925,
+                2.2869156233594072
+              ],
+              "selected_right_hit_xy": [
+                20.111054723943973,
+                3.6771062674393353
+              ],
+              "left_numeric_fallback": false,
+              "right_numeric_fallback": false,
+              "hit_contract_1_or_2_each": true,
+              "selected_median_camera_distance_m": 3.735363961258711,
+              "alternate_median_camera_distance_m": 4.5708647851996,
+              "scored_arc_length_m": 5.065053134925874
+            }
+          ]
+        }
+      },
+      {
+        "score": -0.08997305515604948,
+        "distance_percentile": 0.95,
+        "pred_to_observed_tail_m": 0.12089658540427584,
+        "observed_to_predicted_tail_m": 0.11589095756761367,
+        "pred_to_observed_p90_m": 0.12089658540427584,
+        "pred_to_observed_median_m": 0.05056672640974291,
+        "observed_to_predicted_p90_m": 0.11589095756761367,
+        "pred_boundary_support_0p35m": 1.0,
+        "observed_boundary_points_used": 246,
+        "structure_valid": false,
+        "structure_penalty_m": 0.0,
+        "tangent_p80_rad": 0.0,
+        "curvature_log_p80": 0.0,
+        "bump_support": 0.0,
+        "predicted_bump_count": 0,
+        "observed_bump_count": 0,
+        "distance_only_score": -0.08997305515604948,
+        "azimuth_deg": 166.0,
+        "elevation_deg": 70.0,
+        "iou_diagnostic": 0.4312738794147796,
+        "arc_audit": {
+          "valid": true,
+          "operator": "maximal_camera_cone_middle_arc",
+          "input_components": 22,
+          "contract_components": 1,
+          "retained_components": 1,
+          "component_gate": {
+            "max_components": 2,
+            "min_relative_area": 0.5,
+            "components": [
+              {
+                "rank": 1,
+                "area_pixels": 9251.0,
+                "relative_to_largest": 1.0,
+                "contour_points": 492,
+                "retained": true
+              },
+              {
+                "rank": 2,
+                "area_pixels": 52.0,
+                "relative_to_largest": 0.005621013944438439,
+                "contour_points": 44,
+                "retained": false
+              },
+              {
+                "rank": 3,
+                "area_pixels": 29.5,
+                "relative_to_largest": 0.00318884444924873,
+                "contour_points": 41,
+                "retained": false
+              },
+              {
+                "rank": 4,
+                "area_pixels": 14.0,
+                "relative_to_largest": 0.0015133499081180413,
+                "contour_points": 16,
+                "retained": false
+              },
+              {
+                "rank": 5,
+                "area_pixels": 5.0,
+                "relative_to_largest": 0.0005404821100421576,
+                "contour_points": 12,
+                "retained": false
+              },
+              {
+                "rank": 6,
+                "area_pixels": 2.5,
+                "relative_to_largest": 0.0002702410550210788,
+                "contour_points": 5,
+                "retained": false
+              },
+              {
+                "rank": 7,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 8,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 9,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 10,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 11,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 12,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 13,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 14,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 15,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 16,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 17,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 18,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 19,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 20,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 21,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 22,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              }
+            ]
+          },
+          "selected_points": 246,
+          "components": [
+            {
+              "valid": true,
+              "operator": "maximal_camera_cone_middle_arc",
+              "input_points": 492,
+              "selected_points": 246,
+              "left_angle_deg": 21.5757936899254,
+              "right_angle_deg": 55.34698273902279,
+              "maximal_cone_span_deg": 33.771189049097394,
+              "left_hit_count": 1,
+              "right_hit_count": 1,
+              "left_hits_xy": [
+                [
+                  103.74457235825572,
+                  2.730886455746422
+                ]
+              ],
+              "right_hits_xy": [
+                [
+                  100.19642708436842,
+                  4.180465946159074
+                ]
+              ],
+              "selected_left_hit_xy": [
+                103.74457235825572,
+                2.730886455746422
+              ],
+              "selected_right_hit_xy": [
+                100.19642708436842,
+                4.180465946159074
+              ],
+              "left_numeric_fallback": false,
+              "right_numeric_fallback": false,
+              "hit_contract_1_or_2_each": true,
+              "selected_median_camera_distance_m": 4.84447203410226,
+              "alternate_median_camera_distance_m": 5.7737256038947535,
+              "scored_arc_length_m": 5.277902727877808
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "objective": "per-connected-component maximal camera cone boundary intersections and complete intervening near contour arcs, identically applied to observed shadow and candidate projection; mean bidirectional robust contour distance across frames; IoU diagnostic only",
+  "visibility_mode": "camera_cone_middle",
+  "angular_bins": null,
+  "observed_floor_subtraction": false,
+  "contact_exclusion_m": 0.0,
+  "predicted_floor_subtraction": false,
+  "exclude_image_edge_components": true,
+  "direct_shadow_mask": true,
+  "distance_percentile": 0.95,
+  "structure_aware": false,
+  "structure_objective": null,
+  "visualization": "gray=observed mask; green=scored observed camera-facing edge; blue=vehicle floor; pale-red=rejected full candidate contour; red=scored candidate camera-facing edge; purple=legacy side rays when ray_arc is selected",
+  "top25_same_objective": true,
+  "candidate_visualization": {
+    "requested": 25,
+    "page_size": 25,
+    "pages": [
+      "top25_camera_visible_arc_candidates.jpg"
+    ]
+  },
+  "execution_mode": "multi_frame_shared_angle",
+  "frame_count": 2,
+  "camera_contract": [
+    {
+      "camera_xy": [
+        18.619142104091384,
+        0.15085618122128006
+      ],
+      "left_angle_deg": 25.98730121728784,
+      "right_angle_deg": 67.91360847131232,
+      "observed_arc": {
+        "valid": true,
+        "operator": "maximal_camera_cone_middle_arc",
+        "input_components": 1,
+        "contract_components": 1,
+        "retained_components": 2,
+        "component_gate": {
+          "max_components": 0,
+          "min_relative_area": 0.0,
+          "components": [
+            {
+              "rank": 1,
+              "area_pixels": 6896.0,
+              "relative_to_largest": 1.0,
+              "contour_points": 610,
+              "retained": true
+            }
+          ]
+        },
+        "selected_points": 222,
+        "components": [
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 610,
+            "selected_points": 222,
+            "left_angle_deg": 24.888684672663928,
+            "right_angle_deg": 68.37472245253714,
+            "maximal_cone_span_deg": 43.48603777987322,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                23.334248903421486,
+                2.3384041657327383
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                20.0528042267245,
+                3.7672112165926657
+              ]
+            ],
+            "selected_left_hit_xy": [
+              23.334248903421486,
+              2.3384041657327383
+            ],
+            "selected_right_hit_xy": [
+              20.0528042267245,
+              3.7672112165926657
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 3.678844516515873,
+            "alternate_median_camera_distance_m": 4.195179570258489,
+            "scored_arc_length_m": 3.888472095581069,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 275,
+            "points_after_image_edge_trim": 222,
+            "image_edge_points_removed": 53
+          }
+        ]
+      }
+    },
+    {
+      "camera_xy": [
+        97.48291284446945,
+        0.2547796799087121
+      ],
+      "left_angle_deg": 22.948063075894837,
+      "right_angle_deg": 56.18020769418342,
+      "observed_arc": {
+        "valid": true,
+        "operator": "maximal_camera_cone_middle_arc",
+        "input_components": 1,
+        "contract_components": 1,
+        "retained_components": 1,
+        "component_gate": {
+          "max_components": 0,
+          "min_relative_area": 0.0,
+          "components": [
+            {
+              "rank": 1,
+              "area_pixels": 5342.5,
+              "relative_to_largest": 1.0,
+              "contour_points": 541,
+              "retained": true
+            }
+          ]
+        },
+        "selected_points": 246,
+        "components": [
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 541,
+            "selected_points": 246,
+            "left_angle_deg": 22.217978416542003,
+            "right_angle_deg": 56.569549769590466,
+            "maximal_cone_span_deg": 34.35157135304846,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                103.54498918659957,
+                2.730886455746422
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                100.08554754455945,
+                4.197321521628989
+              ]
+            ],
+            "selected_left_hit_xy": [
+              103.54498918659957,
+              2.730886455746422
+            ],
+            "selected_right_hit_xy": [
+              100.08554754455945,
+              4.197321521628989
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 4.739087836737278,
+            "alternate_median_camera_distance_m": 5.3115372505632745,
+            "scored_arc_length_m": 5.217225762569855,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 246,
+            "points_after_image_edge_trim": 246,
+            "image_edge_points_removed": 0
+          }
+        ]
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png"
+    },
+    {
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+    }
+  ],
+  "search": {
+    "coarse_az_step": 5,
+    "coarse_elevation": [
+      20,
+      70,
+      5
+    ],
+    "local_radius_deg": 5,
+    "local_basins": 3,
+    "candidate_workers": 4,
+    "external_refinement_seeds": [
+      [
+        165.0,
+        70.0
+      ],
+      [
+        160.0,
+        70.0
+      ],
+      [
+        170.0,
+        70.0
+      ]
+    ],
+    "fixed_angle": null,
+    "full_projection_canvas": true,
+    "frame_canvas_bounds": [
+      {
+        "lo": [
+          15.64518327045103,
+          -2.141099020747035
+        ],
+        "hi": [
+          33.100915603886484,
+          9.430950877659045
+        ],
+        "max_projection_shift_m": 3.7464856571294587
+      },
+      {
+        "lo": [
+          95.93865275570367,
+          -1.3987295343826416
+        ],
+        "hi": [
+          115.87479401335791,
+          13.75443281307054
+        ],
+        "max_projection_shift_m": 3.428280800152231
+      }
+    ]
+  }
+}
+{
+  "status": "ok",
+  "accepted_vehicle_indices": [
+    1,
+    3
+  ],
+  "rejected_vehicle_indices": [
+    2
+  ],
+  "contract": {
+    "vehicle_count": 3,
+    "allowed_vehicle_count": "1..5",
+    "hard_gate": {
+      "min_confidence": 0.5,
+      "min_support_0p35m": 0.75
+    },
+    "all_rejected_behavior": "publish no_valid_sun_information and no solar angle",
+    "distance_percentile": 0.95,
+    "structure_aware": false,
+    "visibility_mode": "camera_cone_middle",
+    "fit_workers": 3,
+    "candidate_workers_per_fit": 4,
+    "parallelism_contract": "vehicle processes and angle threads are bounded; native/OpenCV pools use one thread",
+    "per_vehicle_top_candidates": 0,
+    "joint_top_candidates": 25,
+    "shadow_mask_contract": "official SSISv2 associated shadow mask; no vehicle subtraction, connected-component cleanup, or morphology"
+  },
+  "vehicles": [
+    {
+      "vehicle_index": 1,
+      "status": "accepted",
+      "gate_reasons": [],
+      "match_confidence": 0.5981886578612611,
+      "azimuth_deg": 166.0,
+      "elevation_deg": 70.0,
+      "joint_score": -0.17091885490137257,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 0.9651567944250871,
+        "pred_to_observed_tail_m": 0.3176833108602535,
+        "pred_to_observed_median_m": 0.06436067796666389,
+        "observed_to_predicted_tail_m": 0.09708416203245562,
+        "robust_distance_term_m": 0.16743453434388128,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    },
+    {
+      "vehicle_index": 2,
+      "status": "rejected",
+      "gate_reasons": [
+        "confidence<0.5"
+      ],
+      "match_confidence": 0.4956777941582679,
+      "azimuth_deg": 148.0,
+      "elevation_deg": 51.0,
+      "joint_score": -0.24503089998682542,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 0.9975669099756691,
+        "pred_to_observed_tail_m": 0.29695683070743506,
+        "pred_to_observed_median_m": 0.13979340204847573,
+        "observed_to_predicted_tail_m": 0.3642260327571975,
+        "robust_distance_term_m": 0.24478759098439234,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    },
+    {
+      "vehicle_index": 3,
+      "status": "accepted",
+      "gate_reasons": [],
+      "match_confidence": 0.7779200068664259,
+      "azimuth_deg": 167.0,
+      "elevation_deg": 70.0,
+      "joint_score": -0.08789605265970572,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 1.0,
+        "pred_to_observed_tail_m": 0.11570407916341532,
+        "pred_to_observed_median_m": 0.05056672640974469,
+        "observed_to_predicted_tail_m": 0.11589095756761367,
+        "robust_distance_term_m": 0.08789605265970572,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    }
+  ],
+  "commands": [
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "25",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components",
+      "--refinement-seed",
+      "165.0",
+      "70.0",
+      "--refinement-seed",
+      "160.0",
+      "70.0",
+      "--refinement-seed",
+      "170.0",
+      "70.0"
+    ]
+  ],
+  "weighted_angle": {
+    "valid": true,
+    "method": "circular azimuth mean and arithmetic elevation mean weighted by gated boundary confidence",
+    "weighted_azimuth_deg": 166.5653058288049,
+    "weighted_elevation_deg": 70.0,
+    "weight_sum": 1.376108664727687
+  },
+  "joint_fit": {
+    "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit/fit_result.json",
+    "azimuth_deg": 166.0,
+    "elevation_deg": 70.0,
+    "joint_score": -0.13044595502871104,
+    "vehicle_indices": [
+      1,
+      3
+    ],
+    "coarse_grid_reused_from_independent_fits": true,
+    "refinement_seeds": [
+      [
+        165.0,
+        70.0
+      ],
+      [
+        160.0,
+        70.0
+      ],
+      [
+        170.0,
+        70.0
+      ]
+    ]
+  }
+}
+{
+  "status": "ok",
+  "accepted_vehicle_indices": [
+    1,
+    3
+  ],
+  "rejected_vehicle_indices": [
+    2
+  ],
+  "contract": {
+    "vehicle_count": 3,
+    "allowed_vehicle_count": "1..5",
+    "hard_gate": {
+      "min_confidence": 0.5,
+      "min_support_0p35m": 0.75
+    },
+    "all_rejected_behavior": "publish no_valid_sun_information and no solar angle",
+    "distance_percentile": 0.95,
+    "structure_aware": false,
+    "visibility_mode": "camera_cone_middle",
+    "fit_workers": 3,
+    "candidate_workers_per_fit": 4,
+    "parallelism_contract": "vehicle processes and angle threads are bounded; native/OpenCV pools use one thread",
+    "per_vehicle_top_candidates": 0,
+    "joint_top_candidates": 25,
+    "shadow_mask_contract": "official SSISv2 associated shadow mask; no vehicle subtraction, connected-component cleanup, or morphology"
+  },
+  "vehicles": [
+    {
+      "vehicle_index": 1,
+      "status": "accepted",
+      "gate_reasons": [],
+      "match_confidence": 0.5981886578612611,
+      "azimuth_deg": 166.0,
+      "elevation_deg": 70.0,
+      "joint_score": -0.17091885490137257,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 0.9651567944250871,
+        "pred_to_observed_tail_m": 0.3176833108602535,
+        "pred_to_observed_median_m": 0.06436067796666389,
+        "observed_to_predicted_tail_m": 0.09708416203245562,
+        "robust_distance_term_m": 0.16743453434388128,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    },
+    {
+      "vehicle_index": 2,
+      "status": "rejected",
+      "gate_reasons": [
+        "confidence<0.5"
+      ],
+      "match_confidence": 0.4956777941582679,
+      "azimuth_deg": 148.0,
+      "elevation_deg": 51.0,
+      "joint_score": -0.24503089998682542,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 0.9975669099756691,
+        "pred_to_observed_tail_m": 0.29695683070743506,
+        "pred_to_observed_median_m": 0.13979340204847573,
+        "observed_to_predicted_tail_m": 0.3642260327571975,
+        "robust_distance_term_m": 0.24478759098439234,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    },
+    {
+      "vehicle_index": 3,
+      "status": "accepted",
+      "gate_reasons": [],
+      "match_confidence": 0.7779200068664259,
+      "azimuth_deg": 167.0,
+      "elevation_deg": 70.0,
+      "joint_score": -0.08789605265970572,
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit/fit_result.json",
+      "inputs": {
+        "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+      },
+      "confidence_terms": {
+        "support_0p35m": 1.0,
+        "pred_to_observed_tail_m": 0.11570407916341532,
+        "pred_to_observed_median_m": 0.05056672640974469,
+        "observed_to_predicted_tail_m": 0.11589095756761367,
+        "robust_distance_term_m": 0.08789605265970572,
+        "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+      }
+    }
+  ],
+  "commands": [
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "0",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components"
+    ],
+    [
+      "/root/miniconda3/envs/openemma/bin/python",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+      "--vehicle-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "--shadow-geometry",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "--shadow-mask",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "--output-dir",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit",
+      "--raster-size",
+      "900",
+      "--max-vehicle-points",
+      "100000",
+      "--coarse-az-step",
+      "5",
+      "--coarse-elev-min",
+      "20",
+      "--coarse-elev-max",
+      "70",
+      "--local-radius-deg",
+      "5",
+      "--local-basins",
+      "3",
+      "--candidate-workers",
+      "4",
+      "--visibility-mode",
+      "camera_cone_middle",
+      "--distance-percentile",
+      "0.95",
+      "--top-candidates",
+      "25",
+      "--top-page-size",
+      "25",
+      "--direct-shadow-mask",
+      "--no-observed-floor-subtraction",
+      "--no-predicted-floor-subtraction",
+      "--exclude-image-edge-components",
+      "--refinement-seed",
+      "165.0",
+      "70.0",
+      "--refinement-seed",
+      "160.0",
+      "70.0",
+      "--refinement-seed",
+      "170.0",
+      "70.0"
+    ]
+  ],
+  "weighted_angle": {
+    "valid": true,
+    "method": "circular azimuth mean and arithmetic elevation mean weighted by gated boundary confidence",
+    "weighted_azimuth_deg": 166.5653058288049,
+    "weighted_elevation_deg": 70.0,
+    "weight_sum": 1.376108664727687
+  },
+  "joint_fit": {
+    "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit/fit_result.json",
+    "azimuth_deg": 166.0,
+    "elevation_deg": 70.0,
+    "joint_score": -0.13044595502871104,
+    "vehicle_indices": [
+      1,
+      3
+    ],
+    "coarse_grid_reused_from_independent_fits": true,
+    "refinement_seeds": [
+      [
+        165.0,
+        70.0
+      ],
+      [
+        160.0,
+        70.0
+      ],
+      [
+        170.0,
+        70.0
+      ]
+    ]
+  }
+}
+
+{
+  "scene": "argoverse_002",
+  "mainline": "SSE-v8",
+  "compute_device": {
+    "requested": "cuda:2",
+    "torch": "cuda:2",
+    "ultralytics": "2",
+    "name": "explicit CUDA"
+  },
+  "protocol_basis": "SSE-v6-b official SSISv2 associated raw shadow mask",
+  "status": "ok",
+  "selection_contract": "all eligible YOLO observations were segmented by SAM2; group by physical instance; each instance represented by its maximum mask-area observation; rank instances globally; no same-frame requirement and no small-vehicle substitution",
+  "vehicles_requested": 3,
+  "selection_pool_size": 6,
+  "vehicle_rank_offset": 0,
+  "vehicles_selected": 3,
+  "vehicles_prepared": 3,
+  "uses_lidar": false,
+  "geometry_mode": "direct_dense",
+  "preparation_workers": 2,
+  "worker_devices": [
+    "cuda:0",
+    "cuda:2"
+  ],
+  "shadow_detector": "SSISv2 object-shadow association",
+  "source_mask_postprocessing": "none",
+  "prepared_vehicle_inputs": [
+    {
+      "vehicle_rank": 1,
+      "instance_id": "5",
+      "timestep": 15,
+      "camera": 1,
+      "mask_area_ratio": 0.2068951612903226,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+      "worker_device": "cuda:0",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    },
+    {
+      "vehicle_rank": 2,
+      "instance_id": "38",
+      "timestep": 120,
+      "camera": 1,
+      "mask_area_ratio": 0.1767190650201613,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+      "worker_device": "cuda:2",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    },
+    {
+      "vehicle_rank": 3,
+      "instance_id": "20",
+      "timestep": 76,
+      "camera": 1,
+      "mask_area_ratio": 0.11419102822580646,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+      "worker_device": "cuda:0",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    }
+  ],
+  "vehicle_preparation_results": [
+    {
+      "vehicle_rank": 1,
+      "instance_id": "5",
+      "timestep": 15,
+      "camera": 1,
+      "mask_area_ratio": 0.2068951612903226,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+      "worker_device": "cuda:0",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    },
+    {
+      "vehicle_rank": 2,
+      "instance_id": "38",
+      "timestep": 120,
+      "camera": 1,
+      "mask_area_ratio": 0.1767190650201613,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+      "worker_device": "cuda:2",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    },
+    {
+      "vehicle_rank": 3,
+      "instance_id": "20",
+      "timestep": 76,
+      "camera": 1,
+      "mask_area_ratio": 0.11419102822580646,
+      "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+      "image": "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+      "worker_device": "cuda:0",
+      "vehicle_dir": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20",
+      "status": "prepared",
+      "association_manifest": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/ssisv2_association_manifest.json",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    }
+  ],
+  "aggregate_result": {
+    "status": "ok",
+    "accepted_vehicle_indices": [
+      1,
+      3
+    ],
+    "rejected_vehicle_indices": [
+      2
+    ],
+    "contract": {
+      "vehicle_count": 3,
+      "allowed_vehicle_count": "1..5",
+      "hard_gate": {
+        "min_confidence": 0.5,
+        "min_support_0p35m": 0.75
+      },
+      "all_rejected_behavior": "publish no_valid_sun_information and no solar angle",
+      "distance_percentile": 0.95,
+      "structure_aware": false,
+      "visibility_mode": "camera_cone_middle",
+      "fit_workers": 3,
+      "candidate_workers_per_fit": 4,
+      "parallelism_contract": "vehicle processes and angle threads are bounded; native/OpenCV pools use one thread",
+      "per_vehicle_top_candidates": 0,
+      "joint_top_candidates": 25,
+      "shadow_mask_contract": "official SSISv2 associated shadow mask; no vehicle subtraction, connected-component cleanup, or morphology"
+    },
+    "vehicles": [
+      {
+        "vehicle_index": 1,
+        "status": "accepted",
+        "gate_reasons": [],
+        "match_confidence": 0.5981886578612611,
+        "azimuth_deg": 166.0,
+        "elevation_deg": 70.0,
+        "joint_score": -0.17091885490137257,
+        "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit/fit_result.json",
+        "inputs": {
+          "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+          "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+          "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png"
+        },
+        "confidence_terms": {
+          "support_0p35m": 0.9651567944250871,
+          "pred_to_observed_tail_m": 0.3176833108602535,
+          "pred_to_observed_median_m": 0.06436067796666389,
+          "observed_to_predicted_tail_m": 0.09708416203245562,
+          "robust_distance_term_m": 0.16743453434388128,
+          "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+        }
+      },
+      {
+        "vehicle_index": 2,
+        "status": "rejected",
+        "gate_reasons": [
+          "confidence<0.5"
+        ],
+        "match_confidence": 0.4956777941582679,
+        "azimuth_deg": 148.0,
+        "elevation_deg": 51.0,
+        "joint_score": -0.24503089998682542,
+        "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit/fit_result.json",
+        "inputs": {
+          "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+          "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+          "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png"
+        },
+        "confidence_terms": {
+          "support_0p35m": 0.9975669099756691,
+          "pred_to_observed_tail_m": 0.29695683070743506,
+          "pred_to_observed_median_m": 0.13979340204847573,
+          "observed_to_predicted_tail_m": 0.3642260327571975,
+          "robust_distance_term_m": 0.24478759098439234,
+          "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+        }
+      },
+      {
+        "vehicle_index": 3,
+        "status": "accepted",
+        "gate_reasons": [],
+        "match_confidence": 0.7779200068664259,
+        "azimuth_deg": 167.0,
+        "elevation_deg": 70.0,
+        "joint_score": -0.08789605265970572,
+        "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit/fit_result.json",
+        "inputs": {
+          "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+          "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+          "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+        },
+        "confidence_terms": {
+          "support_0p35m": 1.0,
+          "pred_to_observed_tail_m": 0.11570407916341532,
+          "pred_to_observed_median_m": 0.05056672640974469,
+          "observed_to_predicted_tail_m": 0.11589095756761367,
+          "robust_distance_term_m": 0.08789605265970572,
+          "confidence_formula": "support_0p35m * exp(-(0.40*tail + 0.25*median + 0.25*reverse)/0.35m)"
+        }
+      }
+    ],
+    "commands": [
+      [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+        "--vehicle-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "--shadow-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_01/fit",
+        "--raster-size",
+        "900",
+        "--max-vehicle-points",
+        "100000",
+        "--coarse-az-step",
+        "5",
+        "--coarse-elev-min",
+        "20",
+        "--coarse-elev-max",
+        "70",
+        "--local-radius-deg",
+        "5",
+        "--local-basins",
+        "3",
+        "--candidate-workers",
+        "4",
+        "--visibility-mode",
+        "camera_cone_middle",
+        "--distance-percentile",
+        "0.95",
+        "--top-candidates",
+        "0",
+        "--top-page-size",
+        "25",
+        "--direct-shadow-mask",
+        "--no-observed-floor-subtraction",
+        "--no-predicted-floor-subtraction",
+        "--exclude-image-edge-components"
+      ],
+      [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+        "--vehicle-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "--shadow-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_02/fit",
+        "--raster-size",
+        "900",
+        "--max-vehicle-points",
+        "100000",
+        "--coarse-az-step",
+        "5",
+        "--coarse-elev-min",
+        "20",
+        "--coarse-elev-max",
+        "70",
+        "--local-radius-deg",
+        "5",
+        "--local-basins",
+        "3",
+        "--candidate-workers",
+        "4",
+        "--visibility-mode",
+        "camera_cone_middle",
+        "--distance-percentile",
+        "0.95",
+        "--top-candidates",
+        "0",
+        "--top-page-size",
+        "25",
+        "--direct-shadow-mask",
+        "--no-observed-floor-subtraction",
+        "--no-predicted-floor-subtraction",
+        "--exclude-image-edge-components"
+      ],
+      [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+        "--vehicle-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "--shadow-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/vehicle_03/fit",
+        "--raster-size",
+        "900",
+        "--max-vehicle-points",
+        "100000",
+        "--coarse-az-step",
+        "5",
+        "--coarse-elev-min",
+        "20",
+        "--coarse-elev-max",
+        "70",
+        "--local-radius-deg",
+        "5",
+        "--local-basins",
+        "3",
+        "--candidate-workers",
+        "4",
+        "--visibility-mode",
+        "camera_cone_middle",
+        "--distance-percentile",
+        "0.95",
+        "--top-candidates",
+        "0",
+        "--top-page-size",
+        "25",
+        "--direct-shadow-mask",
+        "--no-observed-floor-subtraction",
+        "--no-predicted-floor-subtraction",
+        "--exclude-image-edge-components"
+      ],
+      [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/fit_sun_camera_visible_arc.py",
+        "--vehicle-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "--shadow-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit",
+        "--raster-size",
+        "900",
+        "--max-vehicle-points",
+        "100000",
+        "--coarse-az-step",
+        "5",
+        "--coarse-elev-min",
+        "20",
+        "--coarse-elev-max",
+        "70",
+        "--local-radius-deg",
+        "5",
+        "--local-basins",
+        "3",
+        "--candidate-workers",
+        "4",
+        "--visibility-mode",
+        "camera_cone_middle",
+        "--distance-percentile",
+        "0.95",
+        "--top-candidates",
+        "25",
+        "--top-page-size",
+        "25",
+        "--direct-shadow-mask",
+        "--no-observed-floor-subtraction",
+        "--no-predicted-floor-subtraction",
+        "--exclude-image-edge-components",
+        "--refinement-seed",
+        "165.0",
+        "70.0",
+        "--refinement-seed",
+        "160.0",
+        "70.0",
+        "--refinement-seed",
+        "170.0",
+        "70.0"
+      ]
+    ],
+    "weighted_angle": {
+      "valid": true,
+      "method": "circular azimuth mean and arithmetic elevation mean weighted by gated boundary confidence",
+      "weighted_azimuth_deg": 166.5653058288049,
+      "weighted_elevation_deg": 70.0,
+      "weight_sum": 1.376108664727687
+    },
+    "joint_fit": {
+      "fit_result": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit/joint_fit/fit_result.json",
+      "azimuth_deg": 166.0,
+      "elevation_deg": 70.0,
+      "joint_score": -0.13044595502871104,
+      "vehicle_indices": [
+        1,
+        3
+      ],
+      "coarse_grid_reused_from_independent_fits": true,
+      "refinement_seeds": [
+        [
+          165.0,
+          70.0
+        ],
+        [
+          160.0,
+          70.0
+        ],
+        [
+          170.0,
+          70.0
+        ]
+      ]
+    }
+  },
+  "timings": [
+    {
+      "stage": "all_frame_all_camera_yolo_identity",
+      "elapsed_s": 35.87462570006028,
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/detect_sse_scene_all_vehicle_views.py",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--output",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/all_vehicle_detections.json",
+        "--weights",
+        "/mnt/fjn/yolo11n.pt",
+        "--device",
+        "2",
+        "--batch",
+        "16",
+        "--cameras",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "stage": "all_candidate_sam2_global_mask_ranking",
+      "elapsed_s": 21.179381906054914,
+      "command": [
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/rank_sse_scene_vehicles_by_sam2_mask.py",
+        "--detections",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/all_vehicle_detections.json",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking",
+        "--checkpoint",
+        "/mnt/fjn/projects/tools/sam2/checkpoints/sam2.1_hiera_tiny.pt",
+        "--config",
+        "configs/sam2.1/sam2.1_hiera_t.yaml",
+        "--device",
+        "cuda:2",
+        "--top-vehicles",
+        "6",
+        "--min-mask-area-ratio",
+        "0.01",
+        "--image-batch-size",
+        "16"
+      ]
+    },
+    {
+      "stage": "vehicle1_ssisv2_association",
+      "elapsed_s": 6.859269567066804,
+      "command": [
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_ssisv2_vehicle_shadow_association.py",
+        "--ssis-root",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS",
+        "--weights",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association",
+        "--device",
+        "cuda:0",
+        "--confidence-threshold",
+        "0.1",
+        "--minimum-object-iou",
+        "0.05"
+      ]
+    },
+    {
+      "stage": "vehicle2_ssisv2_association",
+      "elapsed_s": 6.9019181879702955,
+      "command": [
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_ssisv2_vehicle_shadow_association.py",
+        "--ssis-root",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS",
+        "--weights",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association",
+        "--device",
+        "cuda:2",
+        "--confidence-threshold",
+        "0.1",
+        "--minimum-object-iou",
+        "0.05"
+      ]
+    },
+    {
+      "stage": "vehicle3_ssisv2_association",
+      "elapsed_s": 7.282891167094931,
+      "command": [
+        "/root/miniconda3/envs/drivestudio/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_ssisv2_vehicle_shadow_association.py",
+        "--ssis-root",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS",
+        "--weights",
+        "/mnt/fjn/projects/repos/shadowdetect/SSIS/tools/output/model_ssisv2_final.pth",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association",
+        "--device",
+        "cuda:0",
+        "--confidence-threshold",
+        "0.1",
+        "--minimum-object-iou",
+        "0.05"
+      ]
+    },
+    {
+      "stage": "view_t120_cam1_joint_depth_gaussian",
+      "elapsed_s": 19.512659625848755,
+      "command": [
+        "/mnt/fjn/.conda/envs/flashdepth-py311-torch24/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/infer_infinidepth_depth_and_gaussians.py",
+        "--image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1",
+        "--infinidepth-root",
+        "/mnt/data/why/InfiniDepth",
+        "--depth-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/depth/infinidepth.ckpt",
+        "--gs-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/gs/infinidepth_gs.ckpt",
+        "--moge2-pretrained",
+        "/mnt/data/why/InfiniDepth/checkpoints/moge-2-vitl-normal/model.pt",
+        "--sky-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/sky/skyseg.onnx",
+        "--fx",
+        "1685.163734218117",
+        "--fy",
+        "1685.163734218117",
+        "--cx",
+        "1023.7149520634225",
+        "--cy",
+        "772.525917210749",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "120",
+        "--camera",
+        "1",
+        "--device",
+        "cuda:2",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+        "--vehicle-output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry"
+      ]
+    },
+    {
+      "stage": "vehicle2_shadow_depth_lift",
+      "elapsed_s": 1.7502045531291515,
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/lift_source_shadow_with_infinidepth.py",
+        "--depth",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/depth/predicted_depth_original.npy",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+        "--road-mask",
+        "/mnt/data/dataset/argoverse/processed/training/002/road_masks/120_1.png",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_02_instance-38_t120_cam1_mask.png",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/120_1.jpg",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "120",
+        "--camera",
+        "1",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry"
+      ]
+    },
+    {
+      "stage": "view_t015_cam1_joint_depth_gaussian",
+      "elapsed_s": 22.379501666873693,
+      "command": [
+        "/mnt/fjn/.conda/envs/flashdepth-py311-torch24/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/infer_infinidepth_depth_and_gaussians.py",
+        "--image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1",
+        "--infinidepth-root",
+        "/mnt/data/why/InfiniDepth",
+        "--depth-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/depth/infinidepth.ckpt",
+        "--gs-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/gs/infinidepth_gs.ckpt",
+        "--moge2-pretrained",
+        "/mnt/data/why/InfiniDepth/checkpoints/moge-2-vitl-normal/model.pt",
+        "--sky-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/sky/skyseg.onnx",
+        "--fx",
+        "1685.163734218117",
+        "--fy",
+        "1685.163734218117",
+        "--cx",
+        "1023.7149520634225",
+        "--cy",
+        "772.525917210749",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "15",
+        "--camera",
+        "1",
+        "--device",
+        "cuda:0",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+        "--vehicle-output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry"
+      ]
+    },
+    {
+      "stage": "vehicle1_shadow_depth_lift",
+      "elapsed_s": 1.6144970650784671,
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/lift_source_shadow_with_infinidepth.py",
+        "--depth",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/depth/predicted_depth_original.npy",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+        "--road-mask",
+        "/mnt/data/dataset/argoverse/processed/training/002/road_masks/015_1.png",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_01_instance-5_t015_cam1_mask.png",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "15",
+        "--camera",
+        "1",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry"
+      ]
+    },
+    {
+      "stage": "view_t076_cam1_joint_depth_gaussian",
+      "elapsed_s": 22.576811014907435,
+      "command": [
+        "/mnt/fjn/.conda/envs/flashdepth-py311-torch24/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/infer_infinidepth_depth_and_gaussians.py",
+        "--image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1",
+        "--infinidepth-root",
+        "/mnt/data/why/InfiniDepth",
+        "--depth-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/depth/infinidepth.ckpt",
+        "--gs-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/gs/infinidepth_gs.ckpt",
+        "--moge2-pretrained",
+        "/mnt/data/why/InfiniDepth/checkpoints/moge-2-vitl-normal/model.pt",
+        "--sky-checkpoint",
+        "/mnt/data/why/InfiniDepth/checkpoints/sky/skyseg.onnx",
+        "--fx",
+        "1685.163734218117",
+        "--fy",
+        "1685.163734218117",
+        "--cx",
+        "1023.7149520634225",
+        "--cy",
+        "772.525917210749",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "76",
+        "--camera",
+        "1",
+        "--device",
+        "cuda:0",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+        "--vehicle-output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry"
+      ]
+    },
+    {
+      "stage": "vehicle3_shadow_depth_lift",
+      "elapsed_s": 1.5032796759624034,
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/lift_source_shadow_with_infinidepth.py",
+        "--depth",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/depth/predicted_depth_original.npy",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+        "--road-mask",
+        "/mnt/data/dataset/argoverse/processed/training/002/road_masks/076_1.png",
+        "--vehicle-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+        "--source-image",
+        "/mnt/data/dataset/argoverse/processed/training/002/images/076_1.jpg",
+        "--data-root",
+        "/mnt/data/dataset/argoverse/processed/training/002",
+        "--timestep",
+        "76",
+        "--camera",
+        "1",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry"
+      ]
+    },
+    {
+      "stage": "confidence_gated_one_to_five_vehicle_joint_fit",
+      "elapsed_s": 35.759839101927355,
+      "command": [
+        "/root/miniconda3/envs/openemma/bin/python",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_sse_mainline.py",
+        "--geometry-source",
+        "feedforward_infinidepth",
+        "--aggregation-mode",
+        "vehicles",
+        "--vehicle-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+        "--shadow-geometry",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+        "--shadow-mask",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+        "--output-dir",
+        "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/confidence_gated_joint_fit",
+        "--min-vehicle-confidence",
+        "0.5",
+        "--min-vehicle-support",
+        "0.75",
+        "--fit-workers",
+        "3",
+        "--per-vehicle-top-candidates",
+        "0"
+      ]
+    }
+  ],
+  "total_elapsed_s": 152.31214410997927,
+  "contract_checks": {
+    "all_frames_all_cameras": true,
+    "physical_vehicle_deduplication": true,
+    "global_max_sam_mask_ranking": true,
+    "top_vehicle_count_between_one_and_five": true,
+    "selected_vehicle_rank_range": [
+      1,
+      3
+    ],
+    "official_ssisv2_pair_binding": true,
+    "direct_ssisv2_shadow_mask": true,
+    "shadow_vehicle_subtraction": false,
+    "connected_component_cleanup": false,
+    "source_mask_morphology": false,
+    "legacy_detector_probability_gate": false,
+    "confidence_gate_before_joint_fit": true
+  }
+}

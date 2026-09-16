@@ -17,8 +17,16 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+try:
+    from .dataset_adapter import resolve_view_image
+except ImportError:
+    from dataset_adapter import resolve_view_image
 
-VEHICLE_CLASSES = {"REGULAR_VEHICLE", "BOX_TRUCK", "SCHOOL_BUS", "TRUCK", "TRUCK_CAB", "VEHICULAR_TRAILER"}
+
+VEHICLE_CLASSES = {
+    "REGULAR_VEHICLE", "BOX_TRUCK", "SCHOOL_BUS", "TRUCK", "TRUCK_CAB",
+    "VEHICULAR_TRAILER", "VEHICLE", "CAR", "BUS",
+}
 EDGES = ((0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7))
 
 
@@ -96,7 +104,7 @@ def load_annotations(data_root: Path) -> tuple[dict[str, dict], dict[int, set[st
     annotations: dict[str, dict] = {}
     present: dict[int, set[str]] = defaultdict(set)
     for instance_id, instance in info.items():
-        if instance["class_name"] not in VEHICLE_CLASSES:
+        if str(instance["class_name"]).upper() not in VEHICLE_CLASSES:
             continue
         per_frame = {}
         frames = instance["frame_annotations"]["frame_idx"]
@@ -140,8 +148,8 @@ def main() -> None:
     records: list[dict] = []
     for timestep in sampled:
         for camera in range(7):
-            image_path = data_root / "images" / f"{timestep:03d}_{camera}.jpg"
-            image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+            image_path = resolve_view_image(data_root, timestep, camera)
+            image = cv2.imread(str(image_path), cv2.IMREAD_COLOR) if image_path else None
             if image is None:
                 continue
             height, width = image.shape[:2]
@@ -195,7 +203,8 @@ def main() -> None:
     for instance_rank, item in enumerate(selected, start=1):
         for view_rank, view in enumerate(item["top_views"], start=1):
             timestep, camera = view["timestep"], view["camera"]
-            image = cv2.imread(str(data_root / "images" / f"{timestep:03d}_{camera}.jpg"), cv2.IMREAD_COLOR)
+            image_path = resolve_view_image(data_root, timestep, camera)
+            image = cv2.imread(str(image_path), cv2.IMREAD_COLOR) if image_path else None
             fine_mask_path = data_root / "fine_dynamic_masks" / "vehicle" / f"{timestep:03d}_{camera}.png"
             road_mask_path = data_root / "road_masks" / f"{timestep:03d}_{camera}.png"
             fine_mask = cv2.imread(str(fine_mask_path), cv2.IMREAD_GRAYSCALE) if fine_mask_path.exists() else None

@@ -1,16 +1,16 @@
 {
   "schema_version": 2,
   "package": "pbr-vehicle-sun",
-  "package_version": "1.3.0",
+  "package_version": "1.4.0",
   "scope_id": "scene-sun-estimation",
-  "mainline_version_id": "SSE-v8",
+  "mainline_version_id": "SSE-v9",
   "protocol_basis": "SSE-v6-b",
   "aggregation_basis": "SSE-v7",
   "source_contract": {
     "vehicle_selection": "all-frame/all-camera YOLO plus SAM2.1, physical-vehicle deduplication, global maximum mask-area observation",
     "shadow": "official SSISv2 object-shadow association bound to selected vehicle by object-mask IoU",
     "source_shadow_postprocessing": "none",
-    "geometry": "same-frame pure-RGB InfiniDepth depth and visible Gaussian geometry",
+    "geometry": "one shared same-frame pure-RGB InfiniDepth dense forward for depth and source-visible Gaussian geometry; legacy 2M-point PLY remains optional",
     "fit": "P95 robust bidirectional maximal-camera-cone visible contour",
     "aggregation": "one-to-five vehicle confidence gate, circular weighted azimuth, and shared-angle joint fit",
     "replacement": "round 1 uses global ranks 1-3; only a completed no-angle result triggers round 2 with cached detection/ranking and disjoint ranks 4-6"
@@ -28,6 +28,12 @@
     "round_1_physical_vehicle_ranks": [1, 3],
     "round_2_physical_vehicle_ranks": [4, 6],
     "process_retries": 1,
+    "geometry_mode": "direct_dense",
+    "sam2_image_batch_size": 4,
+    "yolo_batch_size": 16,
+    "fit_workers": "up to three vehicles",
+    "candidate_workers_per_fit": 8,
+    "per_vehicle_top_candidate_sheets": 0,
     "all_rejected_behavior": "no_valid_sun_information"
   },
   "upstream_protocol_evidence": "SSE-v6-b/run-20260909T060843Z-ssisv2-raw-fullcanvas-weighted-joint/report.md",

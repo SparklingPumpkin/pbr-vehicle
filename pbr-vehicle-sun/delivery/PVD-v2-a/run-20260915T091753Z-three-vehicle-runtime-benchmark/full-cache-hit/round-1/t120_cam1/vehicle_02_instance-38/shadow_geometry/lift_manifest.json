@@ -1,0 +1,25 @@
+{
+  "timestep": 120,
+  "camera": 1,
+  "depth_semantics": "same-frame InfiniDepth metric camera-z; one depth value per retained source-view shadow pixel",
+  "source_shadow_contract": "official SSISv2 associated shadow mask, unchanged before geometric lifting",
+  "shadow_pixels": 124054,
+  "lifted_shadow_points": 124054,
+  "near_ground_shadow_points": 123770,
+  "near_ground_fraction": 0.9977106743837361,
+  "road_pixels_with_valid_depth": 668034,
+  "road_plane_fit_points": 300000,
+  "road_residual_gate_m": 0.2,
+  "plane_z_ax_by_c": [
+    0.008238448038830207,
+    -0.08511045574929321,
+    -1.5543850604034397
+  ],
+  "shadow_residual_abs_quantiles_m": {
+    "0.5": 0.005740738261201583,
+    "0.9": 0.015828337102126454,
+    "0.99": 0.13351764157134885
+  },
+  "output_npz": "infinidepth_shadow_geometry.npz",
+  "review": "01_source_shadow_depth_lift_review.jpg"
+}

@@ -44,6 +44,56 @@ def test_scene_display_indices_keep_full_scene_when_limit_is_disabled():
     np.testing.assert_array_equal(values[_scene_display_indices(12, 12, 7)], values)
 
 
+def test_projection_uses_gaussian_nodes_instead_of_glb(monkeypatch):
+    calls = []
+
+    class _Scene:
+        def add_gaussian_splats(self, name, **kwargs):
+            calls.append((name, kwargs))
+            return SimpleNamespace(buffer=None, wxyz=None, position=None, visible=True)
+
+        def add_glb(self, *_args, **_kwargs):
+            raise AssertionError("Projection must share the Gaussian render channel")
+
+    rgba = np.zeros((16, 16, 4), dtype=np.uint8)
+    rgba[2:14, 2:14, :3] = 64
+    rgba[2:14, 2:14, 3] = 128
+    result = {
+        "ground_z": -0.02,
+        "extension": {"rgba": rgba, "center_xy": np.array([0.0, 0.0]), "size_xy": np.array([4.0, 2.0])},
+        "contact": {"rgba": rgba, "center_xy": np.array([0.0, 0.0]), "size_xy": np.array([3.0, 1.5])},
+    }
+    monkeypatch.setattr(viewer_module, "build_projection_masks", lambda *_args: result)
+
+    controller = object.__new__(VehicleController)
+    controller.server = SimpleNamespace(scene=_Scene(), atomic=nullcontext)
+    controller.vehicle_id = "vehicle_001"
+    controller.asset = SimpleNamespace(proxy=object())
+    controller.handles = {
+        "projection_visible": _Handle(True),
+        "projection_opacity": _Handle(1.0),
+    }
+    controller.contact_handle = None
+    controller.extension_handle = None
+    controller.projection = lambda: {}
+
+    controller._update_projection(
+        quaternion=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32),
+        position=np.array([6.0, 0.0, 0.0], dtype=np.float32),
+        scale=1.0,
+        lighting=SimpleNamespace(sun_enabled=True, visibility=1.0),
+        local_sun=np.array([0.5, 0.5, 0.7], dtype=np.float32),
+    )
+
+    assert [name for name, _ in calls] == [
+        "/vehicles/vehicle_001/projection/extension",
+        "/vehicles/vehicle_001/projection/contact",
+    ]
+    assert all(kwargs["centers"].shape[1] == 3 for _, kwargs in calls)
+    assert calls[0][1]["centers"][:, 2].min() == pytest.approx(0.01)
+    assert calls[1][1]["centers"][:, 2].min() == pytest.approx(0.012)
+
+
 def test_scene_only_cubemap_capture_hides_and_restores_vehicle_nodes():
     class _Client:
         client_id = 7
@@ -195,8 +245,46 @@ def test_advanced_panel_has_no_nested_priority_folders():
 
 def test_auto_fit_button_is_not_bound_as_a_normal_slider_update():
     source = inspect.getsource(VehicleController._build_gui)
-    assert 'key not in {"config_path", "auto_fit"}' in source
+    assert '"auto_fit_progress", "auto_fit_status"' in source
+    assert '"auto_fit_stage", "auto_fit_result"' in source
     assert 'self.handles["auto_fit"].on_click(self._auto_fit_event)' in source
+
+
+def test_both_estimators_expose_progress_status_stage_and_result():
+    scene_source = inspect.getsource(StandaloneViewer._build_gui)
+    vehicle_source = inspect.getsource(VehicleController._build_gui)
+    for key in (
+        "sun_inference_progress", "sun_inference_status",
+        "sun_inference_stage", "sun_inference_result",
+    ):
+        assert key in scene_source
+    for key in (
+        "auto_fit_progress", "auto_fit_status", "auto_fit_stage", "auto_fit_result",
+    ):
+        assert key in vehicle_source
+
+
+def test_config_panel_exposes_reset_vehicle():
+    source = inspect.getsource(VehicleController._build_gui)
+    assert 'add_button("Reset vehicle")' in source
+    assert "reset_button.on_click" in source
+
+
+def test_reset_restores_the_vehicle_initial_state():
+    controller = object.__new__(VehicleController)
+    initial = SimpleNamespace(value=1)
+    controller.initial_state = initial
+    applied = []
+    notifications = []
+    controller.apply_state = lambda state: applied.append(state)
+    controller.app = SimpleNamespace(_notify=lambda *args: notifications.append(args))
+
+    controller._reset_event(None)
+
+    assert len(applied) == 1
+    assert applied[0].value == 1
+    assert applied[0] is not initial
+    assert notifications[-1][1] == "Vehicle reset"
 
 
 def test_auto_fit_applies_only_its_three_output_controls(monkeypatch, tmp_path):
@@ -208,6 +296,10 @@ def test_auto_fit_applies_only_its_three_output_controls(monkeypatch, tmp_path):
     controller.server = SimpleNamespace(atomic=nullcontext)
     controller.handles = {
         "auto_fit": _Handle(True),
+        "auto_fit_progress": _Handle(0.0),
+        "auto_fit_status": _Handle("等待启动"),
+        "auto_fit_stage": _Handle("尚未执行"),
+        "auto_fit_result": _Handle("尚无结果"),
         "use_scene_lighting": _Handle(True),
         "light_sun_enabled": _Handle(False),
         "light_sun_intensity": _Handle(-0.2),
@@ -261,6 +353,10 @@ def test_auto_fit_applies_only_its_three_output_controls(monkeypatch, tmp_path):
     assert controller.handles["roughness"].value == 0.3
     assert updates == [True]
     assert controller.handles["auto_fit"].disabled is False
+    assert controller.handles["auto_fit_progress"].value == pytest.approx(100.0)
+    assert controller.handles["auto_fit_status"].value == "成功"
+    assert controller.handles["auto_fit_stage"].value == "网格最优参数已回填面板"
+    assert "太阳光强度：2.0000" in controller.handles["auto_fit_result"].value
     assert notifications[-1][1] == "Auto 识别完成"
 
 

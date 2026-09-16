@@ -1,0 +1,558 @@
+{
+  "best": {
+    "azimuth_deg": 166.0,
+    "elevation_deg": 70.0,
+    "joint_score": -0.13044595502871104,
+    "frames": [
+      {
+        "score": -0.17091885490137257,
+        "distance_percentile": 0.95,
+        "pred_to_observed_tail_m": 0.3176833108602535,
+        "observed_to_predicted_tail_m": 0.09708416203245562,
+        "pred_to_observed_p90_m": 0.3176833108602535,
+        "pred_to_observed_median_m": 0.06436067796666389,
+        "observed_to_predicted_p90_m": 0.09708416203245562,
+        "pred_boundary_support_0p35m": 0.9651567944250871,
+        "observed_boundary_points_used": 222,
+        "structure_valid": false,
+        "structure_penalty_m": 0.0,
+        "tangent_p80_rad": 0.0,
+        "curvature_log_p80": 0.0,
+        "bump_support": 0.0,
+        "predicted_bump_count": 0,
+        "observed_bump_count": 0,
+        "distance_only_score": -0.17091885490137257,
+        "azimuth_deg": 166.0,
+        "elevation_deg": 70.0,
+        "iou_diagnostic": 0.3812237338841798,
+        "arc_audit": {
+          "valid": true,
+          "operator": "maximal_camera_cone_middle_arc",
+          "input_components": 2,
+          "contract_components": 1,
+          "retained_components": 1,
+          "component_gate": {
+            "max_components": 2,
+            "min_relative_area": 0.5,
+            "components": [
+              {
+                "rank": 1,
+                "area_pixels": 11896.5,
+                "relative_to_largest": 1.0,
+                "contour_points": 573,
+                "retained": true
+              },
+              {
+                "rank": 2,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.0001681166729710419,
+                "contour_points": 4,
+                "retained": false
+              }
+            ]
+          },
+          "selected_points": 287,
+          "components": [
+            {
+              "valid": true,
+              "operator": "maximal_camera_cone_middle_arc",
+              "input_points": 573,
+              "selected_points": 287,
+              "left_angle_deg": 23.76541024251448,
+              "right_angle_deg": 67.06738160741985,
+              "maximal_cone_span_deg": 43.30197136490536,
+              "left_hit_count": 1,
+              "right_hit_count": 1,
+              "left_hits_xy": [
+                [
+                  23.470166730266925,
+                  2.2869156233594072
+                ]
+              ],
+              "right_hits_xy": [
+                [
+                  20.111054723943973,
+                  3.6771062674393353
+                ]
+              ],
+              "selected_left_hit_xy": [
+                23.470166730266925,
+                2.2869156233594072
+              ],
+              "selected_right_hit_xy": [
+                20.111054723943973,
+                3.6771062674393353
+              ],
+              "left_numeric_fallback": false,
+              "right_numeric_fallback": false,
+              "hit_contract_1_or_2_each": true,
+              "selected_median_camera_distance_m": 3.735363961258711,
+              "alternate_median_camera_distance_m": 4.5708647851996,
+              "scored_arc_length_m": 5.065053134925874
+            }
+          ]
+        }
+      },
+      {
+        "score": -0.08997305515604948,
+        "distance_percentile": 0.95,
+        "pred_to_observed_tail_m": 0.12089658540427584,
+        "observed_to_predicted_tail_m": 0.11589095756761367,
+        "pred_to_observed_p90_m": 0.12089658540427584,
+        "pred_to_observed_median_m": 0.05056672640974291,
+        "observed_to_predicted_p90_m": 0.11589095756761367,
+        "pred_boundary_support_0p35m": 1.0,
+        "observed_boundary_points_used": 246,
+        "structure_valid": false,
+        "structure_penalty_m": 0.0,
+        "tangent_p80_rad": 0.0,
+        "curvature_log_p80": 0.0,
+        "bump_support": 0.0,
+        "predicted_bump_count": 0,
+        "observed_bump_count": 0,
+        "distance_only_score": -0.08997305515604948,
+        "azimuth_deg": 166.0,
+        "elevation_deg": 70.0,
+        "iou_diagnostic": 0.4312738794147796,
+        "arc_audit": {
+          "valid": true,
+          "operator": "maximal_camera_cone_middle_arc",
+          "input_components": 22,
+          "contract_components": 1,
+          "retained_components": 1,
+          "component_gate": {
+            "max_components": 2,
+            "min_relative_area": 0.5,
+            "components": [
+              {
+                "rank": 1,
+                "area_pixels": 9251.0,
+                "relative_to_largest": 1.0,
+                "contour_points": 492,
+                "retained": true
+              },
+              {
+                "rank": 2,
+                "area_pixels": 52.0,
+                "relative_to_largest": 0.005621013944438439,
+                "contour_points": 44,
+                "retained": false
+              },
+              {
+                "rank": 3,
+                "area_pixels": 29.5,
+                "relative_to_largest": 0.00318884444924873,
+                "contour_points": 41,
+                "retained": false
+              },
+              {
+                "rank": 4,
+                "area_pixels": 14.0,
+                "relative_to_largest": 0.0015133499081180413,
+                "contour_points": 16,
+                "retained": false
+              },
+              {
+                "rank": 5,
+                "area_pixels": 5.0,
+                "relative_to_largest": 0.0005404821100421576,
+                "contour_points": 12,
+                "retained": false
+              },
+              {
+                "rank": 6,
+                "area_pixels": 2.5,
+                "relative_to_largest": 0.0002702410550210788,
+                "contour_points": 5,
+                "retained": false
+              },
+              {
+                "rank": 7,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 8,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 9,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 10,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 11,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 12,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 13,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 14,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 15,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 16,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 17,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 18,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 19,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 20,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 21,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              },
+              {
+                "rank": 22,
+                "area_pixels": 2.0,
+                "relative_to_largest": 0.00021619284401686305,
+                "contour_points": 4,
+                "retained": false
+              }
+            ]
+          },
+          "selected_points": 246,
+          "components": [
+            {
+              "valid": true,
+              "operator": "maximal_camera_cone_middle_arc",
+              "input_points": 492,
+              "selected_points": 246,
+              "left_angle_deg": 21.5757936899254,
+              "right_angle_deg": 55.34698273902279,
+              "maximal_cone_span_deg": 33.771189049097394,
+              "left_hit_count": 1,
+              "right_hit_count": 1,
+              "left_hits_xy": [
+                [
+                  103.74457235825572,
+                  2.730886455746422
+                ]
+              ],
+              "right_hits_xy": [
+                [
+                  100.19642708436842,
+                  4.180465946159074
+                ]
+              ],
+              "selected_left_hit_xy": [
+                103.74457235825572,
+                2.730886455746422
+              ],
+              "selected_right_hit_xy": [
+                100.19642708436842,
+                4.180465946159074
+              ],
+              "left_numeric_fallback": false,
+              "right_numeric_fallback": false,
+              "hit_contract_1_or_2_each": true,
+              "selected_median_camera_distance_m": 4.84447203410226,
+              "alternate_median_camera_distance_m": 5.7737256038947535,
+              "scored_arc_length_m": 5.277902727877808
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "objective": "per-connected-component maximal camera cone boundary intersections and complete intervening near contour arcs, identically applied to observed shadow and candidate projection; mean bidirectional robust contour distance across frames; IoU diagnostic only",
+  "visibility_mode": "camera_cone_middle",
+  "angular_bins": null,
+  "observed_floor_subtraction": false,
+  "contact_exclusion_m": 0.0,
+  "predicted_floor_subtraction": false,
+  "exclude_image_edge_components": true,
+  "direct_shadow_mask": true,
+  "distance_percentile": 0.95,
+  "structure_aware": false,
+  "structure_objective": null,
+  "visualization": "gray=observed mask; green=scored observed camera-facing edge; blue=vehicle floor; pale-red=rejected full candidate contour; red=scored candidate camera-facing edge; purple=legacy side rays when ray_arc is selected",
+  "top25_same_objective": true,
+  "candidate_visualization": {
+    "requested": 25,
+    "page_size": 25,
+    "pages": [
+      "top25_camera_visible_arc_candidates.jpg"
+    ]
+  },
+  "execution_mode": "multi_frame_shared_angle",
+  "frame_count": 2,
+  "camera_contract": [
+    {
+      "camera_xy": [
+        18.619142104091384,
+        0.15085618122128006
+      ],
+      "left_angle_deg": 25.98730121728784,
+      "right_angle_deg": 67.91360847131232,
+      "observed_arc": {
+        "valid": true,
+        "operator": "maximal_camera_cone_middle_arc",
+        "input_components": 1,
+        "contract_components": 1,
+        "retained_components": 2,
+        "component_gate": {
+          "max_components": 0,
+          "min_relative_area": 0.0,
+          "components": [
+            {
+              "rank": 1,
+              "area_pixels": 6896.0,
+              "relative_to_largest": 1.0,
+              "contour_points": 610,
+              "retained": true
+            }
+          ]
+        },
+        "selected_points": 222,
+        "components": [
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 610,
+            "selected_points": 222,
+            "left_angle_deg": 24.888684672663928,
+            "right_angle_deg": 68.37472245253714,
+            "maximal_cone_span_deg": 43.48603777987322,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                23.334248903421486,
+                2.3384041657327383
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                20.0528042267245,
+                3.7672112165926657
+              ]
+            ],
+            "selected_left_hit_xy": [
+              23.334248903421486,
+              2.3384041657327383
+            ],
+            "selected_right_hit_xy": [
+              20.0528042267245,
+              3.7672112165926657
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 3.678844516515873,
+            "alternate_median_camera_distance_m": 4.195179570258489,
+            "scored_arc_length_m": 3.888472095581069,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 275,
+            "points_after_image_edge_trim": 222,
+            "image_edge_points_removed": 53
+          }
+        ]
+      }
+    },
+    {
+      "camera_xy": [
+        97.48291284446945,
+        0.2547796799087121
+      ],
+      "left_angle_deg": 22.948063075894837,
+      "right_angle_deg": 56.18020769418342,
+      "observed_arc": {
+        "valid": true,
+        "operator": "maximal_camera_cone_middle_arc",
+        "input_components": 1,
+        "contract_components": 1,
+        "retained_components": 1,
+        "component_gate": {
+          "max_components": 0,
+          "min_relative_area": 0.0,
+          "components": [
+            {
+              "rank": 1,
+              "area_pixels": 5342.5,
+              "relative_to_largest": 1.0,
+              "contour_points": 541,
+              "retained": true
+            }
+          ]
+        },
+        "selected_points": 246,
+        "components": [
+          {
+            "valid": true,
+            "operator": "maximal_camera_cone_middle_arc",
+            "input_points": 541,
+            "selected_points": 246,
+            "left_angle_deg": 22.217978416542003,
+            "right_angle_deg": 56.569549769590466,
+            "maximal_cone_span_deg": 34.35157135304846,
+            "left_hit_count": 1,
+            "right_hit_count": 1,
+            "left_hits_xy": [
+              [
+                103.54498918659957,
+                2.730886455746422
+              ]
+            ],
+            "right_hits_xy": [
+              [
+                100.08554754455945,
+                4.197321521628989
+              ]
+            ],
+            "selected_left_hit_xy": [
+              103.54498918659957,
+              2.730886455746422
+            ],
+            "selected_right_hit_xy": [
+              100.08554754455945,
+              4.197321521628989
+            ],
+            "left_numeric_fallback": false,
+            "right_numeric_fallback": false,
+            "hit_contract_1_or_2_each": true,
+            "selected_median_camera_distance_m": 4.739087836737278,
+            "alternate_median_camera_distance_m": 5.3115372505632745,
+            "scored_arc_length_m": 5.217225762569855,
+            "image_edge_trim_pixels": 8.0,
+            "points_before_image_edge_trim": 246,
+            "points_after_image_edge_trim": 246,
+            "image_edge_points_removed": 0
+          }
+        ]
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png"
+    },
+    {
+      "vehicle_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "shadow_geometry": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "shadow_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-e2e/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+    }
+  ],
+  "search": {
+    "coarse_az_step": 5,
+    "coarse_elevation": [
+      20,
+      70,
+      5
+    ],
+    "local_radius_deg": 5,
+    "local_basins": 3,
+    "candidate_workers": 4,
+    "external_refinement_seeds": [
+      [
+        165.0,
+        70.0
+      ],
+      [
+        160.0,
+        70.0
+      ],
+      [
+        170.0,
+        70.0
+      ]
+    ],
+    "fixed_angle": null,
+    "full_projection_canvas": true,
+    "frame_canvas_bounds": [
+      {
+        "lo": [
+          15.64518327045103,
+          -2.141099020747035
+        ],
+        "hi": [
+          33.100915603886484,
+          9.430950877659045
+        ],
+        "max_projection_shift_m": 3.7464856571294587
+      },
+      {
+        "lo": [
+          95.93865275570367,
+          -1.3987295343826416
+        ],
+        "hi": [
+          115.87479401335791,
+          13.75443281307054
+        ],
+        "max_projection_shift_m": 3.428280800152231
+      }
+    ]
+  }
+}

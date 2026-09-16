@@ -1,0 +1,11 @@
+{
+  "vehicle_mask": "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/selection/sam2_global_ranking/vehicle_03_instance-20_t076_cam1_mask.png",
+  "timestep": 76,
+  "camera": 1,
+  "dense_gaussians": 786432,
+  "mask_visible_selected": 89833,
+  "min_opacity": 0.02,
+  "selection_contract": "same-frame vehicle mask resized by nearest neighbor to the dense InfiniDepth source grid; one surface Gaussian per pixel; opacity gate; no 3D-uniform resampling, PLY serialization, or PLY reprojection",
+  "geometry_relation_to_legacy_ply": "same InfiniDepth dense depth, DINO features, Gaussian predictor, camera intrinsics, and world transform; dense source-pixel sampling replaces legacy 3D-uniform resampling, so a regression gate is required",
+  "output": "visible_infinidepth_vehicle_gaussians.npz"
+}

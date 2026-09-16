@@ -23,6 +23,11 @@ except ImportError:
     from device import resolve_device
 
 try:
+    from .dataset_adapter import discover_camera_ids, resolve_view_image
+except ImportError:
+    from dataset_adapter import discover_camera_ids, resolve_view_image
+
+try:
     from .audit_argoverse_single_vehicle_views import (
         box_corners, camera_to_world, load_annotations, project_box,
     )
@@ -47,7 +52,7 @@ def main() -> None:
     ap.add_argument("--output", type=Path, required=True)
     ap.add_argument("--weights", type=Path, required=True)
     ap.add_argument("--device", default="auto")
-    ap.add_argument("--cameras", nargs="+", type=int, default=list(range(7)))
+    ap.add_argument("--cameras", nargs="+", type=int)
     ap.add_argument("--confidence", type=float, default=.25)
     ap.add_argument("--imgsz", type=int, default=960)
     ap.add_argument("--batch", type=int, default=16)
@@ -55,6 +60,9 @@ def main() -> None:
     ap.add_argument("--min-yolo-area-ratio", type=float, default=.003)
     ap.add_argument("--border-margin", type=int, default=8)
     args = ap.parse_args(); started = time.perf_counter()
+    args.cameras = args.cameras or discover_camera_ids(args.data_root)
+    if not args.cameras:
+        raise RuntimeError(f"no calibrated cameras found under {args.data_root}")
     compute_device = resolve_device(args.device)
     print(f"YOLO compute device: {compute_device.description}", flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -66,8 +74,8 @@ def main() -> None:
     for camera in args.cameras:
         fx, fy, cx, cy, *_ = np.loadtxt(args.data_root / "intrinsics" / f"{camera}.txt")
         intrinsics[camera] = np.array(((fx,0,cx),(0,fy,cy),(0,0,1)), float)
-        first = next((args.data_root / "images" / f"{t:03d}_{camera}.jpg" for t in frame_ids
-                      if (args.data_root / "images" / f"{t:03d}_{camera}.jpg").is_file()), None)
+        first = next((resolve_view_image(args.data_root, t, camera) for t in frame_ids
+                  if resolve_view_image(args.data_root, t, camera) is not None), None)
         image = cv2.imread(str(first), cv2.IMREAD_COLOR) if first else None
         if image is None: raise RuntimeError(f"no readable image for camera {camera}")
         dimensions[camera] = (image.shape[1], image.shape[0])
@@ -91,9 +99,9 @@ def main() -> None:
     inputs = []
     for timestep in frame_ids:
         for camera in args.cameras:
-            image = args.data_root / "images" / f"{timestep:03d}_{camera}.jpg"
+            image = resolve_view_image(args.data_root, timestep, camera)
             road = args.data_root / "road_masks" / f"{timestep:03d}_{camera}.png"
-            if image.is_file() and road.is_file(): inputs.append(image)
+            if image is not None and road.is_file(): inputs.append(image)
     model = YOLO(str(args.weights))
     matched = []
     raw_count = 0

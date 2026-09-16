@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "candidate": "PVD-v2-a",
+  "mainline": "SSE-v9",
+  "package_version": "1.4.0",
+  "python_compile": "passed",
+  "sun_package_tests": {
+    "passed": 24,
+    "failed": 0,
+    "warning": "host root environment has a pre-existing Torch/NumPy ABI warning"
+  },
+  "panel_sun_adapter_tests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "panel_full_suite": {
+    "status": "not_collected_in_root_environment",
+    "reason": "optional viser dependency is not installed in the root test interpreter; the changed sun adapter suite passed"
+  },
+  "wheel": {
+    "path": "../../../dist/pbr_vehicle_sun-1.4.0-py3-none-any.whl",
+    "size_bytes": 88519,
+    "sha256": "92126fabbdfe60f3f4740036fe8c3736e9c197a42cc47038fb4d1838f3e2c220",
+    "isolated_no_deps_install": "passed",
+    "imported_version": "1.4.0",
+    "scene_cli_help": "passed",
+    "absolute_machine_path_scan": "passed",
+    "bound_scene_or_experiment_asset_scan": "passed",
+    "retired_detector_scan": "passed"
+  },
+  "runtime_evidence": "benchmark_summary.json",
+  "cold_result": "full-cold-final/two_round_result.json"
+}

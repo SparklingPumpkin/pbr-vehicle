@@ -1,10 +1,7 @@
-import json
-import struct
-
 import numpy as np
 
 from pbr_vehicle_standalone.projection import build_projection_masks
-from pbr_vehicle_standalone.rendering import rgba_plane_glb
+from pbr_vehicle_standalone.rendering import projection_rgba_to_gaussians
 from pbr_vehicle_standalone.types import GaussianLayer
 
 
@@ -60,10 +57,32 @@ def test_low_sun_extension_contains_vehicle_footprint_and_casts_opposite_sun():
     assert float((farthest - source_center) @ sun[:2]) < -1.0
 
 
-def test_glb_uses_blend_material():
-    glb = rgba_plane_glb(np.full((8, 8, 4), 255, np.uint8), 2.0, 1.0)
-    assert glb[:4] == b"glTF"
-    json_length, chunk_type = struct.unpack_from("<II", glb, 12)
-    assert chunk_type == 0x4E4F534A
-    document = json.loads(glb[20:20 + json_length].decode("utf-8"))
-    assert document["materials"][0]["alphaMode"] == "BLEND"
+def test_projection_mask_converts_to_bounded_planar_gaussians():
+    rgba = np.zeros((100, 200, 4), dtype=np.uint8)
+    rgba[10:90, 20:180, :3] = 64
+    rgba[10:90, 20:180, 3] = 128
+
+    centers, covariances, colors, opacities = projection_rgba_to_gaussians(
+        rgba,
+        center_xy=np.array([2.0, -1.0], dtype=np.float32),
+        size_xy=np.array([4.0, 2.0], dtype=np.float32),
+        z=0.03,
+        max_splats=2_000,
+    )
+
+    assert 0 < len(centers) <= 2_000
+    assert covariances.shape == (len(centers), 3, 3)
+    assert colors.shape == (len(centers), 3)
+    assert opacities.shape == (len(centers), 1)
+    assert np.allclose(centers[:, 2], 0.03)
+    assert centers[:, 0].min() >= 0.0 and centers[:, 0].max() <= 4.0
+    assert centers[:, 1].min() >= -2.0 and centers[:, 1].max() <= 0.0
+    assert np.allclose(colors, 64.0 / 255.0)
+    assert np.allclose(opacities, 128.0 / 255.0)
+    assert np.all(np.diagonal(covariances, axis1=1, axis2=2) > 0.0)
+
+
+def test_projection_rejects_nonfinite_sun_direction():
+    with np.errstate(invalid="ignore"):
+        with np.testing.assert_raises_regex(ValueError, "finite sun direction"):
+            build_projection_masks(_proxy(), np.array([np.nan, 0.0, 1.0]), _config())

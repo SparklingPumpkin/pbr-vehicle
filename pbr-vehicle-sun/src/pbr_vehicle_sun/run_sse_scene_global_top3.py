@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the generic SSE-v8 scene pipeline on the globally largest vehicles.
+"""Run the generic SSE-v9 scene pipeline on the globally largest vehicles.
 
 The Argoverse adapter scans all requested frames/cameras, groups observations
 by physical vehicle, and selects one maximum-area SAM2 mask per vehicle.
@@ -12,6 +12,7 @@ confidence-gated shared-angle fitter together.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import subprocess
@@ -20,6 +21,11 @@ import time
 from pathlib import Path
 
 import numpy as np
+
+try:
+    from .dataset_adapter import discover_camera_ids
+except ImportError:
+    from dataset_adapter import discover_camera_ids
 
 try:
     from .device import resolve_device
@@ -80,6 +86,8 @@ def main() -> None:
     ap.add_argument("--sam2-checkpoint", type=Path, required=True)
     ap.add_argument("--sam2-python", type=Path, default=Path(sys.executable))
     ap.add_argument("--sam2-config", default="configs/sam2.1/sam2.1_hiera_t.yaml")
+    ap.add_argument("--sam2-image-batch-size", type=int, default=4,
+                    help="SAM2 image encoder batch size; all boxes remain exhaustive")
     ap.add_argument("--ssis-root", type=Path, required=True)
     ap.add_argument("--ssis-weights", type=Path, required=True)
     ap.add_argument("--ssis-python", type=Path, default=Path(sys.executable))
@@ -93,6 +101,13 @@ def main() -> None:
     ap.add_argument("--moge2-pretrained", type=Path)
     ap.add_argument("--sky-checkpoint", type=Path)
     ap.add_argument("--infinidepth-sample-points", type=int, default=2_000_000)
+    ap.add_argument("--geometry-mode", choices=("direct_dense", "legacy_ply"),
+                    default="direct_dense",
+                    help="direct_dense reuses the dense source-view Gaussian output and avoids 2M-point PLY I/O")
+    ap.add_argument("--preparation-workers", type=int, default=0,
+                    help="parallel vehicle/view preparation workers; 0 uses the number of worker devices")
+    ap.add_argument("--worker-devices", nargs="+",
+                    help="devices used round-robin for independent SSISv2/InfiniDepth jobs; defaults to --device")
     ap.add_argument("--device", default="auto")
     ap.add_argument("--yolo-batch", type=int, default=16)
     ap.add_argument("--top-vehicles", type=int, choices=range(1, 6), default=3)
@@ -101,14 +116,24 @@ def main() -> None:
     ap.add_argument("--min-mask-area-ratio", type=float, default=.01)
     ap.add_argument("--min-vehicle-confidence", type=float, default=.50)
     ap.add_argument("--min-vehicle-support", type=float, default=.75)
-    ap.add_argument("--cameras", nargs="+", type=int, default=list(range(7)))
+    ap.add_argument("--fit-workers", type=int, default=0)
+    ap.add_argument("--candidate-workers", type=int, default=8,
+                    help="parallel angle candidates inside each independent fit")
+    ap.add_argument("--per-vehicle-top-candidates", type=int, default=0)
+    ap.add_argument("--cameras", nargs="+", type=int)
     ap.add_argument("--existing-detection", type=Path)
     ap.add_argument("--existing-ranking", type=Path)
     args = ap.parse_args()
+    args.cameras = args.cameras or discover_camera_ids(args.data_root)
+    if not args.cameras:
+        ap.error(f"no calibrated cameras found under {args.data_root}")
     compute_device = resolve_device(args.device)
     ssis_device = resolve_device(args.ssis_device)
     args.ssis_device = ssis_device.torch
     print(f"SSE compute device: {compute_device.description}", flush=True)
+    worker_devices = [resolve_device(value) for value in (args.worker_devices or [args.device])]
+    preparation_workers = args.preparation_workers or len(worker_devices)
+    preparation_workers = max(1, min(preparation_workers, len(worker_devices), args.top_vehicles))
     if args.vehicle_rank_offset < 0:
         ap.error("--vehicle-rank-offset must be non-negative")
     selection_pool_size = args.selection_pool_size or args.top_vehicles + args.vehicle_rank_offset
@@ -152,15 +177,16 @@ def main() -> None:
             "--device", compute_device.torch,
             "--top-vehicles", str(selection_pool_size),
             "--min-mask-area-ratio", str(args.min_mask_area_ratio),
+            "--image-batch-size", str(args.sam2_image_batch_size),
         ], timings, sam_env)
     ranking = json.loads(ranking_manifest.read_text())
     selected = select_ranked_vehicles(ranking, args.vehicle_rank_offset, args.top_vehicles)
 
     depth_env = prepend_pythonpath(os.environ, args.infinidepth_root)
-    common: dict[tuple[int, int], tuple[Path, Path]] = {}
     prepared: list[dict] = []
     results: list[dict] = []
-    for vehicle in selected:
+    records: list[dict] = []
+    for item_index, vehicle in enumerate(selected):
         rank = int(vehicle["vehicle_rank"])
         timestep = int(vehicle["timestep"])
         camera = int(vehicle["camera"])
@@ -174,101 +200,133 @@ def main() -> None:
             "timestep": timestep, "camera": camera,
             "mask_area_ratio": vehicle["mask_area_ratio"],
             "vehicle_mask": str(vehicle_mask.resolve()),
+            "image": str(image.resolve()),
+            "worker_device": worker_devices[item_index % len(worker_devices)].torch,
+            "vehicle_dir": str(vehicle_dir.resolve()),
         }
-        try:
-            if key not in common:
-                depth_dir = view_dir / "depth"
-                run_stage(f"view_t{timestep:03d}_cam{camera}_rgb_depth", [
-                    str(args.infinidepth_python), str(SCRIPTS / "infer_infinidepth_dense_depth.py"),
-                    "--image", str(image), "--output-dir", str(depth_dir),
-                    "--device", compute_device.torch, "--model-type", "InfiniDepth",
-                    "--infinidepth-root", str(args.infinidepth_root),
-                    "--depth-checkpoint", str(depth_checkpoint), "--moge2-pretrained", str(moge2),
-                ], timings, depth_env)
-                ply_dir = view_dir / "infinidepth_ply"
-                ply_dir.mkdir(parents=True, exist_ok=True)
-                fx, fy, cx, cy, *_ = map(float, np.loadtxt(args.data_root / "intrinsics" / f"{camera}.txt"))
-                run_stage(f"view_t{timestep:03d}_cam{camera}_rgb_gaussian", [
-                    str(args.infinidepth_python), str(args.infinidepth_root / "inference_gs.py"),
-                    "--input-image-path", str(image), "--output-ply-dir", str(ply_dir),
-                    "--output-ply-name", "scene_gaussians.ply", "--model-type", "InfiniDepth",
-                    "--depth-model-path", str(depth_checkpoint), "--gs-model-path", str(gs_checkpoint),
-                    "--moge2-pretrained", str(moge2), "--sky-model-ckpt-path", str(sky_checkpoint),
-                    "--fx-org", str(fx), "--fy-org", str(fy), "--cx-org", str(cx), "--cy-org", str(cy),
-                    "--sample-point-num", str(args.infinidepth_sample_points), "--no-render-novel-video",
-                ], timings, depth_env)
-                common[key] = (depth_dir, ply_dir / "scene_gaussians.ply")
-            depth_dir, ply = common[key]
+        records.append(record)
 
-            association_dir = vehicle_dir / "ssisv2_association"
+    def associate(record: dict) -> dict:
+        rank = record["vehicle_rank"]
+        association_dir = Path(record["vehicle_dir"]) / "ssisv2_association"
+        command = ssisv2_command(
+            args, Path(record["image"]), Path(record["vehicle_mask"]), association_dir)
+        device_index = records.index(record) % len(worker_devices)
+        command[command.index("--device") + 1] = worker_devices[device_index].torch
+        try:
             run_stage(f"vehicle{rank}_ssisv2_association",
-                      ssisv2_command(args, image, vehicle_mask, association_dir), timings)
+                      command, timings)
             association_manifest = association_dir / "ssisv2_association_manifest.json"
             association = json.loads(association_manifest.read_text())
             if not association.get("accepted"):
                 raise VehicleMethodRejection("SSISv2 found no object-shadow pair passing the vehicle IoU gate")
-            shadow_mask = association_dir / "04_associated_shadow_mask.png"
+            return {**record, "status": "associated",
+                    "association_manifest": str(association_manifest.resolve()),
+                    "shadow_mask": str((association_dir / "04_associated_shadow_mask.png").resolve())}
+        except VehicleMethodRejection as error:
+            return {**record, "status": "rejected", "reason": str(error)}
+        except subprocess.CalledProcessError as error:
+            return {**record, "status": "process_failed", "error": repr(error),
+                    "failed_command": error.cmd, "returncode": error.returncode}
 
-            shadow_geometry_dir = vehicle_dir / "shadow_geometry"
-            run_stage(f"vehicle{rank}_shadow_depth_lift", [
+    with concurrent.futures.ThreadPoolExecutor(max_workers=preparation_workers,
+                                               thread_name_prefix="sse-association") as executor:
+        associated = list(executor.map(associate, records))
+    failures = [row for row in associated if row["status"] == "process_failed"]
+    if failures:
+        failure = {"scene": args.scene, "status": "process_failed",
+                   "failed_vehicle": failures[0], "vehicle_preparation_results": associated,
+                   "timings": timings, "total_elapsed_s": time.perf_counter() - started}
+        (out / "scene_failure.json").write_text(json.dumps(failure, indent=2) + "\n")
+        raise RuntimeError(failures[0]["error"])
+
+    accepted_associations = [row for row in associated if row["status"] == "associated"]
+    results.extend(row for row in associated if row["status"] == "rejected")
+    by_view: dict[tuple[int, int], list[dict]] = {}
+    for row in accepted_associations:
+        by_view.setdefault((row["timestep"], row["camera"]), []).append(row)
+
+    def prepare_view(item: tuple[int, tuple[tuple[int, int], list[dict]]]) -> list[dict]:
+        view_index, ((timestep, camera), rows) = item
+        device = worker_devices[view_index % len(worker_devices)]
+        image = Path(rows[0]["image"])
+        view_dir = out / f"t{timestep:03d}_cam{camera}"
+        depth_dir = view_dir / "depth"
+        fx, fy, cx, cy, *_ = map(float, np.loadtxt(args.data_root / "intrinsics" / f"{camera}.txt"))
+        if args.geometry_mode == "direct_dense":
+            command = [
+                str(args.infinidepth_python), str(SCRIPTS / "infer_infinidepth_depth_and_gaussians.py"),
+                "--image", str(image), "--output-dir", str(view_dir),
+                "--infinidepth-root", str(args.infinidepth_root),
+                "--depth-checkpoint", str(depth_checkpoint), "--gs-checkpoint", str(gs_checkpoint),
+                "--moge2-pretrained", str(moge2), "--sky-checkpoint", str(sky_checkpoint),
+                "--fx", str(fx), "--fy", str(fy), "--cx", str(cx), "--cy", str(cy),
+                "--data-root", str(args.data_root), "--timestep", str(timestep), "--camera", str(camera),
+                "--device", device.torch,
+            ]
+            for row in rows:
+                vehicle_geometry_dir = Path(row["vehicle_dir"]) / "vehicle_geometry"
+                command.extend(["--vehicle-mask", row["vehicle_mask"],
+                                "--vehicle-output-dir", str(vehicle_geometry_dir)])
+            run_stage(f"view_t{timestep:03d}_cam{camera}_joint_depth_gaussian", command,
+                      timings, depth_env)
+        else:
+            run_stage(f"view_t{timestep:03d}_cam{camera}_rgb_depth", [
+                str(args.infinidepth_python), str(SCRIPTS / "infer_infinidepth_dense_depth.py"),
+                "--image", str(image), "--output-dir", str(depth_dir), "--device", device.torch,
+                "--model-type", "InfiniDepth", "--infinidepth-root", str(args.infinidepth_root),
+                "--depth-checkpoint", str(depth_checkpoint), "--moge2-pretrained", str(moge2),
+            ], timings, depth_env)
+            ply_dir = view_dir / "infinidepth_ply"
+            ply_dir.mkdir(parents=True, exist_ok=True)
+            run_stage(f"view_t{timestep:03d}_cam{camera}_rgb_gaussian", [
+                str(args.infinidepth_python), str(args.infinidepth_root / "inference_gs.py"),
+                "--input-image-path", str(image), "--output-ply-dir", str(ply_dir),
+                "--output-ply-name", "scene_gaussians.ply", "--model-type", "InfiniDepth",
+                "--depth-model-path", str(depth_checkpoint), "--gs-model-path", str(gs_checkpoint),
+                "--moge2-pretrained", str(moge2), "--sky-model-ckpt-path", str(sky_checkpoint),
+                "--fx-org", str(fx), "--fy-org", str(fy), "--cx-org", str(cx), "--cy-org", str(cy),
+                "--sample-point-num", str(args.infinidepth_sample_points), "--no-render-novel-video",
+            ], timings, depth_env)
+            for row in rows:
+                vehicle_geometry_dir = Path(row["vehicle_dir"]) / "vehicle_geometry"
+                run_stage(f"vehicle{row['vehicle_rank']}_vehicle_geometry", [
+                    py, str(SCRIPTS / "extract_infinidepth_vehicle_geometry.py"),
+                    "--ply", str(ply_dir / "scene_gaussians.ply"), "--vehicle-mask", row["vehicle_mask"],
+                    "--data-root", str(args.data_root), "--timestep", str(timestep),
+                    "--camera", str(camera), "--output-dir", str(vehicle_geometry_dir),
+                ], timings)
+        output = []
+        for row in rows:
+            shadow_geometry_dir = Path(row["vehicle_dir"]) / "shadow_geometry"
+            run_stage(f"vehicle{row['vehicle_rank']}_shadow_depth_lift", [
                 py, str(SCRIPTS / "lift_source_shadow_with_infinidepth.py"),
                 "--depth", str(depth_dir / "predicted_depth_original.npy"),
-                "--shadow-mask", str(shadow_mask),
+                "--shadow-mask", row["shadow_mask"],
                 "--road-mask", str(args.data_root / "road_masks" / f"{timestep:03d}_{camera}.png"),
-                "--vehicle-mask", str(vehicle_mask), "--source-image", str(image),
+                "--vehicle-mask", row["vehicle_mask"], "--source-image", str(image),
                 "--data-root", str(args.data_root), "--timestep", str(timestep),
                 "--camera", str(camera), "--output-dir", str(shadow_geometry_dir),
             ], timings)
-            vehicle_geometry_dir = vehicle_dir / "vehicle_geometry"
-            run_stage(f"vehicle{rank}_vehicle_geometry", [
-                py, str(SCRIPTS / "extract_infinidepth_vehicle_geometry.py"),
-                "--ply", str(ply), "--vehicle-mask", str(vehicle_mask),
-                "--data-root", str(args.data_root), "--timestep", str(timestep),
-                "--camera", str(camera), "--output-dir", str(vehicle_geometry_dir),
-            ], timings)
-            prepared.append({
-                **record,
-                "association_manifest": str(association_manifest.resolve()),
-                "shadow_mask": str(shadow_mask.resolve()),
-                "shadow_geometry": str((shadow_geometry_dir / "infinidepth_shadow_geometry.npz").resolve()),
-                "vehicle_geometry": str((vehicle_geometry_dir / "visible_infinidepth_vehicle_gaussians.npz").resolve()),
-            })
-            results.append({**record, "status": "prepared", "association_manifest": str(association_manifest.resolve())})
-        except VehicleMethodRejection as error:
-            results.append({**record, "status": "rejected", "reason": str(error)})
-        except subprocess.CalledProcessError as error:
-            if is_vehicle_evidence_failure(error):
-                results.append({
-                    **record,
-                    "status": "rejected",
-                    "reason": "vehicle geometric evidence did not satisfy the preparation contract",
-                    "failed_command": error.cmd,
-                    "returncode": error.returncode,
-                })
-                continue
-            failure = {
-                "scene": args.scene,
-                "status": "process_failed",
-                "failed_vehicle": record,
-                "error": repr(error),
-                "vehicle_preparation_results": results,
-                "timings": timings,
-                "total_elapsed_s": time.perf_counter() - started,
-            }
-            (out / "scene_failure.json").write_text(json.dumps(failure, indent=2) + "\n")
-            raise
-        except Exception as error:
-            failure = {
-                "scene": args.scene,
-                "status": "process_failed",
-                "failed_vehicle": record,
-                "error": repr(error),
-                "vehicle_preparation_results": results,
-                "timings": timings,
-                "total_elapsed_s": time.perf_counter() - started,
-            }
-            (out / "scene_failure.json").write_text(json.dumps(failure, indent=2) + "\n")
-            raise
+            output.append({**row, "status": "prepared",
+                           "shadow_geometry": str((shadow_geometry_dir / "infinidepth_shadow_geometry.npz").resolve()),
+                           "vehicle_geometry": str((Path(row["vehicle_dir"]) / "vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz").resolve())})
+        return output
+
+    view_items = list(enumerate(by_view.items()))
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(preparation_workers, max(1, len(view_items))),
+                                                   thread_name_prefix="sse-view") as executor:
+            for group in executor.map(prepare_view, view_items):
+                prepared.extend(group)
+                results.extend({**row, "association_manifest": row["association_manifest"]} for row in group)
+    except subprocess.CalledProcessError as error:
+        failure = {"scene": args.scene, "status": "process_failed", "error": repr(error),
+                   "timings": timings, "total_elapsed_s": time.perf_counter() - started}
+        (out / "scene_failure.json").write_text(json.dumps(failure, indent=2) + "\n")
+        raise
+    prepared.sort(key=lambda row: row["vehicle_rank"])
+    results.sort(key=lambda row: row["vehicle_rank"])
 
     aggregate_result = None
     if prepared:
@@ -281,13 +339,16 @@ def main() -> None:
             "--shadow-mask", *[row["shadow_mask"] for row in prepared],
             "--output-dir", str(fit_dir), "--min-vehicle-confidence", str(args.min_vehicle_confidence),
             "--min-vehicle-support", str(args.min_vehicle_support),
+            "--fit-workers", str(args.fit_workers),
+            "--candidate-workers", str(args.candidate_workers),
+            "--per-vehicle-top-candidates", str(args.per_vehicle_top_candidates),
         ]
         run_stage("confidence_gated_one_to_five_vehicle_joint_fit", command, timings)
         aggregate_result = json.loads((fit_dir / "multi_vehicle_fit_result.json").read_text())
 
     summary = {
         "scene": args.scene,
-        "mainline": "SSE-v8",
+        "mainline": "SSE-v9",
         "compute_device": {
             "requested": str(args.device),
             "torch": compute_device.torch,
@@ -303,6 +364,10 @@ def main() -> None:
         "vehicles_selected": len(selected),
         "vehicles_prepared": len(prepared),
         "uses_lidar": False,
+        "geometry_mode": args.geometry_mode,
+        "preparation_workers": preparation_workers,
+        "candidate_workers": args.candidate_workers,
+        "worker_devices": [device.torch for device in worker_devices],
         "shadow_detector": "SSISv2 object-shadow association",
         "source_mask_postprocessing": "none",
         "prepared_vehicle_inputs": prepared,

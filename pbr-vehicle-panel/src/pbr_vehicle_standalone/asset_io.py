@@ -344,7 +344,13 @@ def resolve_scene_context(path: str | Path) -> dict[str, Any]:
     if not isinstance(data, dict) or not data.get("data_root") or data.get("scene_idx") is None:
         return {"name": name, "data_root": None, "config_path": str(config_path)}
     raw_root = Path(str(data["data_root"])).expanduser()
-    scene = f"{int(data['scene_idx']):03d}"
+    raw_scene = data["scene_idx"]
+    try:
+        scene = f"{int(raw_scene):03d}"
+    except (TypeError, ValueError):
+        scene = str(raw_scene).strip()
+        if not scene:
+            return {"name": name, "data_root": None, "config_path": str(config_path)}
     candidates = [raw_root] if raw_root.is_absolute() else [Path.cwd() / raw_root]
     if not raw_root.is_absolute():
         ancestors = (config_path.parent, *config_path.parents)
@@ -358,6 +364,8 @@ def resolve_scene_context(path: str | Path) -> dict[str, Any]:
         if candidate in seen:
             continue
         seen.add(candidate)
+        if candidate.is_dir() and candidate.name == scene:
+            return {"name": name, "data_root": str(candidate), "config_path": str(config_path)}
         scene_root = candidate / scene
         if scene_root.is_dir():
             return {"name": name, "data_root": str(scene_root), "config_path": str(config_path)}

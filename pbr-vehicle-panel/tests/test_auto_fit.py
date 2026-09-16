@@ -122,15 +122,19 @@ def test_run_keeps_auto_artifacts_in_temporary_directory(tmp_path):
         "'metric':{'improvement_percent':3.0}}))\n",
         encoding="utf-8",
     )
+    progress = []
     result = run_vehicle_auto_fit(
         scene_ply=scene,
         asset_dir=asset,
         template_payload={"vehicle": {}},
         command_override=[sys.executable, str(script)],
         timeout=10.0,
+        progress_callback=lambda value, stage: progress.append((value, stage)),
     )
     output_root = Path(result["output_dir"])
     assert output_root.is_dir()
     assert (output_root / "current_panel_state.json").is_file()
     assert (output_root / "output" / "metrics.json").is_file()
     assert result["sun_intensity"] == pytest.approx(2.0)
+    assert progress[0] == (0.01, "创建车辆参数识别任务")
+    assert progress[-1] == (1.0, "车辆参数识别完成")

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pbr-vehicle-sun"
-version = "1.3.0"
-description = "SSE-v8 two-round vehicle-replacement sun azimuth and elevation estimator."
+version = "1.4.0"
+description = "SSE-v9 accelerated two-round vehicle-replacement sun angle estimator."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

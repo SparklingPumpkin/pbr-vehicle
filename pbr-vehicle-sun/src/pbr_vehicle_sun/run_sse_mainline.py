@@ -62,6 +62,12 @@ def main() -> None:
     parser.add_argument("--structure-aware", action="store_true",
                         help="include optional smoothed tangent/curvature/bump line correspondence")
     parser.add_argument("--top-candidates", type=int, default=25)
+    parser.add_argument("--per-vehicle-top-candidates", type=int, default=0,
+                        help="candidate sheets for independent gate fits; best evidence is always written")
+    parser.add_argument("--fit-workers", type=int, default=0,
+                        help="parallel independent vehicle fits; 0 selects up to three")
+    parser.add_argument("--candidate-workers", type=int, default=8,
+                        help="parallel angle candidates inside each fit")
     parser.add_argument("--min-vehicle-confidence", type=float, default=.50)
     parser.add_argument("--min-vehicle-support", type=float, default=.75)
     parser.add_argument("--dry-run", action="store_true")
@@ -100,13 +106,16 @@ def main() -> None:
             "--local-basins", str(args.local_basins),
             "--distance-percentile", str(args.distance_percentile),
             "--top-candidates", str(args.top_candidates),
+            "--per-vehicle-top-candidates", str(args.per_vehicle_top_candidates),
+            "--fit-workers", str(args.fit_workers),
+            "--candidate-workers", str(args.candidate_workers),
             "--min-confidence", str(args.min_vehicle_confidence),
             "--min-support", str(args.min_vehicle_support),
         ]
         if args.structure_aware:
             command.append("--structure-aware")
         manifest = {
-            "mainline": "SSE-v8",
+            "mainline": "SSE-v9",
             "geometry_source": args.geometry_source,
             "aggregation_mode": "vehicles",
             "vehicle_count": frame_count,
@@ -118,6 +127,9 @@ def main() -> None:
                           "min_support_0p35m": args.min_vehicle_support},
             "distance_percentile": args.distance_percentile,
             "structure_aware": args.structure_aware,
+            "fit_workers": args.fit_workers,
+            "candidate_workers": args.candidate_workers,
+            "per_vehicle_top_candidates": args.per_vehicle_top_candidates,
             "shadow_mask_contract": "official SSISv2 associated shadow mask, consumed directly without source-mask postprocessing",
             "all_rejected_behavior": "no_valid_sun_information",
             "command": command,
@@ -173,7 +185,7 @@ def main() -> None:
             command.append("--exclude-image-edge-components")
             command.append("--no-predicted-floor-subtraction")
     manifest = {
-        "mainline": "SSE-v8",
+        "mainline": "SSE-v9",
         "geometry_source": args.geometry_source,
         "execution_mode": "single_frame" if frame_count == 1 else "multi_frame",
         "frame_count": frame_count,
@@ -202,7 +214,7 @@ def main() -> None:
         raise RuntimeError(f"branch fitter did not produce {result_path}")
     result = json.loads(result_path.read_text())
     result["mainline_branch"] = args.geometry_source
-    result["mainline_version"] = "SSE-v8"
+    result["mainline_version"] = "SSE-v9"
     result_path.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"branch_manifest": str((args.output_dir / 'sse_mainline_branch_manifest.json').resolve()), "fit_result": result}, indent=2))
 

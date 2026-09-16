@@ -1,0 +1,67 @@
+{
+  "audit": "SAM2.1 image batch size 4 versus 16 on the same full-cold-e2e detection manifest",
+  "input": {
+    "detections": "full-cold-e2e/round-1/selection/all_vehicle_detections.json",
+    "detection_count": 292,
+    "image_count_with_eligible_detections": 148,
+    "physical_instance_count": 17
+  },
+  "runs": {
+    "batch_4": {
+      "elapsed_s": 14.277285377960652,
+      "device": "one idle NVIDIA A100-SXM4-80GB",
+      "detections_evaluated": 292
+    },
+    "batch_16": {
+      "elapsed_s": 17.830181742087007,
+      "source": "full-cold-e2e/round-1/selection/sam2_global_ranking/scene_global_vehicle_ranking.json",
+      "detections_evaluated": 292
+    }
+  },
+  "same_input_batch_equivalence": {
+    "top6_instance_timestep_camera": [
+      ["5", 15, 1],
+      ["38", 120, 1],
+      ["20", 76, 1],
+      ["32", 111, 1],
+      ["33", 123, 1],
+      ["19", 92, 1]
+    ],
+    "top6_mask_area_ratio": [
+      0.2068951612903226,
+      0.1767190650201613,
+      0.11419102822580646,
+      0.11387222782258065,
+      0.05448053175403226,
+      0.0538218245967742
+    ],
+    "instance_frame_camera_identical": true,
+    "mask_area_ratio_identical": true,
+    "mask_pixels_identical": true,
+    "per_mask_symmetric_difference_pixels": [0, 0, 0, 0, 0, 0],
+    "per_mask_iou": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  },
+  "frozen_old_ranking_comparison": {
+    "source": "/mnt/data/fjn/projects/51w/PBR-Inserts/work/scene-sun-estimation/single-vehicle-shadow-geometry/SSE-v8-a/run-20260910T103511Z-argoverse-first-seven-parallel-sun-estimation/scene-002/selection/sam2_global_ranking/scene_global_vehicle_ranking.json",
+    "old_detection_count": 291,
+    "old_top6_instance_timestep_camera": [
+      ["5", 15, 1],
+      ["38", 120, 1],
+      ["32", 111, 1],
+      ["20", 76, 1],
+      ["33", 123, 1],
+      ["19", 92, 1]
+    ],
+    "same_top6_set": true,
+    "same_best_observation_for_each_top6_instance": true,
+    "same_top3_order": false,
+    "difference": "instances 20 and 32 swap ranks 3 and 4",
+    "attribution": "not caused by SAM2 image batch size: batch 4 and batch 16 are pixel-identical on the same 292-detection input; the frozen old ranking used a different 291-detection YOLO manifest and different bounding boxes"
+  },
+  "recommendation": {
+    "formal_default_image_batch_size": 4,
+    "reason": "batch 4 and 16 are output-identical on the controlled input, while batch 4 was 3.55 seconds faster in this full-cold replay and has substantially lower peak-memory risk on generic delivery hardware",
+    "viser_override": "batch 16 is valid on an A100 but has no demonstrated speed advantage in this controlled replay",
+    "selection_semantics_changed": false
+  }
+}

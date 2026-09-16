@@ -1,0 +1,81 @@
+{
+  "mainline": "SSE-v8",
+  "geometry_source": "feedforward_infinidepth",
+  "aggregation_mode": "vehicles",
+  "vehicle_count": 3,
+  "selected_fit_script": "run_sse_confidence_gated_joint.py",
+  "inputs": {
+    "vehicle_geometry": [
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz"
+    ],
+    "shadow_geometry": [
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz"
+    ],
+    "shadow_masks": [
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+      "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png"
+    ]
+  },
+  "hard_gate": {
+    "min_confidence": 0.5,
+    "min_support_0p35m": 0.75
+  },
+  "distance_percentile": 0.95,
+  "structure_aware": false,
+  "fit_workers": 3,
+  "candidate_workers": 8,
+  "per_vehicle_top_candidates": 0,
+  "shadow_mask_contract": "official SSISv2 associated shadow mask, consumed directly without source-mask postprocessing",
+  "all_rejected_behavior": "no_valid_sun_information",
+  "command": [
+    "/root/miniconda3/envs/openemma/bin/python",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/src/pbr_vehicle_sun/run_sse_confidence_gated_joint.py",
+    "--vehicle-geometry",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/vehicle_geometry/visible_infinidepth_vehicle_gaussians.npz",
+    "--shadow-geometry",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/shadow_geometry/infinidepth_shadow_geometry.npz",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/shadow_geometry/infinidepth_shadow_geometry.npz",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/shadow_geometry/infinidepth_shadow_geometry.npz",
+    "--shadow-mask",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t015_cam1/vehicle_01_instance-5/ssisv2_association/04_associated_shadow_mask.png",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t120_cam1/vehicle_02_instance-38/ssisv2_association/04_associated_shadow_mask.png",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/t076_cam1/vehicle_03_instance-20/ssisv2_association/04_associated_shadow_mask.png",
+    "--output-dir",
+    "/mnt/data/fjn/projects/fjn/pbr-vehicle/pbr-vehicle-sun/delivery/PVD-v2-a/run-20260915T091753Z-three-vehicle-runtime-benchmark/full-cold-final/round-1/confidence_gated_joint_fit",
+    "--raster-size",
+    "900",
+    "--max-vehicle-points",
+    "100000",
+    "--coarse-az-step",
+    "5",
+    "--coarse-elev-min",
+    "20",
+    "--coarse-elev-max",
+    "70",
+    "--local-radius-deg",
+    "5",
+    "--local-basins",
+    "3",
+    "--distance-percentile",
+    "0.95",
+    "--top-candidates",
+    "25",
+    "--per-vehicle-top-candidates",
+    "0",
+    "--fit-workers",
+    "3",
+    "--candidate-workers",
+    "8",
+    "--min-confidence",
+    "0.5",
+    "--min-support",
+    "0.75"
+  ]
+}

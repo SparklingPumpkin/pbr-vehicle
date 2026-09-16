@@ -45,7 +45,11 @@ def component_filter(sd, mask_path: Path, max_components: int = 1,
 def robust(pred, obs, percentile: float = .90):
     if len(pred) < 8 or len(obs) < 8: return None
     dt = cKDTree(pred); ot = cKDTree(obs)
-    dp = ot.query(pred, k=1, workers=-1)[0]; do = dt.query(obs, k=1, workers=-1)[0]
+    # These contours normally contain only a few hundred points.  Asking
+    # scipy to create/use a full machine-sized worker pool for every candidate
+    # is substantially slower than the query itself and oversubscribes badly
+    # when independent vehicle fits run concurrently.
+    dp = ot.query(pred, k=1, workers=1)[0]; do = dt.query(obs, k=1, workers=1)[0]
     tail, med, reverse_tail = np.quantile(dp, percentile), np.median(dp), np.quantile(do, percentile)
     support = np.mean(dp <= .35)
     score = -(0.40*tail + 0.25*med + 0.25*reverse_tail + 0.10*(1-support))

@@ -1,0 +1,35 @@
+{
+  "model": "InfiniDepth",
+  "checkpoint": "/mnt/data/why/InfiniDepth/checkpoints/depth/infinidepth.ckpt",
+  "image": "/mnt/data/dataset/argoverse/processed/training/002/images/015_1.jpg",
+  "uses_lidar": false,
+  "prompt_depth": null,
+  "depth_prompt_source": "MoGe-2 metric depth inferred from the same RGB image",
+  "moge2_pretrained": "/mnt/data/why/InfiniDepth/checkpoints/moge-2-vitl-normal/model.pt",
+  "input_size_hw": [
+    768,
+    1024
+  ],
+  "shared_forward_with_gaussian_export": true,
+  "model_depth_shape_hw": [
+    768,
+    1024
+  ],
+  "original_depth_shape_hw": [
+    1550,
+    2048
+  ],
+  "depth_semantics": "metric camera-z depth in meters from the dense 2D-uniform pass inside inference_for_gs",
+  "valid_pixels": 3174400,
+  "depth_m_quantiles": {
+    "0.01": 2.8060338497161865,
+    "0.5": 10.632381439208984,
+    "0.99": 47.161354064941406
+  },
+  "outputs": {
+    "model_depth": "predicted_depth_model.npy",
+    "original_depth": "predicted_depth_original.npy",
+    "heatmap": "predicted_depth_heatmap.png"
+  },
+  "joint_inference_elapsed_s": 22.614607942989096
+}
